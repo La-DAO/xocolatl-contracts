@@ -12,10 +12,13 @@ pragma solidity 0.8.4;
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "./interfaces/IERC20Extension.sol";
-import "./interfaces/IOracle.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IAssetsAccountant.sol";
 import "contracts/interfaces/IAssetsAccountantState.Sol";
 import "./interfaces/IHouseOfReserveState.sol";
+import "redstone-evm-connector/lib/contracts/message-based/PriceAware.sol";
+
+import "hardhat/console.sol";
 
 contract HouseOfCoinState {
 
@@ -41,27 +44,23 @@ contract HouseOfCoinState {
     address public backedAsset;
 
     address public assetsAccountant;
-
-    IOracle public oracle;
 }
 
-contract HouseOfCoin is Initializable, HouseOfCoinState {
+contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinState {
     
     /**
     * @dev Initializes this contract by setting:
     * @param _backedAsset ERC20 address of the asset type of coin to be minted in this contract.
     * @param _assetsAccountant Address of the {AssetsAccountant} contract.
-    * @param _oracle Address of the oracle that will return price in _backedAsset units per reserve asset units.
     */
     function initialize(
         address _backedAsset,
-        address _assetsAccountant,
-        address _oracle
+        address _assetsAccountant
     ) public initializer() 
     {
         backedAsset = _backedAsset;
         assetsAccountant = _assetsAccountant;
-        oracle = IOracle(_oracle);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /**
@@ -92,7 +91,7 @@ contract HouseOfCoin is Initializable, HouseOfCoinState {
 
         // Get inputs for checking minting power, collateralization factor and oracle price
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve.collateralRatio();
-        uint price = oracle.getLastPrice();
+        uint price = redstoneGetLastPrice();
 
         // Checks minting power of msg.sender.
         uint mintingPower = _checkMintingPower(
@@ -163,7 +162,7 @@ contract HouseOfCoin is Initializable, HouseOfCoinState {
     function getBackedTokenID(address _reserveAsset) public view returns(uint) {
         return uint(keccak256(abi.encodePacked(_reserveAsset, backedAsset, "backedAsset")));
     }
-    
+
     /**
     * @dev  Internal function to query balances in {AssetsAccountant}
     */
@@ -174,6 +173,16 @@ contract HouseOfCoin is Initializable, HouseOfCoinState {
     ) internal view returns (uint reserveBal, uint mintedCoinBal) {
         reserveBal = IERC1155(assetsAccountant).balanceOf(user, _reservesTokenID);
         mintedCoinBal = IERC1155(assetsAccountant).balanceOf(user, _bAssetRTokenID);
+    }
+
+    /**
+    * @dev  Internal function to query balances in {AssetsAccountant}
+    */
+    function redstoneGetLastPrice() public view returns (uint) {
+        uint usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
+        uint usdeth = getPriceFromMsg(bytes32("ETH"));
+        uint fiateth = (usdeth * 1e8) / usdfiat;
+        return fiateth;
     }
 
     /**
@@ -196,7 +205,7 @@ contract HouseOfCoin is Initializable, HouseOfCoinState {
 
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve.collateralRatio();
 
-        uint price = oracle.getLastPrice();
+        uint price = redstoneGetLastPrice();
 
         return _checkMintingPower(
             user,
@@ -254,13 +263,13 @@ contract HouseOfCoin is Initializable, HouseOfCoinState {
         uint mintedCoinBal,
         IHouseOfReserveState.Factor memory collatRatio,
         uint price
-    ) internal view returns (bool liquidatable, uint mintingPower) {
+    ) internal pure returns (bool liquidatable, uint mintingPower) {
 
         uint reserveBalreducedByFactor =
             ( reserveBal * collatRatio.denominator) / collatRatio.numerator;
             
         uint maxMintableAmount =
-            (reserveBalreducedByFactor * price) / 10**(oracle.oraclePriceDecimals());
+            (reserveBalreducedByFactor * price) / 1e8;
 
         liquidatable = mintedCoinBal > maxMintableAmount? true : false;
 

@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IAssetsAccountant.sol";
-import "./interfaces/IOracle.sol";
+import "redstone-evm-connector/lib/contracts/message-based/PriceAware.sol";
 
 contract HouseOfReserveState {
 
@@ -58,26 +58,22 @@ contract HouseOfReserveState {
 
   IAssetsAccountant public assetsAccountant;
 
-  IOracle public oracle;
-
   bytes32 public constant HOUSE_TYPE = keccak256("RESERVE_HOUSE");
 
 }
 
-contract HouseOfReserve is Initializable, AccessControl, HouseOfReserveState {
+contract HouseOfReserve is Initializable, AccessControl, PriceAware, HouseOfReserveState {
 
     /**
    * @dev Initializes this contract by setting:
    * @param _reserveAsset ERC20 address of reserve asset handled in this contract.
    * @param _backedAsset ERC20 address of the asset type of coin that can be backed with this reserves.
    * @param _assetsAccountant Address of the {AssetsAccountant} contract.
-   * @param _oracle Address of the oracle that will return price in _backedAsset units per reserve asset units.
    */
   function initialize(
     address _reserveAsset,
     address _backedAsset,
-    address _assetsAccountant,
-    address _oracle
+    address _assetsAccountant
   ) public initializer() {
 
     reserveAsset = _reserveAsset;
@@ -87,7 +83,6 @@ contract HouseOfReserve is Initializable, AccessControl, HouseOfReserveState {
     collateralRatio.numerator = 150;
     collateralRatio.denominator = 100;
     assetsAccountant = IAssetsAccountant(_assetsAccountant);
-    oracle = IOracle(_oracle);
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
   }
@@ -123,35 +118,10 @@ contract HouseOfReserve is Initializable, AccessControl, HouseOfReserveState {
    * Emits a {UserWitdhraw} event.
    */
   function withdraw(uint amount) public {
-    // Need balances for tokenIDs of both reserves and backed asset in {AssetsAccountant}
-    (uint reserveBal, uint mintedCoinBal) =  _checkBalances(msg.sender, reserveTokenID, backedTokenID);
-    
-    // Validate user has reserveBal, and input amount is greater than zero, and less than msg.sender reserves deposits.
-    require(
-      reserveBal > 0 &&
-      amount > 0 && 
-      amount <= reserveBal,
-      "Invalid input amount!"
-    );
-
-    // Get max withdrawal amount
-    uint maxWithdrawal = _checkMaxWithdrawal(reserveBal, mintedCoinBal);
-
-    // Check maxWithdrawal is greater than or equal to the withdraw amount.
-    require(maxWithdrawal >= amount, "Invalid input amount!");
-
-    // Burn at AssetAccountant withdrawal amount.
-    assetsAccountant.burn(
-      msg.sender,
-      reserveTokenID,
-      amount
-    );
-
-    // Transfer Asset to msg.sender
-    IERC20(reserveAsset).transfer(msg.sender, amount);
-
-    // Emit withdraw event.
-    emit UserWithdraw(msg.sender, reserveAsset, amount);
+    uint usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
+    uint usdeth = getPriceFromMsg(bytes32("ETH"));
+    uint fiateth = (usdeth * 1e8) / usdfiat;
+    _withdraw(amount, fiateth);
   }
 
   /**
@@ -183,24 +153,58 @@ contract HouseOfReserve is Initializable, AccessControl, HouseOfReserveState {
    * @param user Address to check. 
    */
   function checkMaxWithdrawal(address user) external view returns (uint max) {
+    uint usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
+    uint usdeth = getPriceFromMsg(bytes32("ETH"));
+    uint price = (usdeth * 1e8) / usdfiat;
     // Need balances for tokenIDs of both reserves and backed asset in {AssetsAccountant}
     (uint reserveBal, uint mintedCoinBal) =  _checkBalances(user, reserveTokenID, backedTokenID);
-    max = reserveBal == 0 ? 0 : _checkMaxWithdrawal(reserveBal, mintedCoinBal);
+    max = reserveBal == 0 ? 0 : _checkMaxWithdrawal(reserveBal, mintedCoinBal, price);
+  }
+
+  /**
+   * @dev  Internal function to withdrawal an amount given oracle price.
+   */
+  function _withdraw(uint amount, uint price) internal {
+  // Need balances for tokenIDs of both reserves and backed asset in {AssetsAccountant}
+  (uint reserveBal, uint mintedCoinBal) =  _checkBalances(msg.sender, reserveTokenID, backedTokenID);
+
+  // Validate user has reserveBal, and input amount is greater than zero, and less than msg.sender reserves deposits.
+  require(
+    reserveBal > 0 &&
+    amount > 0 && 
+    amount <= reserveBal,
+    "Invalid input amount!"
+  );
+
+  // Get max withdrawal amount
+  uint maxWithdrawal = _checkMaxWithdrawal(reserveBal, mintedCoinBal, price);
+
+  // Check maxWithdrawal is greater than or equal to the withdraw amount.
+  require(maxWithdrawal >= amount, "Invalid input amount!");
+
+  // Burn at AssetAccountant withdrawal amount.
+  assetsAccountant.burn(
+    msg.sender,
+    reserveTokenID,
+    amount
+  );
+
+  // Transfer Asset to msg.sender
+  IERC20(reserveAsset).transfer(msg.sender, amount);
+
+  // Emit withdraw event.
+  emit UserWithdraw(msg.sender, reserveAsset, amount);
   }
 
   /**
    * @dev  Internal function to check max withdrawal amount.
    */
-  function _checkMaxWithdrawal(uint _reserveBal, uint _mintedCoinBal) internal view returns(uint) {
-    // Get price
-    // Price should be: backedAsset per unit of reserveAsset {backedAsset / reserveAsset}
-    uint price = oracle.getLastPrice();
-
+  function _checkMaxWithdrawal(uint _reserveBal, uint _mintedCoinBal, uint price) internal view returns(uint) {
     // Check if msg.sender has minted backedAsset, if yes compute:
     // The minimum required balance to back 100% all minted coins of backedAsset.
     // Else, return 0.
     uint minReqReserveBal = _mintedCoinBal > 0 ? 
-      (_mintedCoinBal * 10**(oracle.oraclePriceDecimals())) / price :
+      (_mintedCoinBal * 1e8) / price :
       0
     ;
     
@@ -218,6 +222,16 @@ contract HouseOfReserve is Initializable, AccessControl, HouseOfReserveState {
       // Return _reserveBal if msg.sender has no minted coin.
       return _reserveBal;
     }
+  }
+
+  /**
+   * @dev  Internal function to query balances in {AssetsAccountant}
+   */
+  function redstoneGetLastPrice() public view returns(uint) {
+        uint usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
+        uint usdeth = getPriceFromMsg(bytes32("ETH"));
+        uint fiateth = (usdeth * 1e8) / usdfiat;
+        return fiateth;
   }
 
   /**
