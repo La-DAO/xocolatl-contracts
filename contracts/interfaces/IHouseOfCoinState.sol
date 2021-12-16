@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.4;
+
+interface IHouseOfCoinState {
+    
+    /**
+    * @dev Returns the type of House Contract.
+    */
+    function HOUSE_TYPE() external returns(bytes32);
+
+    /**
+    * @dev Returns the backedAsset that is minted by this HouseOfCoin.
+    */
+    function backedAsset() external view returns(address);
+
+}

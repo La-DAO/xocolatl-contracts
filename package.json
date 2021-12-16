@@ -1,6 +1,8 @@
 {
   "dependencies": {
-    "hardhat": "2.8.0"
+    "@openzeppelin/contracts": "^4.4.1",
+    "hardhat": "2.8.0",
+    "redstone-evm-connector": "^1.3.5"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "2.0.0",
