@@ -33,8 +33,6 @@ describe("efiat Sytem Tests", function () {
 
     const loadFixture = createFixtureLoader(accounts, provider);
     const loadedContracts = await loadFixture(deploy_setup);
-
-    evmSnapshot0 = await evmSnapshot();
     
     accountant = loadedContracts.accountant;
     coinhouse = loadedContracts.w_coinhouse;
@@ -46,6 +44,14 @@ describe("efiat Sytem Tests", function () {
     bid = await reservehouse.backedTokenID();
   });
 
+  beforeEach(async () => {
+    evmSnapshot0 = await evmSnapshot();
+  });
+
+  afterEach(async () => {
+    await evmRevert(evmSnapshot0);
+  });
+
   it("Oracle price feed tests, should return a price value", async () => {
     await syncTime();
     const price = await coinhouse.redstoneGetLastPrice(); 
@@ -54,5 +60,29 @@ describe("efiat Sytem Tests", function () {
     await syncTime();
     const price2 = await reservehouse.redstoneGetLastPrice();
     await expect(price2).to.be.gt(0);
+  });
+
+  it("Deposit in HouseOfReserve", async () => {
+    const depositAmount = ethers.utils.parseUnits("50",18);
+    await mockweth.connect(accounts[1]).deposit({value: depositAmount});
+    await mockweth.connect(accounts[1]).approve(reservehouse.address,depositAmount);
+    await syncTime();
+    await reservehouse.connect(accounts[1]).deposit(depositAmount);
+    await expect(await accountant.balanceOf(accounts[1].address,rid)).to.eq(depositAmount);
+  });
+
+  it("Mint in HouseOfCoin", async () => {
+    const depositAmount = ethers.utils.parseUnits("50",18);
+    const mintAmount = ethers.utils.parseUnits("2500",18);
+    await mockweth.connect(accounts[1]).deposit({value: depositAmount});
+    await mockweth.connect(accounts[1]).approve(reservehouse.address,depositAmount);
+    await syncTime();
+    let localreservehouse = reservehouse.connect(accounts[1]);
+    localreservehouse = WrapperBuilder.wrapLite(localreservehouse).usingPriceFeed("redstone-stocks");
+    await localreservehouse.deposit(depositAmount);
+    await syncTime();
+    let localcoinhouse = coinhouse.connect(accounts[1]);
+    localcoinhouse = WrapperBuilder.wrapLite(localcoinhouse).usingPriceFeed("redstone-stocks");
+    await localcoinhouse.mintCoin(mockweth.address,reservehouse.address,mintAmount);
   });
 });

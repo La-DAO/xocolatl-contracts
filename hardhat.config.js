@@ -101,7 +101,7 @@ module.exports = {
     },
     localhost: {
       url: "http://localhost:8545",
-      timeout: 200000,
+      timeout: 2000000,
       /*
         no mnemonic here? it will just use account 0 of the hardhat node to deploy
         (add mnemonic() here to set the deployer locally)
