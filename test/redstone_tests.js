@@ -68,7 +68,7 @@ describe("efiat Sytem Tests", function () {
     await mockweth.connect(accounts[1]).approve(reservehouse.address,depositAmount);
     await syncTime();
     await reservehouse.connect(accounts[1]).deposit(depositAmount);
-    await expect(await accountant.balanceOf(accounts[1].address,rid)).to.eq(depositAmount);
+    expect(await accountant.balanceOf(accounts[1].address,rid)).to.eq(depositAmount);
   });
 
   it("Mint in HouseOfCoin", async () => {
@@ -84,5 +84,24 @@ describe("efiat Sytem Tests", function () {
     let localcoinhouse = coinhouse.connect(accounts[1]);
     localcoinhouse = WrapperBuilder.wrapLite(localcoinhouse).usingPriceFeed("redstone-stocks");
     await localcoinhouse.mintCoin(mockweth.address,reservehouse.address,mintAmount);
+    expect(await fiat.balanceOf(accounts[1].address)).to.eq(mintAmount);
+  });
+
+  it("Payback in HouseOfCoin", async () => {
+    const depositAmount = ethers.utils.parseUnits("50",18);
+    const mintAmount = ethers.utils.parseUnits("2500",18);
+    await mockweth.connect(accounts[1]).deposit({value: depositAmount});
+    await mockweth.connect(accounts[1]).approve(reservehouse.address,depositAmount);
+    await syncTime();
+    let localreservehouse = reservehouse.connect(accounts[1]);
+    localreservehouse = WrapperBuilder.wrapLite(localreservehouse).usingPriceFeed("redstone-stocks");
+    await localreservehouse.deposit(depositAmount);
+    await syncTime();
+    let localcoinhouse = coinhouse.connect(accounts[1]);
+    localcoinhouse = WrapperBuilder.wrapLite(localcoinhouse).usingPriceFeed("redstone-stocks");
+    await localcoinhouse.mintCoin(mockweth.address,reservehouse.address,mintAmount);
+    expect(await fiat.balanceOf(accounts[1].address)).to.eq(mintAmount);
+    await localcoinhouse.paybackCoin(bid,mintAmount);
+    expect(await fiat.balanceOf(accounts[1].address)).to.eq(0);
   });
 });

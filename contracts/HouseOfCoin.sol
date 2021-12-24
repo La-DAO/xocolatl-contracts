@@ -181,6 +181,7 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
     function redstoneGetLastPrice() public view returns (uint) {
         uint usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
         uint usdeth = getPriceFromMsg(bytes32("ETH"));
+        require(usdfiat != 0 && usdeth != 0, "oracle return zero!");
         uint fiateth = (usdeth * 1e8) / usdfiat;
         return fiateth;
     }
