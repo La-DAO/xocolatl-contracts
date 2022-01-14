@@ -176,7 +176,8 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
     }
 
     /**
-    * @dev  Internal function to query balances in {AssetsAccountant}
+    * @dev Function to call redstone oracle price.
+    * @dev Must be called according to 'redstone-evm-connector' documentation.
     */
     function redstoneGetLastPrice() public view returns (uint) {
         uint usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
