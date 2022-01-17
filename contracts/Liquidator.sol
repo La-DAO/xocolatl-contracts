@@ -31,6 +31,10 @@ contract LiquidatorState {
     */
     event Liquidation (address indexed userLiquidated, adddress indexed liquidator, uint amount);
 
+    uint256 public marginCallThreshold;
+
+    uint256 public liquidationThreshold;
+
 }
 
 contract Liquidator is LiquidatorState{
@@ -41,11 +45,25 @@ contract Liquidator is LiquidatorState{
     * @param houseOfReserve the house of reserve where user will be liquidated. 
     */
     function liquidateUser(address userToLiquidate, address houseOfReserve) external {
-        // 1.- Check minted power
+
+        // Need to break steps into subfunctions. Process.
+        // 0.- Get latest price.
+        // 1.- Check mintpower
         // 2.- Check user minted debt
         // 3.- Compute health ratio 
+        // 3.1- Conditionals
 
+    }
 
+    /**
+    * @dev Function to call redstone oracle price.
+    * @dev Must be called according to 'redstone-evm-connector' documentation.
+    */
+    function redstoneGetLastPrice() public view returns(uint) {
+        uint usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
+        uint usdeth = getPriceFromMsg(bytes32("ETH"));
+        uint fiateth = (usdeth * 1e8) / usdfiat;
+        return fiateth;
     }
 
 }
