@@ -45,22 +45,22 @@ contract HouseOfCoinState {
     * @param mintedAsset ERC20 address of user's token debt on margin call.
     * @param reserveAsset ERC20 address of user's backing collateral.
     */
-    event MarginCall(address indexed user, adddress indexed mintedAsset, address indexed reserveAsset);
+    event MarginCall(address indexed user, address indexed mintedAsset, address indexed reserveAsset);
 
     /**
     * @dev Log when a user is liquidated.
     * @param userLiquidated Address of user that is being liquidated.
     * @param liquidator Address of user that liquidates.
-    * @param amount payback.
+    * @param collateralAmount sold.
     */
-    event Liquidation(address indexed userLiquidated, adddress indexed liquidator, uint amount);
+    event Liquidation(address indexed userLiquidated, address indexed liquidator, uint collateralAmount);
 
     struct LiquidationParameters{
-      uint64 globalBase;
-      uint64 marginCallThreshold;
-      uint64 liquidationThreshold;
-      uint64 liquidationPricePenaltyDiscount;
-      uint64 collateralPenalty;
+      uint globalBase;
+      uint marginCallThreshold;
+      uint liquidationThreshold;
+      uint liquidationPricePenaltyDiscount;
+      uint collateralPenalty;
     }
 
     bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
@@ -206,17 +206,15 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
     function liquidateUser(address userToLiquidate, address reserveAsset) external {
         // Get all the required inputs.
         IAssetsAccountantState accountant = IAssetsAccountantState(assetsAccountant);
-        uint reserveTokenID = accountant.reservesIds(reserveAsset, backedAsset);
-        uint backedTokenID = getBackedTokenID(reserveAsset);
 
         (uint reserveBal, uint mintedCoinBal) =  _checkBalances(
             userToLiquidate,
-            reserveTokenID,
-            backedTokenID
+            accountant.reservesIds(reserveAsset, backedAsset),
+            getBackedTokenID(reserveAsset)
         );
         require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
 
-        address hOfReserveAddr = accountant.houseOfReserves(reserveTokenID);
+        address hOfReserveAddr = accountant.houseOfReserves(accountant.reservesIds(reserveAsset, backedAsset));
         IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserveAddr);
 
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve.collateralRatio();
@@ -239,16 +237,22 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
             // User at liquidation level
             if(healthRatio <= liqParam.liquidationThreshold) {
                 // check liquidator ERC20 approval
-                (uint approvalReqAmount, uint collateralAtPenalty) = _computeCostOfLiquidation(reserveBal, latestPrice, reserveAssetDecimals);
+                (uint costofLiquidation, uint collatPenaltyBal) = _computeCostOfLiquidation(reserveBal, latestPrice, reserveAssetDecimals);
                 require(
-                    IERC20Extension(reserveAsset).allowance(msg.sender, address(this)) >= approvalReqAmount,
+                    IERC20Extension(reserveAsset).allowance(msg.sender, address(this)) >= costofLiquidation,
                     "No allowance!"
                 );
 
-                _executeLiquidation(userToLiquidate);
+                _executeLiquidation(
+                    userToLiquidate,
+                    accountant.reservesIds(reserveAsset, backedAsset),
+                    getBackedTokenID(reserveAsset),
+                    costofLiquidation,
+                    collatPenaltyBal
+                );
             }
         } else {
-            revert("Not liquidatable!")
+            revert("Not liquidatable!");
         }
     }
 
@@ -267,7 +271,7 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
         uint backedTokenID = getBackedTokenID(reserveAsset);
 
         (uint reserveBal, uint mintedCoinBal) =  _checkBalances(
-            userToLiquidate,
+            user,
             reserveTokenID,
             backedTokenID
         );
@@ -303,7 +307,7 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
         uint reserveTokenID = accountant.reservesIds(reserveAsset, backedAsset);
         uint backedTokenID = getBackedTokenID(reserveAsset);
 
-        (uint reserveBal,) =  _checkBalances(
+        (uint reserveBal, uint mintedCoinBal) =  _checkBalances(
             user,
             reserveTokenID,
             backedTokenID
@@ -480,7 +484,7 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
         uint mintedCoinBal,
         IHouseOfReserveState.Factor memory collatRatio,
         uint price
-    ) internal returns(uint healthRatio) {
+    ) internal view returns(uint healthRatio) {
         // Check current maxMintableAmount with current price
         uint reserveBalreducedByFactor =
             (reserveBal * collatRatio.denominator) / collatRatio.numerator;
@@ -496,12 +500,12 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
         uint reserveBal,
         uint price,
         uint reserveAssetDecimals
-    ) internal view returns(uint costamount, uint collateralAtPenalty){
+    ) internal view returns(uint costofLiquidation, uint collatPenaltyBal){
         uint liqDiscountedPrice = price * liqParam.liquidationPricePenaltyDiscount / liqParam.globalBase;
 
-        collateralAtPenalty = reserveBal * liqParam.collateralPenalty / liqParam.globalBase;
+        collatPenaltyBal = reserveBal * liqParam.collateralPenalty / liqParam.globalBase;
 
-        uint amountTemp = collateralAtPenalty * liqDiscountedPrice / 10 ** 8;
+        uint amountTemp = collatPenaltyBal * liqDiscountedPrice / 10 ** 8;
 
         uint decimalDiff;
 
@@ -513,12 +517,33 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
             amountTemp = amountTemp * 10 ** decimalDiff;
         }
 
-        costamount = amountTemp
+        costofLiquidation = amountTemp;
     }
 
-    function _executeLiquidation(address user) internal {
-        // Substract user's collateral penalty balance
-        // burn the received tokens.
+    function _executeLiquidation(
+        address user,
+        uint reserveTokenID,
+        uint backedTokenID,
+        uint costofLiquidation,
+        uint collatPenaltyBal
+    ) internal {
+        // Transfer of Assets.
 
+        // BackedAsset to this contract.
+        IERC20Extension(backedAsset).transferFrom(msg.sender, address(this), costofLiquidation);
+        // Penalty collateral from liquidated user to liquidator.
+        IAssetsAccountant accountant = IAssetsAccountant(assetsAccountant);
+        accountant.safeTransferFrom(user, msg.sender, reserveTokenID, collatPenaltyBal, "");
+
+        // Burning tokens and debt.
+        // Burn 'costofLiquidation' debt amount from liquidated user in {AssetsAccountant}
+        accountant.burn(user, backedTokenID, costofLiquidation);
+
+        // Burn the received backedAsset tokens.
+        IERC20Extension bAsset = IERC20Extension(backedAsset);
+        bAsset.burn(address(this), costofLiquidation);
+
+        // Emit event
+        emit Liquidation(user, msg.sender, collatPenaltyBal);
     }
 }

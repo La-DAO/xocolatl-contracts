@@ -11,7 +11,7 @@ interface IHouseOfCoin  {
     * @param amount To mint. 
     * Emits a {CoinMinted} event.
     */
-    function mintCoin(address reserveAsset, address houseOfReserve, uint amount) public;
+    function mintCoin(address reserveAsset, address houseOfReserve, uint amount) external;
 
     /**
     * @notice  Function to payback ERC20 'backedAsset' of this HouseOfCoin.
@@ -20,13 +20,13 @@ interface IHouseOfCoin  {
     * @param amount To payback. 
     * Emits a {CoinPayback} event.
     */
-    function paybackCoin(uint _backedTokenID, uint amount) public;
+    function paybackCoin(uint _backedTokenID, uint amount) external;
 
     /**
     * @notice  External function that returns the amount of backed asset coins user can mint with unused reserve asset.
     * @param user to check minting power.
     * @param reserveAsset Address of reserve asset.
     */
-    function checkMintingPower(address user, address reserveAsset) external view returns(uint)
+    function checkMintingPower(address user, address reserveAsset) external view returns(uint);
     
 }
