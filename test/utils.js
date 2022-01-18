@@ -15,29 +15,29 @@ const deploy_setup = async () => {
     const AssetsAccountant = await ethers.getContractFactory("AssetsAccountant");
     const HouseOfCoin = await ethers.getContractFactory("HouseOfCoin");
     const HouseOfReserve = await ethers.getContractFactory("HouseOfReserve");
-    const MockeFiat = await ethers.getContractFactory("MockeFiat");
+    const Xocolatl = await ethers.getContractFactory("Xocolatl");
     const MockWETH = await ethers.getContractFactory("MockWETH");
 
     // 1.- Deploy all contracts
     let accountant = await AssetsAccountant.deploy();
     let coinhouse = await HouseOfCoin.deploy();
     let reservehouse = await HouseOfReserve.deploy();
-    let fiat = await MockeFiat.deploy();
+    let xoc = await Xocolatl.deploy();
     let mockweth = await MockWETH.deploy();
 
     // 2.- Initialize house contracts and register with accountant
     await coinhouse.initialize(
-        fiat.address,
+        xoc.address,
         accountant.address
     );
     await reservehouse.initialize(
         mockweth.address,
-        fiat.address,
+        xoc.address,
         accountant.address
       );
     await accountant.registerHouse(
         coinhouse.address,
-        fiat.address
+        xoc.address
     );
     await accountant.registerHouse(
         reservehouse.address,
@@ -45,10 +45,10 @@ const deploy_setup = async () => {
     );
 
     // 3.- Assign minter and burner role to coinhouse in fiat ERC20
-    const minter = await fiat.MINTER_ROLE();
-    const burner = await fiat.BURNER_ROLE();
-    await fiat.grantRole(minter, coinhouse.address);
-    await fiat.grantRole(burner, coinhouse.address);
+    const minter = await xoc.MINTER_ROLE();
+    const burner = await xoc.BURNER_ROLE();
+    await xoc.grantRole(minter, coinhouse.address);
+    await xoc.grantRole(burner, coinhouse.address);
 
     // 4.- Authorize Provider
     const w_reservehouse = WrapperBuilder.wrapLite(reservehouse).usingPriceFeed("redstone-stocks");
@@ -66,7 +66,7 @@ const deploy_setup = async () => {
         accountant,
         w_coinhouse,
         w_reservehouse,
-        fiat,
+        xoc,
         mockweth
     }
 }

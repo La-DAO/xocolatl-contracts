@@ -39,11 +39,39 @@ contract HouseOfCoinState {
     */
     event CoinPayback(address indexed user, uint indexed backedtokenID, uint amount);
 
+    /**
+    * @dev Log when a user is in the danger zone of being liquidated.
+    * @param user Address of user that is on margin call. 
+    * @param mintedAsset ERC20 address of user's token debt on margin call.
+    * @param reserveAsset ERC20 address of user's backing collateral.
+    */
+    event MarginCall(address indexed user, address indexed mintedAsset, address indexed reserveAsset);
+
+    /**
+    * @dev Log when a user is liquidated.
+    * @param userLiquidated Address of user that is being liquidated.
+    * @param liquidator Address of user that liquidates.
+    * @param collateralAmount sold.
+    */
+    event Liquidation(address indexed userLiquidated, address indexed liquidator, uint collateralAmount);
+
+    struct LiquidationParameters{
+      uint globalBase;
+      uint marginCallThreshold;
+      uint liquidationThreshold;
+      uint liquidationPricePenaltyDiscount;
+      uint collateralPenalty;
+    }
+
     bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
 
     address public backedAsset;
 
+    uint internal backedAssetDecimals;
+
     address public assetsAccountant;
+
+    LiquidationParameters public liqParam;
 }
 
 contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinState {
@@ -59,7 +87,23 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
     ) public initializer() 
     {
         backedAsset = _backedAsset;
+        backedAssetDecimals = IERC20Extension(backedAsset).decimals();
         assetsAccountant = _assetsAccountant;
+
+        // Defines all LiquidationParameters as base 100 decimal numbers.
+        liqParam.globalBase = 100;
+        // Margin call when health ratio = 1 or below. This means maxMintPower = mintedDebt, accounting the collateralization factors.
+        liqParam.marginCallThreshold = 100;
+        // Liquidation starts health ratio = 0.95 or below. 
+        liqParam.liquidationThreshold = 95;
+        // User's unhealthy position sells collateral at penalty discount of 10%, bring them back to a good HealthRatio.
+        liqParam.liquidationPricePenaltyDiscount = 10;
+        // Percentage amount of unhealthy user's collateral that will be sold to bring user's to good HealthRatio.
+        liqParam.collateralPenalty = 75;
+
+        // Internal function that will transform liqParam, compatible with backedAsset decimals
+        _transformToBackAssetDecimalBase();
+
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -94,7 +138,7 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
         uint price = redstoneGetLastPrice();
 
         // Checks minting power of msg.sender.
-        uint mintingPower = _checkMintingPower(
+        uint mintingPower = _checkRemainingMintingPower(
             msg.sender,
             reserveTokenID,
             backedTokenID,
@@ -104,7 +148,7 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
         require(
             mintingPower > 0 &&
             mintingPower >= amount,
-             "Not enough reserves to mint amount!"
+             "No reserves to mint amount!"
         );
 
         // Update state in AssetAccountant
@@ -155,6 +199,136 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
     }
 
     /**
+    * @dev Called to liquidate a user or publish margin call event.
+    * @param userToLiquidate address to liquidate.
+    * @param reserveAsset the reserve asset address user is using to back debt.
+    */
+    function liquidateUser(address userToLiquidate, address reserveAsset) external {
+        // Get all the required inputs.
+        IAssetsAccountantState accountant = IAssetsAccountantState(assetsAccountant);
+
+        (uint reserveBal, uint mintedCoinBal) =  _checkBalances(
+            userToLiquidate,
+            accountant.reservesIds(reserveAsset, backedAsset),
+            getBackedTokenID(reserveAsset)
+        );
+        require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
+
+        address hOfReserveAddr = accountant.houseOfReserves(accountant.reservesIds(reserveAsset, backedAsset));
+        IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserveAddr);
+
+        IHouseOfReserveState.Factor memory collatRatio = hOfReserve.collateralRatio();
+
+        uint latestPrice = redstoneGetLastPrice();
+
+        uint reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
+
+        // Get health ratio
+        uint healthRatio = _computeUserHealthRatio(
+            reserveBal,
+            mintedCoinBal,
+            collatRatio,
+            latestPrice
+        );
+
+        // User on marginCall
+        if(healthRatio <= liqParam.marginCallThreshold) {
+            emit MarginCall(userToLiquidate, backedAsset, reserveAsset);
+            // User at liquidation level
+            if(healthRatio <= liqParam.liquidationThreshold) {
+                // check liquidator ERC20 approval
+                (uint costofLiquidation, uint collatPenaltyBal) = _computeCostOfLiquidation(reserveBal, latestPrice, reserveAssetDecimals);
+                require(
+                    IERC20Extension(reserveAsset).allowance(msg.sender, address(this)) >= costofLiquidation,
+                    "No allowance!"
+                );
+
+                _executeLiquidation(
+                    userToLiquidate,
+                    accountant.reservesIds(reserveAsset, backedAsset),
+                    getBackedTokenID(reserveAsset),
+                    costofLiquidation,
+                    collatPenaltyBal
+                );
+            }
+        } else {
+            revert("Not liquidatable!");
+        }
+    }
+
+    /**
+    * @notice  Function to get the health ratio of user.
+    * @param user address.
+    * @param reserveAsset address being used as collateral. 
+    */
+    function computeUserHealthRatio(
+        address user,
+        address reserveAsset
+    ) public view returns(uint){
+        // Get all the required inputs.
+        IAssetsAccountantState accountant = IAssetsAccountantState(assetsAccountant);
+        uint reserveTokenID = accountant.reservesIds(reserveAsset, backedAsset);
+        uint backedTokenID = getBackedTokenID(reserveAsset);
+
+        (uint reserveBal, uint mintedCoinBal) =  _checkBalances(
+            user,
+            reserveTokenID,
+            backedTokenID
+        );
+        require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
+
+        address hOfReserveAddr = accountant.houseOfReserves(reserveTokenID);
+        IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserveAddr);
+
+        IHouseOfReserveState.Factor memory collatRatio = hOfReserve.collateralRatio();
+
+        uint latestPrice = redstoneGetLastPrice();
+
+        return _computeUserHealthRatio(
+            reserveBal,
+            mintedCoinBal,
+            collatRatio,
+            latestPrice
+        );
+    }
+
+    /**
+    * @notice  Function to get the theoretical cost of liquidating a user.
+    * @param user address.
+    * @param reserveAsset address being used as collateral. 
+    */
+    function computeCostOfLiquidation(
+        address user,
+        address reserveAsset
+    ) public view returns(uint, uint){
+
+        // Get all the required inputs.
+        IAssetsAccountantState accountant = IAssetsAccountantState(assetsAccountant);
+        uint reserveTokenID = accountant.reservesIds(reserveAsset, backedAsset);
+        uint backedTokenID = getBackedTokenID(reserveAsset);
+
+        (uint reserveBal, uint mintedCoinBal) =  _checkBalances(
+            user,
+            reserveTokenID,
+            backedTokenID
+        );
+
+        require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
+
+        uint latestPrice = redstoneGetLastPrice();
+
+        uint reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
+
+        (uint costAmount, uint collateralAtPenalty) = _computeCostOfLiquidation(
+            reserveBal,
+            latestPrice,
+            reserveAssetDecimals
+        );
+
+        return (costAmount, collateralAtPenalty);
+    }
+
+    /**
     *
     * @dev  Get backedTokenID to be used in {AssetsAccountant}
     * @param _reserveAsset ERC20 address of the reserve asset used to back coin.
@@ -164,19 +338,8 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
     }
 
     /**
-    * @dev  Internal function to query balances in {AssetsAccountant}
-    */
-    function _checkBalances(
-        address user,
-        uint _reservesTokenID,
-        uint _bAssetRTokenID
-    ) internal view returns (uint reserveBal, uint mintedCoinBal) {
-        reserveBal = IERC1155(assetsAccountant).balanceOf(user, _reservesTokenID);
-        mintedCoinBal = IERC1155(assetsAccountant).balanceOf(user, _bAssetRTokenID);
-    }
-
-    /**
-    * @dev  Internal function to query balances in {AssetsAccountant}
+    * @dev Function to call redstone oracle price.
+    * @dev Must be called according to 'redstone-evm-connector' documentation.
     */
     function redstoneGetLastPrice() public view returns (uint) {
         uint usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
@@ -191,7 +354,7 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
     * @param user to check minting power.
     * @param reserveAsset Address of reserve asset.
     */
-    function checkMintingPower(address user, address reserveAsset) external view returns(uint) {
+    function checkRemainingMintingPower(address user, address reserveAsset) external view returns(uint) {
 
         // Get all required inputs
         IAssetsAccountantState accountant = IAssetsAccountantState(assetsAccountant);
@@ -206,21 +369,35 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
 
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve.collateralRatio();
 
-        uint price = redstoneGetLastPrice();
+        uint latestPrice = redstoneGetLastPrice();
 
-        return _checkMintingPower(
+        return _checkRemainingMintingPower(
             user,
             reserveTokenID,
             backedTokenID,
             collatRatio,
-            price
+            latestPrice
         );
     }
 
+    /// Internal Functions
+
     /**
-    * @dev  Internal function to check if user is liquidatable
+    * @dev  Internal function to query balances in {AssetsAccountant}
     */
-    function _checkMintingPower(
+    function _checkBalances(
+        address user,
+        uint _reservesTokenID,
+        uint _bAssetRTokenID
+    ) internal view returns (uint reserveBal, uint mintedCoinBal) {
+        reserveBal = IERC1155(assetsAccountant).balanceOf(user, _reservesTokenID);
+        mintedCoinBal = IERC1155(assetsAccountant).balanceOf(user, _bAssetRTokenID);
+    }
+
+    /**
+    * @dev  Internal function to check user's remaining minting power.
+    */
+    function _checkRemainingMintingPower(
         address user,
         uint reserveTokenID,
         uint backedTokenID,
@@ -240,31 +417,31 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
             // If msg.sender has NO reserves, minting power = 0.
             return 0;
         } else {
-            // Check that user is not Liquidatable
-            (bool liquidatable, uint mintingPower) = _checkIfLiquidatable(
+            // Check if user can mint more
+            (bool canMintMore, uint remainingMintingPower) = _checkIfUserCanMintMore(
                 reserveBal,
                 mintedCoinBal,
                 collatRatio,
                 price
             );
-            if(liquidatable) {
-                // If msg.sender is liquidatable, minting power = 0.
-                return 0;
+            if(canMintMore) {
+                // If msg.sender canMintMore, how much
+                return remainingMintingPower;
             } else {
-                return mintingPower;
+                return 0;
             }
         }
     }
 
     /**
-    * @dev  Internal function to check if user is liquidatable
+    * @dev  Internal function to check if user can mint more coin.
     */
-    function _checkIfLiquidatable(
+    function _checkIfUserCanMintMore(
         uint reserveBal,
         uint mintedCoinBal,
         IHouseOfReserveState.Factor memory collatRatio,
         uint price
-    ) internal pure returns (bool liquidatable, uint mintingPower) {
+    ) internal pure returns (bool canMintMore, uint remainingMintingPower) {
 
         uint reserveBalreducedByFactor =
             ( reserveBal * collatRatio.denominator) / collatRatio.numerator;
@@ -272,8 +449,101 @@ contract HouseOfCoin is Initializable, AccessControl, PriceAware, HouseOfCoinSta
         uint maxMintableAmount =
             (reserveBalreducedByFactor * price) / 1e8;
 
-        liquidatable = mintedCoinBal > maxMintableAmount? true : false;
+        canMintMore = mintedCoinBal > maxMintableAmount? false : true;
 
-        mintingPower = !liquidatable ? (maxMintableAmount - mintedCoinBal) : 0;
+        remainingMintingPower = canMintMore ? (maxMintableAmount - mintedCoinBal) : 0;
+    }
+
+    /**
+    * @dev  Internal function that transforms liqParams to backedAsset decimal base.
+    */
+    function _transformToBackAssetDecimalBase() internal {
+        require(backedAssetDecimals > 0, "No backedAsset decimals!");
+        require(
+            liqParam.globalBase > 0 &&
+            liqParam.marginCallThreshold > 0 &&
+            liqParam.liquidationThreshold > 0 &&
+            liqParam.liquidationPricePenaltyDiscount > 0 &&
+            liqParam.collateralPenalty > 0,
+            "Empty liqParam!"
+        );
+
+        LiquidationParameters memory _liqParamTemp;
+
+        _liqParamTemp.globalBase = 10 ** backedAssetDecimals;
+        _liqParamTemp.marginCallThreshold = liqParam.marginCallThreshold * _liqParamTemp.globalBase / liqParam.globalBase; 
+        _liqParamTemp.liquidationThreshold = liqParam.liquidationThreshold * _liqParamTemp.globalBase / liqParam.globalBase;
+        _liqParamTemp.liquidationPricePenaltyDiscount = liqParam.liquidationPricePenaltyDiscount * _liqParamTemp.globalBase / liqParam.globalBase;
+        _liqParamTemp.collateralPenalty = liqParam.collateralPenalty * _liqParamTemp.globalBase / liqParam.globalBase;
+
+        liqParam = _liqParamTemp;
+    }
+
+    function _computeUserHealthRatio(
+        uint reserveBal,
+        uint mintedCoinBal,
+        IHouseOfReserveState.Factor memory collatRatio,
+        uint price
+    ) internal view returns(uint healthRatio) {
+        // Check current maxMintableAmount with current price
+        uint reserveBalreducedByFactor =
+            (reserveBal * collatRatio.denominator) / collatRatio.numerator;
+            
+        uint maxMintableAmount =
+            (reserveBalreducedByFactor * price) / 1e8;
+
+        // ompute health ratio
+        healthRatio = maxMintableAmount * backedAssetDecimals / mintedCoinBal;
+    }
+
+    function _computeCostOfLiquidation(
+        uint reserveBal,
+        uint price,
+        uint reserveAssetDecimals
+    ) internal view returns(uint costofLiquidation, uint collatPenaltyBal){
+        uint liqDiscountedPrice = price * liqParam.liquidationPricePenaltyDiscount / liqParam.globalBase;
+
+        collatPenaltyBal = reserveBal * liqParam.collateralPenalty / liqParam.globalBase;
+
+        uint amountTemp = collatPenaltyBal * liqDiscountedPrice / 10 ** 8;
+
+        uint decimalDiff;
+
+        if(reserveAssetDecimals > backedAssetDecimals) {
+            decimalDiff = reserveAssetDecimals - backedAssetDecimals;
+            amountTemp = amountTemp / 10 ** decimalDiff;
+        } else {
+            decimalDiff = backedAssetDecimals - reserveAssetDecimals;
+            amountTemp = amountTemp * 10 ** decimalDiff;
+        }
+
+        costofLiquidation = amountTemp;
+    }
+
+    function _executeLiquidation(
+        address user,
+        uint reserveTokenID,
+        uint backedTokenID,
+        uint costofLiquidation,
+        uint collatPenaltyBal
+    ) internal {
+        // Transfer of Assets.
+
+        // BackedAsset to this contract.
+        IERC20Extension(backedAsset).transferFrom(msg.sender, address(this), costofLiquidation);
+        // Penalty collateral from liquidated user to liquidator.
+        IAssetsAccountant accountant = IAssetsAccountant(assetsAccountant);
+        accountant.safeTransferFrom(user, msg.sender, reserveTokenID, collatPenaltyBal, "");
+
+        // Burning tokens and debt.
+        // Burn 'costofLiquidation' debt amount from liquidated user in {AssetsAccountant}
+        accountant.burn(user, backedTokenID, costofLiquidation);
+
+        // Burn the received backedAsset tokens.
+        IERC20Extension bAsset = IERC20Extension(backedAsset);
+        bAsset.burn(address(this), costofLiquidation);
+
+        // Emit event
+        emit Liquidation(user, msg.sender, collatPenaltyBal);
     }
 }

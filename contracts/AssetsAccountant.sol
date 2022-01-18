@@ -37,6 +37,8 @@ contract AssetsAccountantState {
 
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
+    bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
+
 }
 
 contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
@@ -56,6 +58,7 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
         _setupRole(URI_SETTER_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
         _setupRole(BURNER_ROLE, msg.sender);
+        _setupRole(LIQUIDATOR_ROLE, msg.sender);
     }
 
     /**  
@@ -205,13 +208,8 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
         uint256 id,
         uint256 amount,
         bytes calldata data
-    ) public pure override {
-        from;
-        to;
-        id;
-        amount;
-        data;
-        revert("Non-transferable!");
+    ) public override onlyRole(LIQUIDATOR_ROLE) {
+        _safeTransferFrom(from, to, id, amount, data);
     }
 
     /**
