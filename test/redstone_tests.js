@@ -12,14 +12,14 @@ const {
   syncTime
 } = require("./utils.js");
 
-describe("efiat Sytem Tests", function () {
+describe("eFiat Sytem Tests", function () {
 
   // Global Test variables
   let accounts;
   let accountant;
   let coinhouse;
   let reservehouse;
-  let fiat;
+  let xoc;
   let mockweth;
 
   let rid;
@@ -37,7 +37,7 @@ describe("efiat Sytem Tests", function () {
     accountant = loadedContracts.accountant;
     coinhouse = loadedContracts.w_coinhouse;
     reservehouse = loadedContracts.w_reservehouse;
-    fiat = loadedContracts.fiat;
+    xoc = loadedContracts.xoc;
     mockweth = loadedContracts.mockweth;
 
     rid = await reservehouse.reserveTokenID();
@@ -84,7 +84,7 @@ describe("efiat Sytem Tests", function () {
     let localcoinhouse = coinhouse.connect(accounts[1]);
     localcoinhouse = WrapperBuilder.wrapLite(localcoinhouse).usingPriceFeed("redstone-stocks");
     await localcoinhouse.mintCoin(mockweth.address,reservehouse.address,mintAmount);
-    expect(await fiat.balanceOf(accounts[1].address)).to.eq(mintAmount);
+    expect(await xoc.balanceOf(accounts[1].address)).to.eq(mintAmount);
   });
 
   it("Payback in HouseOfCoin", async () => {
@@ -100,8 +100,8 @@ describe("efiat Sytem Tests", function () {
     let localcoinhouse = coinhouse.connect(accounts[1]);
     localcoinhouse = WrapperBuilder.wrapLite(localcoinhouse).usingPriceFeed("redstone-stocks");
     await localcoinhouse.mintCoin(mockweth.address,reservehouse.address,mintAmount);
-    expect(await fiat.balanceOf(accounts[1].address)).to.eq(mintAmount);
+    expect(await xoc.balanceOf(accounts[1].address)).to.eq(mintAmount);
     await localcoinhouse.paybackCoin(bid,mintAmount);
-    expect(await fiat.balanceOf(accounts[1].address)).to.eq(0);
+    expect(await xoc.balanceOf(accounts[1].address)).to.eq(0);
   });
 });
