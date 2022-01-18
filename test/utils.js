@@ -28,11 +28,7 @@ const deploy_setup = async () => {
     // 2.- Initialize house contracts and register with accountant
     await coinhouse.initialize(
         xoc.address,
-        accountant.address,
-        100,
-        100,
-        95,
-        10
+        accountant.address
     );
     await reservehouse.initialize(
         mockweth.address,
