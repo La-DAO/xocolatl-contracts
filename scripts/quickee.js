@@ -1,6 +1,3 @@
-let accountant = await AssetsAccountant.deploy();
-undefined
-
 // Rinkeby deployment 1-30-2022
 const accountant = await ethers.getContractAt('AssetsAccountant', '0xf487Ff2A5430eFBdC4B15e2735d9D83e3508F317');
 const coinhouse = await ethers.getContractAt('HouseOfCoin', '0xF3A1C091f110F7b931c02d3603ec8bC771182466');
