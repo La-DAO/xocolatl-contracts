@@ -69,18 +69,18 @@ switch (forkNetwork) {
     forkUrl = mainnetUrl;
 }
 
-  function mnemonic() {
-    try {
-      return fs.readFileSync("./mnemonic.txt").toString().trim();
-    } catch (e) {
-      if (defaultNetwork !== "localhost") {
-        console.log(
-          "☢️ WARNING: No mnemonic file created for a deploy account. Try `yarn run generate` and then `yarn run account`."
-        );
-      }
+function mnemonic() {
+  try {
+    return fs.readFileSync("./mnemonic.txt").toString().trim();
+  } catch (e) {
+    if (defaultNetwork !== "localhost") {
+      console.log(
+        "☢️ WARNING: No mnemonic file created for a deploy account. Try `yarn run generate` and then `yarn run account`."
+      );
     }
-    return "";
   }
+  return "";
+}
 
 //
 // Identify in .env the netowrk to interact for deployments or scripts:
@@ -109,38 +109,44 @@ module.exports = {
     },
     mainnet: {
       url: mainnetUrl,
-      accounts: process.env.PRIVATE_KEY ? 
-        [process.env.PRIVATE_KEY] : 
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${process.env.INFURA_ID}`,
-      accounts: process.env.PRIVATE_KEY ? 
-        [process.env.PRIVATE_KEY] : 
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`,
-      accounts: process.env.PRIVATE_KEY ? 
-        [process.env.PRIVATE_KEY] : 
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
+    },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
     fantom: {
       url: `https://rpc.ftm.tools/`,
-      accounts: process.env.PRIVATE_KEY ? 
-        [process.env.PRIVATE_KEY] : 
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
     bsc: {
       url: `https://bsc-dataseed.binance.org/`,
-      accounts: process.env.PRIVATE_KEY ? 
-        [process.env.PRIVATE_KEY] : 
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
     polygon: {
       url: `https://rpc-mainnet.maticvigil.com/`,
-      accounts: process.env.PRIVATE_KEY ? 
-        [process.env.PRIVATE_KEY] : 
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
   },

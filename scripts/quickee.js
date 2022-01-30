@@ -1,26 +1,9 @@
 let accountant = await AssetsAccountant.deploy();
 undefined
-> accountant.address
-'0xd9c5D3B12719fdA2d8c2CCA48FD3D92123c5D1CC'
-> let coinhouse = await HouseOfCoin.deploy();
-undefined
-> coinhouse.address
-'0x3c3714b6Ac979241a71717c0A89e7226988141A5'
-> let reservehouse = await HouseOfReserve.deploy();
-undefined
-> reservehouse.address
-'0x8325CE385A2Fbc320f55F6C7bbe267532bF1F89B'
-> let xoc = await Xocolatl.deploy();
-undefined
-> xoc.address
-'0x2FeE11961a58b36E766a74CC9c76A847E002FEAa'
-> let mockweth = await MockWETH.deploy();
-undefined
-> mockweth.address
-'0x053DA244AaaF94A071d9e3E73141e5249FE9251D'
 
-const accountant = await ethers.getContractAt('AssetsAccountant', '0xd9c5D3B12719fdA2d8c2CCA48FD3D92123c5D1CC');
-const coinhouse = await ethers.getContractAt('HouseOfCoin', '0x3c3714b6Ac979241a71717c0A89e7226988141A5');
-const reservehouse = await ethers.getContractAt('HouseOfReserve', '0x8325CE385A2Fbc320f55F6C7bbe267532bF1F89B');
-const xoc = await ethers.getContractAt('Xocolatl', '0x2FeE11961a58b36E766a74CC9c76A847E002FEAa');
-const mockweth = await ethers.getContractAt('MockWETH', '0x053DA244AaaF94A071d9e3E73141e5249FE9251D');
+// Rinkeby deployment 1-30-2022
+const accountant = await ethers.getContractAt('AssetsAccountant', '0xf487Ff2A5430eFBdC4B15e2735d9D83e3508F317');
+const coinhouse = await ethers.getContractAt('HouseOfCoin', '0xF3A1C091f110F7b931c02d3603ec8bC771182466');
+const reservehouse = await ethers.getContractAt('HouseOfReserve', '0x62c4014a76e21C046fc5196D81E8cD7e04C5f122');
+const xoc = await ethers.getContractAt('Xocolatl', '0x2872332fB3619F5fDbAeb04F4e3Bd8e42AF8fD04');
+const rinkebyweth = await ethers.getContractAt('MockWETH', '0xDf032Bc4B9dC2782Bb09352007D4C57B75160B15');
