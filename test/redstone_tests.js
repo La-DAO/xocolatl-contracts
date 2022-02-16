@@ -71,6 +71,17 @@ describe("Xoc System Tests", function () {
     expect(await accountant.balanceOf(accounts[1].address, rid)).to.eq(depositAmount);
   });
 
+  it("Deposit in HouseOfReserve, sending native-token directly", async () => {
+    const depositAmount = ethers.utils.parseUnits("50", 18);
+    // This method does automatic wrapping to WETH-token-type and deposit.
+    const tx = {
+      to: reservehouse.address,
+      value: depositAmount
+    }
+    await accounts[1].sendTransaction(tx);
+    expect(await accountant.balanceOf(accounts[1].address, rid)).to.eq(depositAmount);
+  });
+
   it("Mint in HouseOfCoin", async () => {
     const depositAmount = ethers.utils.parseUnits("50", 18);
     const mintAmount = ethers.utils.parseUnits("2500", 18);
@@ -105,7 +116,7 @@ describe("Xoc System Tests", function () {
     expect(await xoc.balanceOf(accounts[1].address)).to.eq(0);
   });
 
-  it.only("Withdraw in HouseOfReserve", async () => {
+  it("Withdraw in HouseOfReserve", async () => {
     const depositAmount = ethers.utils.parseUnits("50", 18);
     const mintAmount = ethers.utils.parseUnits("2500", 18);
     await mockweth.connect(accounts[1]).deposit({ value: depositAmount });
