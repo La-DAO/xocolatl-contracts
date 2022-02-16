@@ -14,6 +14,7 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./interfaces/IWETH.sol";
 import "./interfaces/IAssetsAccountant.sol";
 import "redstone-evm-connector/lib/contracts/message-based/PriceAware.sol";
 
@@ -46,6 +47,8 @@ contract HouseOfReserveState {
       uint denominator;
   }
 
+  address public WETH;
+
   address public reserveAsset;
 
   address public backedAsset;
@@ -59,7 +62,6 @@ contract HouseOfReserveState {
   IAssetsAccountant public assetsAccountant;
 
   bytes32 public constant HOUSE_TYPE = keccak256("RESERVE_HOUSE");
-
 }
 
 contract HouseOfReserve is Initializable, AccessControl, PriceAware, HouseOfReserveState {
@@ -73,11 +75,13 @@ contract HouseOfReserve is Initializable, AccessControl, PriceAware, HouseOfRese
   function initialize(
     address _reserveAsset,
     address _backedAsset,
-    address _assetsAccountant
+    address _assetsAccountant,
+    address _WETH
   ) public initializer() {
 
     reserveAsset = _reserveAsset;
     backedAsset = _backedAsset;
+    WETH = _WETH;
     reserveTokenID = uint(keccak256(abi.encodePacked(reserveAsset, backedAsset, "collateral")));
     backedTokenID = uint(keccak256(abi.encodePacked(reserveAsset, backedAsset, "backedAsset")));
     collateralRatio.numerator = 150;
@@ -104,11 +108,8 @@ contract HouseOfReserve is Initializable, AccessControl, PriceAware, HouseOfRese
     // Transfer reserveAsset amount to this contract.
     IERC20(reserveAsset).transferFrom(msg.sender, address(this), amount);
 
-    // Mint in AssetsAccountant received amount.
-    assetsAccountant.mint(msg.sender, reserveTokenID, amount, "");
-    
-    // Emit deposit event.
-    emit UserDeposit(msg.sender, reserveAsset, amount);
+    // Continue deposit in internal function
+    _deposit(msg.sender, amount);
   }
 
   /**
@@ -196,6 +197,19 @@ contract HouseOfReserve is Initializable, AccessControl, PriceAware, HouseOfRese
   emit UserWithdraw(msg.sender, reserveAsset, amount);
   }
 
+  // Internal Functions
+
+  /**
+   * @dev Internal function that completes the 'deposit' function.
+   */
+  function _deposit(address user, uint amount) internal {
+    // Mint in AssetsAccountant received amount.
+    assetsAccountant.mint(user, reserveTokenID, amount, "");
+    
+    // Emit deposit event.
+    emit UserDeposit(user, reserveAsset, amount);
+  }
+
   /**
    * @dev  Internal function to check max withdrawal amount.
    */
@@ -245,5 +259,19 @@ contract HouseOfReserve is Initializable, AccessControl, PriceAware, HouseOfRese
   ) internal view returns (uint reserveBal, uint mintedCoinBal) {
       reserveBal = IERC1155(address(assetsAccountant)).balanceOf(user, _reservesTokenID);
       mintedCoinBal = IERC1155(address(assetsAccountant)).balanceOf(user, _bAssetRTokenID);
+  }
+
+  /**
+   * @dev  Handle direct sending of native-token.
+   */
+  receive() external payable {
+    uint preBalance = IERC20(WETH).balanceOf(address(this));
+    if ( reserveAsset == WETH ) {
+      IWETH(WETH).deposit{value: msg.value}();
+      require(IERC20(WETH).balanceOf(address(this)) == preBalance + msg.value, "deposit failed!");
+      _deposit(msg.sender, msg.value);
+    } else {
+      revert("Wrong reserveAsset!");
+    }
   }
 }
