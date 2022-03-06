@@ -11,3 +11,6 @@ artifacts
 #Text files
 *.txt
 
+#Script output files
+scripts/output/*.json
+
