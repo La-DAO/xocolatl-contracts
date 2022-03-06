@@ -23,12 +23,12 @@ contract HouseOfCoinState {
     /**
      * @dev Log when a user is mints coin.
      * @param user Address of user that minted coin.
-     * @param reservetokenID Token Id number of asset in {AssetsAccountant}.
+     * @param backedTokenId Token Id number of asset in {AssetsAccountant}.
      * @param amount minted.
      */
     event CoinMinted(
         address indexed user,
-        uint256 indexed reservetokenID,
+        uint256 indexed backedTokenId,
         uint256 amount
     );
 
@@ -188,7 +188,7 @@ contract HouseOfCoin is
         bAsset.mint(msg.sender, amount);
 
         // Emit Event
-        emit CoinMinted(msg.sender, reserveTokenID, amount);
+        emit CoinMinted(msg.sender, backedTokenID, amount);
     }
 
     /**
