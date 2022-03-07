@@ -23,24 +23,24 @@ contract HouseOfCoinState {
     /**
      * @dev Log when a user is mints coin.
      * @param user Address of user that minted coin.
-     * @param backedtokenID Token Id number of asset in {AssetsAccountant}.
+     * @param backedTokenId Token Id number of asset in {AssetsAccountant}.
      * @param amount minted.
      */
     event CoinMinted(
         address indexed user,
-        uint256 indexed backedtokenID,
+        uint256 indexed backedTokenId,
         uint256 amount
     );
 
     /**
      * @dev Log when a user paybacks minted coin.
      * @param user Address of user that minted coin.
-     * @param backedtokenID Token Id number of asset in {AssetsAccountant}.
+     * @param reservetokenID Token Id number of asset in {AssetsAccountant}.
      * @param amount payback.
      */
     event CoinPayback(
         address indexed user,
-        uint256 indexed backedtokenID,
+        uint256 indexed reservetokenID,
         uint256 amount
     );
 
