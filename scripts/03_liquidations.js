@@ -42,8 +42,8 @@ const getHistoricCoinMinters = async function (coinhouse, backedTokenID) {
         console.log("...CoinMinted events saved successfully");
       }
     });
-    const filteredbyBackedToken = savedData.filter(
-      e => backedTokenID.eq(ethers.BigNumber.from(e.backedTokenID.hex))
+    const filteredbyBackedToken = data.filter(
+      e => backedTokenID.eq(e.backedTokenID)
     );
     return removeDuplicates(filteredbyBackedToken.map(e => e.user));
   }
@@ -169,7 +169,6 @@ async function main() {
 
   const historicMinters = await getHistoricCoinMinters(coinhouse, bid);
   const validminters = await validateMinters(historicMinters, accountant, bid);
-
   const liquidatableUsers = await checkLiquidatable(validminters, coinhouse, liquidator, weth);
 
   if (liquidatableUsers.length > 0) {
