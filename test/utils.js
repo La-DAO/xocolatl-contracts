@@ -33,7 +33,8 @@ const deploy_setup = async () => {
   await reservehouse.initialize(
     mockweth.address,
     xoc.address,
-    accountant.address
+    accountant.address,
+    mockweth.address
   );
   await accountant.registerHouse(
     coinhouse.address,

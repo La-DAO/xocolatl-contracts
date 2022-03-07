@@ -1,8 +1,8 @@
 ## Que es Xocolatl ? $XOC
 
 Xocolatl ha surgido para ayudar a los mexicanos a transicionar a la web3.
-Xocolatl es un protocolo decentralizado para mintear(acuñar) tokens ERC20 con paridad 1:1 al peso mexicano (MXN). 
-Los contribuidores a Xocolatl estan experimentando con herramientas web3 para esparcer el mensaje y ayudar a México ha integrarse a la economía decentralizada popularmente conocida como DeFi.
+Xocolatl es un protocolo decentralizado para acuñar tokens ERC20 con paridad 1:1 al peso mexicano (MXN). 
+Los contribuidores de Xocolatl estamos contribuyendo con las herramientas web3 para ayudar a México ha integrarse a la economía decentralizada popularmente conocida como DeFi.
 
 ### México no conoce DeFi
 

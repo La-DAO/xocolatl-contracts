@@ -57,6 +57,8 @@ switch (forkNetwork) {
   case 'kovan':
     forkUrl = `https://kovan.infura.io/v3/${process.env.INFURA_ID}`;
     break;
+  case 'rinkeby':
+    forkUrl = `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`;
   case 'ropsten':
     forkUrl = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
   case 'fantom':
