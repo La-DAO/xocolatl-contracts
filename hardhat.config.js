@@ -4,6 +4,7 @@ require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
+require('hardhat-contract-sizer');
 
 const fs = require("fs");
 
@@ -93,7 +94,7 @@ const defaultNetwork = !process.env.DEFAULT_NETWORK ? localhost : process.env.DE
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.4",
+  solidity: "0.8.13",
   networks: {
     hardhat: {
       forking: {
