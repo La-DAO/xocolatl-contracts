@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.13;
 
 /**
 * @title Assets accountant contract.
@@ -29,7 +29,7 @@ contract AssetsAccountantState {
     mapping(address => bool) internal _isARegisteredHouse;
 
     // Contract Token name
-    string internal constant _name = 'eFIAT AssetAccountant';
+    string internal constant NAME = "AssetAccountant";
 
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
 
@@ -134,7 +134,7 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
      * @dev Returns _name.
      */
     function name() public pure returns (string memory) {
-        return _name;
+        return NAME;
     }
 
     /**  

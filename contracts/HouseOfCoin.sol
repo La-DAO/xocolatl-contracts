@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.13;
 
 /**
  * @title The house Of coin minting contract.
@@ -14,12 +14,13 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "./interfaces/IERC20Extension.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IAssetsAccountant.sol";
-import "contracts/interfaces/IAssetsAccountantState.Sol";
+import "./interfaces/IAssetsAccountantState.Sol";
 import "./interfaces/IHouseOfReserveState.sol";
 import "redstone-evm-connector/lib/contracts/message-based/PriceAware.sol";
 
 contract HouseOfCoinState {
     // HouseOfCoinMinting Events
+
     /**
      * @dev Log when a user is mints coin.
      * @param user Address of user that minted coin.
@@ -84,7 +85,7 @@ contract HouseOfCoinState {
 
     address public assetsAccountant;
 
-    LiquidationParameters public liqParam;
+    LiquidationParameters internal _liqParam;
 }
 
 contract HouseOfCoin is
@@ -107,17 +108,17 @@ contract HouseOfCoin is
         assetsAccountant = _assetsAccountant;
 
         // Defines all LiquidationParameters as base 100 decimal numbers.
-        liqParam.globalBase = 100;
+        _liqParam.globalBase = 100;
         // Margin call when health ratio = 1 or below. This means maxMintPower = mintedDebt, accounting the collateralization factors.
-        liqParam.marginCallThreshold = 100;
+        _liqParam.marginCallThreshold = 100;
         // Liquidation starts health ratio = 0.95 or below.
-        liqParam.liquidationThreshold = 95;
+        _liqParam.liquidationThreshold = 95;
         // User's unhealthy position sells collateral at penalty discount of 10%, bring them back to a good HealthRatio.
-        liqParam.liquidationPricePenaltyDiscount = 10;
+        _liqParam.liquidationPricePenaltyDiscount = 10;
         // Percentage amount of unhealthy user's collateral that will be sold to bring user's to good HealthRatio.
-        liqParam.collateralPenalty = 75;
+        _liqParam.collateralPenalty = 75;
 
-        // Internal function that will transform liqParam, compatible with backedAsset decimals
+        // Internal function that will transform _liqParam, compatible with backedAsset decimals
         _transformToBackAssetDecimalBase();
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -135,7 +136,7 @@ contract HouseOfCoin is
         address reserveAsset,
         address houseOfReserve,
         uint256 amount
-    ) public {
+    ) public returns (bool success) {
         IHouseOfReserveState hOfReserve = IHouseOfReserveState(houseOfReserve);
         IERC20Extension bAsset = IERC20Extension(backedAsset);
 
@@ -144,11 +145,8 @@ contract HouseOfCoin is
 
         // Validate reserveAsset is active with {AssetsAccountant} and check houseOfReserve inputs.
         require(
-            IAssetsAccountantState(assetsAccountant).houseOfReserves(
-                reserveTokenID
-            ) !=
-                address(0) &&
-                hOfReserve.reserveAsset() == reserveAsset,
+            IAssetsAccountantState(assetsAccountant).houseOfReserves(reserveTokenID) != address(0) &&
+            hOfReserve.reserveAsset() == reserveAsset,
             "Not valid reserveAsset!"
         );
 
@@ -189,6 +187,7 @@ contract HouseOfCoin is
 
         // Emit Event
         emit CoinMinted(msg.sender, backedTokenID, amount);
+        success = true;
     }
 
     /**
@@ -266,10 +265,10 @@ contract HouseOfCoin is
         );
 
         // User on marginCall
-        if (healthRatio <= liqParam.marginCallThreshold) {
+        if (healthRatio <= _liqParam.marginCallThreshold) {
             emit MarginCall(userToLiquidate, backedAsset, reserveAsset);
             // User at liquidation level
-            if (healthRatio <= liqParam.liquidationThreshold) {
+            if (healthRatio <= _liqParam.liquidationThreshold) {
                 // check liquidator ERC20 approval
                 (
                     uint256 costofLiquidation,
@@ -404,6 +403,13 @@ contract HouseOfCoin is
     }
 
     /**
+     * @dev Returns the _liqParams as a struct
+     */
+     function getLiqParams() public view returns (LiquidationParameters memory) {
+         return _liqParam;
+     }
+
+    /**
      * @dev Function to call redstone oracle price.
      * @dev Must be called according to 'redstone-evm-connector' documentation.
      */
@@ -421,7 +427,7 @@ contract HouseOfCoin is
      * @param reserveAsset Address of reserve asset.
      */
     function checkRemainingMintingPower(address user, address reserveAsset)
-        external
+        public
         view
         returns (uint256)
     {
@@ -485,7 +491,7 @@ contract HouseOfCoin is
         uint256 backedTokenID,
         IHouseOfReserveState.Factor memory collatRatio,
         uint256 price
-    ) public view returns (uint256) {
+    ) internal view returns (uint256) {
         // Need balances for tokenIDs of both reserves and backed asset in {AssetsAccountant}
         (uint256 reserveBal, uint256 mintedCoinBal) = _checkBalances(
             user,
@@ -539,37 +545,37 @@ contract HouseOfCoin is
     }
 
     /**
-     * @dev  Internal function that transforms liqParams to backedAsset decimal base.
+     * @dev  Internal function that transforms _liqParams to backedAsset decimal base.
      */
     function _transformToBackAssetDecimalBase() internal {
         require(backedAssetDecimals > 0, "No backedAsset decimals!");
         require(
-            liqParam.globalBase > 0 &&
-                liqParam.marginCallThreshold > 0 &&
-                liqParam.liquidationThreshold > 0 &&
-                liqParam.liquidationPricePenaltyDiscount > 0 &&
-                liqParam.collateralPenalty > 0,
-            "Empty liqParam!"
+            _liqParam.globalBase > 0 &&
+                _liqParam.marginCallThreshold > 0 &&
+                _liqParam.liquidationThreshold > 0 &&
+                _liqParam.liquidationPricePenaltyDiscount > 0 &&
+                _liqParam.collateralPenalty > 0,
+            "Empty _liqParam!"
         );
 
-        LiquidationParameters memory _liqParamTemp;
+        LiquidationParameters memory ltemp;
 
-        _liqParamTemp.globalBase = 10**backedAssetDecimals;
-        _liqParamTemp.marginCallThreshold =
-            (liqParam.marginCallThreshold * _liqParamTemp.globalBase) /
-            liqParam.globalBase;
-        _liqParamTemp.liquidationThreshold =
-            (liqParam.liquidationThreshold * _liqParamTemp.globalBase) /
-            liqParam.globalBase;
-        _liqParamTemp.liquidationPricePenaltyDiscount =
-            (liqParam.liquidationPricePenaltyDiscount *
-                _liqParamTemp.globalBase) /
-            liqParam.globalBase;
-        _liqParamTemp.collateralPenalty =
-            (liqParam.collateralPenalty * _liqParamTemp.globalBase) /
-            liqParam.globalBase;
+        ltemp.globalBase = 10**backedAssetDecimals;
+        ltemp.marginCallThreshold =
+            (_liqParam.marginCallThreshold * ltemp.globalBase) /
+            _liqParam.globalBase;
+        ltemp.liquidationThreshold =
+            (_liqParam.liquidationThreshold * ltemp.globalBase) /
+            _liqParam.globalBase;
+        ltemp.liquidationPricePenaltyDiscount =
+            (_liqParam.liquidationPricePenaltyDiscount *
+                ltemp.globalBase) /
+            _liqParam.globalBase;
+        ltemp.collateralPenalty =
+            (_liqParam.collateralPenalty * ltemp.globalBase) /
+            _liqParam.globalBase;
 
-        liqParam = _liqParamTemp;
+        _liqParam = ltemp;
     }
 
     function _computeUserHealthRatio(
@@ -585,7 +591,7 @@ contract HouseOfCoin is
         uint256 maxMintableAmount = (reserveBalreducedByFactor * price) / 1e8;
 
         // Compute health ratio
-        healthRatio = (maxMintableAmount * liqParam.globalBase) / mintedCoinBal;
+        healthRatio = (maxMintableAmount * _liqParam.globalBase) / mintedCoinBal;
     }
 
     function _computeCostOfLiquidation(
@@ -597,13 +603,13 @@ contract HouseOfCoin is
         view
         returns (uint256 costofLiquidation, uint256 collatPenaltyBal)
     {
-        uint256 discount = liqParam.globalBase -
-            liqParam.liquidationPricePenaltyDiscount;
-        uint256 liqDiscountedPrice = (price * discount) / liqParam.globalBase;
+        uint256 discount = _liqParam.globalBase -
+            _liqParam.liquidationPricePenaltyDiscount;
+        uint256 liqDiscountedPrice = (price * discount) / _liqParam.globalBase;
 
         collatPenaltyBal =
-            (reserveBal * liqParam.collateralPenalty) /
-            liqParam.globalBase;
+            (reserveBal * _liqParam.collateralPenalty) /
+            _liqParam.globalBase;
 
         uint256 amountTemp = (collatPenaltyBal * liqDiscountedPrice) / 10**8;
 
