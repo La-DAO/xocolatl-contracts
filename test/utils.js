@@ -36,6 +36,8 @@ const deploy_setup = async () => {
     mockweth.address,
     xoc.address,
     accountant.address,
+    "MXNUSD=X",
+    "ETH",
     mockweth.address
   );
   await accountant.registerHouse(
@@ -66,6 +68,8 @@ const deploy_setup = async () => {
   await txch.wait();
 
   await syncTime();
+
+  console.log("complete utils");
 
   return {
     accountant,

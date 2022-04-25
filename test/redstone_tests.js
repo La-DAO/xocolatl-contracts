@@ -54,11 +54,11 @@ describe("Xoc System Tests", function () {
 
   it("Oracle price feed tests, should return a price value", async () => {
     await syncTime();
-    const price = await coinhouse.redstoneGetLastPrice();
+    const price = await coinhouse.getLastPrice();
     await expect(price).to.be.gt(0);
 
     await syncTime();
-    const price2 = await reservehouse.redstoneGetLastPrice();
+    const price2 = await reservehouse.getLastPrice();
     await expect(price2).to.be.gt(0);
   });
 
