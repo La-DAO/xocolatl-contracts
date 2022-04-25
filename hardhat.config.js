@@ -52,26 +52,6 @@ const mainnetUrl = `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`;
 // Configure fork network, by defining in .env file 
 const forkNetwork = process.env.FORK_NETWORK;
 
-let forkUrl = '';
-
-switch (forkNetwork) {
-  case 'kovan':
-    forkUrl = `https://kovan.infura.io/v3/${process.env.INFURA_ID}`;
-    break;
-  case 'rinkeby':
-    forkUrl = `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`;
-  case 'ropsten':
-    forkUrl = `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`;
-  case 'fantom':
-    forkUrl = 'https://rpc.ftm.tools/';
-  case 'polygon':
-    forkUrl = 'https://rpc-mainnet.maticvigil.com/';
-  case 'bsc':
-    forkUrl = 'https://bsc-dataseed.binance.org/';
-  default:
-    forkUrl = mainnetUrl;
-}
-
 function mnemonic() {
   try {
     return fs.readFileSync("./mnemonic.txt").toString().trim();
@@ -96,14 +76,8 @@ const defaultNetwork = !process.env.DEFAULT_NETWORK ? localhost : process.env.DE
 module.exports = {
   solidity: "0.8.13",
   networks: {
-    hardhat: {
-      forking: {
-        url: forkUrl,
-        // blockNumber: 12962882, //before London
-      },
-    },
     localhost: {
-      url: "http://localhost:8545",
+      url: "http://localhost:8545/",
       timeout: 2000000,
       /*
         no mnemonic here? it will just use account 0 of the hardhat node to deploy
@@ -122,32 +96,8 @@ module.exports = {
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
-    ropsten: {
-      url: `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`,
-      accounts: process.env.PRIVATE_KEY ?
-        [process.env.PRIVATE_KEY] :
-        { mnemonic: mnemonic() },
-    },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
-      accounts: process.env.PRIVATE_KEY ?
-        [process.env.PRIVATE_KEY] :
-        { mnemonic: mnemonic() },
-    },
-    fantom: {
-      url: `https://rpc.ftm.tools/`,
-      accounts: process.env.PRIVATE_KEY ?
-        [process.env.PRIVATE_KEY] :
-        { mnemonic: mnemonic() },
-    },
-    bsc: {
-      url: `https://bsc-dataseed.binance.org/`,
-      accounts: process.env.PRIVATE_KEY ?
-        [process.env.PRIVATE_KEY] :
-        { mnemonic: mnemonic() },
-    },
-    polygon: {
-      url: `https://rpc-mainnet.maticvigil.com/`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },

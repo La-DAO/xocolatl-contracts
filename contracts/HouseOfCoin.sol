@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IAssetsAccountant.sol";
 import "./interfaces/IAssetsAccountantState.Sol";
 import "./interfaces/IHouseOfReserveState.sol";
-import "redstone-evm-connector/lib/contracts/message-based/PriceAware.sol";
+import "./abstract/OracleHouse.sol";
 
 contract HouseOfCoinState {
     // HouseOfCoinMinting Events
@@ -91,7 +91,7 @@ contract HouseOfCoinState {
 contract HouseOfCoin is
     Initializable,
     AccessControl,
-    PriceAware,
+    OracleHouse,
     HouseOfCoinState
 {
     /**
@@ -99,10 +99,12 @@ contract HouseOfCoin is
      * @param _backedAsset ERC20 address of the asset type of coin to be minted in this contract.
      * @param _assetsAccountant Address of the {AssetsAccountant} contract.
      */
-    function initialize(address _backedAsset, address _assetsAccountant)
-        public
-        initializer
-    {
+    function initialize(
+        address _backedAsset,
+        address _assetsAccountant,
+        string memory _tickerUsdFiat,
+        string memory _tickerReserveAsset
+    ) public initializer {
         backedAsset = _backedAsset;
         backedAssetDecimals = IERC20Extension(backedAsset).decimals();
         assetsAccountant = _assetsAccountant;
@@ -121,7 +123,34 @@ contract HouseOfCoin is
         // Internal function that will transform _liqParam, compatible with backedAsset decimals
         _transformToBackAssetDecimalBase();
 
+        _oracleHouse_initialize();
+
+        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /**
+     * @notice  See '_setTickers()' in {OracleHouse}.
+     * @dev restricted to admin only.
+     */
+    function setTickers(
+        string memory _tickerUsdFiat,
+        string memory _tickerReserveAsset
+    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+    }
+
+    /**
+     * @notice  See '_authorizeSigner()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function authorizeSigner(address newtrustedSigner)
+        external
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _authorizeSigner(newtrustedSigner);
     }
 
     /**
@@ -145,8 +174,11 @@ contract HouseOfCoin is
 
         // Validate reserveAsset is active with {AssetsAccountant} and check houseOfReserve inputs.
         require(
-            IAssetsAccountantState(assetsAccountant).houseOfReserves(reserveTokenID) != address(0) &&
-            hOfReserve.reserveAsset() == reserveAsset,
+            IAssetsAccountantState(assetsAccountant).houseOfReserves(
+                reserveTokenID
+            ) !=
+                address(0) &&
+                hOfReserve.reserveAsset() == reserveAsset,
             "Not valid reserveAsset!"
         );
 
@@ -159,7 +191,7 @@ contract HouseOfCoin is
         // Get inputs for checking minting power, collateralization factor and oracle price
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
             .collateralRatio();
-        uint256 price = redstoneGetLastPrice();
+        uint256 price = getLatestPrice();
 
         // Checks minting power of msg.sender.
         uint256 mintingPower = _checkRemainingMintingPower(
@@ -252,7 +284,7 @@ contract HouseOfCoin is
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
-        uint256 latestPrice = redstoneGetLastPrice();
+        uint256 latestPrice = getLatestPrice();
 
         uint256 reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
 
@@ -332,7 +364,7 @@ contract HouseOfCoin is
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
-        uint256 latestPrice = redstoneGetLastPrice();
+        uint256 latestPrice = getLatestPrice();
 
         return
             _computeUserHealthRatio(
@@ -371,7 +403,7 @@ contract HouseOfCoin is
 
         require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
 
-        uint256 latestPrice = redstoneGetLastPrice();
+        uint256 latestPrice = getLatestPrice();
 
         uint256 reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
 
@@ -405,20 +437,16 @@ contract HouseOfCoin is
     /**
      * @dev Returns the _liqParams as a struct
      */
-     function getLiqParams() public view returns (LiquidationParameters memory) {
-         return _liqParam;
-     }
+    function getLiqParams() public view returns (LiquidationParameters memory) {
+        return _liqParam;
+    }
 
     /**
-     * @dev Function to call redstone oracle price.
+     * @dev Call latest price.
      * @dev Must be called according to 'redstone-evm-connector' documentation.
      */
-    function redstoneGetLastPrice() public view returns (uint256) {
-        uint256 usdfiat = getPriceFromMsg(bytes32("MXNUSD=X"));
-        uint256 usdeth = getPriceFromMsg(bytes32("ETH"));
-        require(usdfiat != 0 && usdeth != 0, "oracle return zero!");
-        uint256 fiateth = (usdeth * 1e8) / usdfiat;
-        return fiateth;
+    function getLatestPrice() public view returns (uint256 price) {
+        price = _getLatestPrice();
     }
 
     /**
@@ -450,7 +478,7 @@ contract HouseOfCoin is
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
-        uint256 latestPrice = redstoneGetLastPrice();
+        uint256 latestPrice = getLatestPrice();
 
         return
             _checkRemainingMintingPower(
@@ -568,8 +596,7 @@ contract HouseOfCoin is
             (_liqParam.liquidationThreshold * ltemp.globalBase) /
             _liqParam.globalBase;
         ltemp.liquidationPricePenaltyDiscount =
-            (_liqParam.liquidationPricePenaltyDiscount *
-                ltemp.globalBase) /
+            (_liqParam.liquidationPricePenaltyDiscount * ltemp.globalBase) /
             _liqParam.globalBase;
         ltemp.collateralPenalty =
             (_liqParam.collateralPenalty * ltemp.globalBase) /
@@ -591,7 +618,9 @@ contract HouseOfCoin is
         uint256 maxMintableAmount = (reserveBalreducedByFactor * price) / 1e8;
 
         // Compute health ratio
-        healthRatio = (maxMintableAmount * _liqParam.globalBase) / mintedCoinBal;
+        healthRatio =
+            (maxMintableAmount * _liqParam.globalBase) /
+            mintedCoinBal;
     }
 
     function _computeCostOfLiquidation(
