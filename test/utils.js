@@ -28,7 +28,9 @@ const deploy_setup = async () => {
   // 2.- Initialize house contracts and register with accountant
   await coinhouse.initialize(
     xoc.address,
-    accountant.address
+    accountant.address,
+    "MXNUSD=X",
+    "ETH"
   );
   await reservehouse.initialize(
     mockweth.address,
