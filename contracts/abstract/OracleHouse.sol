@@ -17,11 +17,16 @@ abstract contract OracleHouse is PriceAware {
      **/
     event TickersChanged(string newtickerUsdFiat, string newtickerReserveAsset);
 
-    bytes32 internal tickerUsdFiat;
-    bytes32 internal tickerReserveAsset;
+    bytes32 public tickerUsdFiat;
+    bytes32 public tickerReserveAsset;
     bytes32[] internal tickers;
 
     address internal _trustedSigner;
+
+    function _oracleHouse_initialize() internal {
+      tickers.push(bytes32(0));
+      tickers.push(bytes32(0));
+    }
 
     /**
      * @notice  Checks that signer is authorized
@@ -38,11 +43,11 @@ abstract contract OracleHouse is PriceAware {
     }
 
     function _getLatestPrice() internal view virtual returns (uint256 price) {
-        uint256[] memory oraclePrices = _getPricesFromMsg(tickers);
-        uint256 usdfiat = oraclePrices[0];
-        uint256 usdReserveAsset = oraclePrices[1];
-        require(usdfiat != 0 && usdReserveAsset != 0, "oracle return zero!");
-        price = (usdReserveAsset * 1e8) / usdfiat;
+      uint256[] memory oraclePrices = _getPricesFromMsg(tickers);
+      uint256 usdfiat = oraclePrices[0];
+      uint256 usdReserveAsset = oraclePrices[1];
+      require(usdfiat != 0 && usdReserveAsset != 0, "oracle return zero!");
+      price = (usdReserveAsset * 1e8) / usdfiat;
     }
 
     /**
@@ -57,6 +62,7 @@ abstract contract OracleHouse is PriceAware {
         string memory _tickerUsdFiat,
         string memory _tickerReserveAsset
     ) internal {
+      require(tickers.length == 2, "Not initialized!");
       bytes32 ticker1;
       bytes32 ticker2;
       assembly{
@@ -65,6 +71,10 @@ abstract contract OracleHouse is PriceAware {
       }
       tickerUsdFiat = ticker1;
       tickerReserveAsset = ticker2;
+
+      tickers[0] = tickerUsdFiat;
+      tickers[1] = tickerReserveAsset;
+
       emit TickersChanged(_tickerUsdFiat, _tickerReserveAsset);
     }
 
@@ -77,7 +87,7 @@ abstract contract OracleHouse is PriceAware {
     function _authorizeSigner(address newtrustedSigner)
         internal
     {
-        require(_trustedSigner != address(0));
+        require(newtrustedSigner != address(0));
         _trustedSigner = newtrustedSigner;
         emit TrustedSignerChanged(_trustedSigner);
     }

@@ -69,8 +69,6 @@ const deploy_setup = async () => {
 
   await syncTime();
 
-  console.log("complete utils");
-
   return {
     accountant,
     w_coinhouse,

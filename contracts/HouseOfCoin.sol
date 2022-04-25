@@ -123,6 +123,8 @@ contract HouseOfCoin is
         // Internal function that will transform _liqParam, compatible with backedAsset decimals
         _transformToBackAssetDecimalBase();
 
+        _oracleHouse_initialize();
+
         _setTickers(_tickerUsdFiat, _tickerReserveAsset);
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);

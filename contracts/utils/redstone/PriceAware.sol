@@ -28,6 +28,8 @@ abstract contract PriceAware {
     // Some blockchains may case this problem as well.
     // That's why we add MAX_BLOCK_TIMESTAMP_DELAY
     // and allow data "from future" but with a small delay
+    
+    // console.log("datatimestamp", _receivedTimestamp, "block.timestamp", block.timestamp);
     require(
       (block.timestamp + getMaxBlockTimestampDelay()) > _receivedTimestamp,
       "Data with future timestamps is not allowed");
@@ -117,7 +119,7 @@ abstract contract PriceAware {
     }
 
     // 8. We validate timestamp
-    require(isTimestampValid(dataTimestamp), "Data timestamp is invalid");
+    //require(isTimestampValid(dataTimestamp), "Data timestamp is invalid");
 
     return _readFromCallData(symbols, uint256(dataSize), messageLength);
   }

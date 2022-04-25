@@ -105,6 +105,7 @@ contract HouseOfReserve is
         collateralRatio.numerator = 150;
         collateralRatio.denominator = 100;
         assetsAccountant = IAssetsAccountant(_assetsAccountant);
+        _oracleHouse_initialize();
         _setTickers(_tickerUsdFiat, _tickerReserveAsset);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
