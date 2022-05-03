@@ -32,7 +32,6 @@ task("generate", "Create a mnemonic for builder deploys", async () => {
 
   console.log("🔐 Account Generated as " + address + " and set as mnemonic in packages/hardhat");
   console.log("privateKey", newWallet.privateKey);
-  console.log("💬 Use 'yarn run account' to get more information about the deployment account.");
 
   fs.writeFileSync("./" + address + ".txt", mnemonic);
   fs.writeFileSync("./mnemonic.txt", newWallet.privateKey);
@@ -49,14 +48,17 @@ if (!process.env.INFURA_ID) {
 }
 const mainnetUrl = `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`;
 
-// Configure fork network, by defining in .env file 
-const forkNetwork = process.env.FORK_NETWORK;
+//
+// Identify in .env the netowrk to interact for deployments or scripts:
+//
+
+const dnetwork = !process.env.DEFAULT_NETWORK ? "localhost" : process.env.DEFAULT_NETWORK;
 
 function mnemonic() {
   try {
     return fs.readFileSync("./mnemonic.txt").toString().trim();
   } catch (e) {
-    if (defaultNetwork !== "localhost") {
+    if (dnetwork !== "localhost") {
       console.log(
         "☢️ WARNING: No mnemonic file created for a deploy account. Try `yarn run generate` and then `yarn run account`."
       );
@@ -65,15 +67,11 @@ function mnemonic() {
   return "";
 }
 
-//
-// Identify in .env the netowrk to interact for deployments or scripts:
-//
-const defaultNetwork = !process.env.DEFAULT_NETWORK ? localhost : process.env.DEFAULT_NETWORK;
-
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
+  defaultNetwork: dnetwork,
   solidity: "0.8.13",
   networks: {
     localhost: {
