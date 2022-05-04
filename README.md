@@ -15,3 +15,21 @@ Las Organizaciones Autonomas Decentralizadas (DAO en inglés) son cooperativas d
 
 Todos son bienvenidos a contribuir y se utiliza Coordinape para que por medio de un sistema de evaluacion social, la contribución de cada integrante en PípilaDAO sea de manera abierta, facil y transparente.
 
+### Testing Oracle instructions
+
+clone and the repo and switch to branch:
+
+dev/fix/redstone-price-troubleshooting
+
+Install dependencies:
+
+yarn install
+
+In a seperate terminal run:
+
+npx hardhat node
+
+Then run tests with:
+
+npx hardhat --network localhost test ./test/redstone_tests.js
+

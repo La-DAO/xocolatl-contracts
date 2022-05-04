@@ -52,7 +52,7 @@ describe("Xoc System Tests", function () {
     await evmRevert(evmSnapshot0);
   });
 
-  it("Tickers should be probably set-up", async () => {
+  it("Tickers should be set-up", async () => {
     const ticker1 = await coinhouse.tickerUsdFiat();
     const ticker2 = await reservehouse.tickerUsdFiat();
     const ticker3 = await coinhouse.tickerReserveAsset();
@@ -61,7 +61,7 @@ describe("Xoc System Tests", function () {
     expect(ticker3).to.eq(ticker4);
   });
 
-  it("Oracle price feed tests, should return a price value", async () => {
+  it.only("Oracle price feed tests, should return a price value", async () => {
     await syncTime();
     const price = await coinhouse.getLatestPrice();
     await expect(price).to.be.gt(0);

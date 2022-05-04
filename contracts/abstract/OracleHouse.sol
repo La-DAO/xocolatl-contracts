@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import "../utils/redstone/PriceAware.sol";
+import "hardhat/console.sol";
 
 abstract contract OracleHouse is PriceAware {
     /**
@@ -46,6 +47,8 @@ abstract contract OracleHouse is PriceAware {
       uint256[] memory oraclePrices = _getPricesFromMsg(tickers);
       uint256 usdfiat = oraclePrices[0];
       uint256 usdReserveAsset = oraclePrices[1];
+      console.log("usdfiat", usdfiat);
+      console.log("usdReserveAsset", usdReserveAsset);
       require(usdfiat != 0 && usdReserveAsset != 0, "oracle return zero!");
       price = (usdReserveAsset * 1e8) / usdfiat;
     }

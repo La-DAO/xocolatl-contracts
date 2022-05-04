@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "hardhat/console.sol";
 
 abstract contract PriceAware {
   using ECDSA for bytes32;
@@ -45,6 +46,10 @@ abstract contract PriceAware {
   }
 
   function _getPricesFromMsg(bytes32[] memory symbols) internal view returns (uint256[] memory) {
+    console.log("symbol1");
+    console.logBytes32(symbols[0]);
+    console.log("symbol2");
+    console.logBytes32(symbols[1]);
     // The structure of calldata witn n - data items:
     // The data that is signed (symbols, values, timestamp) are inside the {} brackets
     // [origina_call_data| ?]{[[symbol | 32][value | 32] | n times][timestamp | 32]}[size | 1][signature | 65]

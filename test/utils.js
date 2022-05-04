@@ -29,14 +29,14 @@ const deploy_setup = async () => {
   await coinhouse.initialize(
     xoc.address,
     accountant.address,
-    "MXNUSD=X",
+    "ETH",
     "ETH"
   );
   await reservehouse.initialize(
     mockweth.address,
     xoc.address,
     accountant.address,
-    "MXNUSD=X",
+    "ETH",
     "ETH",
     mockweth.address
   );
@@ -57,9 +57,9 @@ const deploy_setup = async () => {
   await xoc.grantRole(burner, coinhouse.address);
   await accountant.grantRole(liquidator, coinhouse.address);
 
-  // 4.- Authorize Provider
-  const w_reservehouse = WrapperBuilder.wrapLite(reservehouse).usingPriceFeed("redstone-stocks");
-  const w_coinhouse = WrapperBuilder.wrapLite(coinhouse).usingPriceFeed("redstone-stocks");
+  // 4.- Wrap the contracts in redstone-evm-connector
+  const w_reservehouse = WrapperBuilder.wrapLite(reservehouse).usingPriceFeed("redstone");
+  const w_coinhouse = WrapperBuilder.wrapLite(coinhouse).usingPriceFeed("redstone");
 
   // 5.- Authorize Redstone Provider
   const txrh = await w_reservehouse.authorizeProvider();
@@ -68,6 +68,8 @@ const deploy_setup = async () => {
   await txch.wait();
 
   await syncTime();
+
+  console.log("complete utils!");
 
   return {
     accountant,
