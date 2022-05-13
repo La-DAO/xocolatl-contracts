@@ -52,7 +52,7 @@ describe("Xoc System Tests", function () {
     await evmRevert(evmSnapshot0);
   });
 
-  it("Tickers should be probably set-up", async () => {
+  it("Tickers should be set-up", async () => {
     const ticker1 = await coinhouse.tickerUsdFiat();
     const ticker2 = await reservehouse.tickerUsdFiat();
     const ticker3 = await coinhouse.tickerReserveAsset();

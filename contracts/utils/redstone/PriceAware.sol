@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
+/// Contract taken from redstone-evm-connector package; 
+/// Refer to: https://github.com/redstone-finance/redstone-evm-connector
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 abstract contract PriceAware {
@@ -29,7 +31,6 @@ abstract contract PriceAware {
     // That's why we add MAX_BLOCK_TIMESTAMP_DELAY
     // and allow data "from future" but with a small delay
     
-    // console.log("datatimestamp", _receivedTimestamp, "block.timestamp", block.timestamp);
     require(
       (block.timestamp + getMaxBlockTimestampDelay()) > _receivedTimestamp,
       "Data with future timestamps is not allowed");
