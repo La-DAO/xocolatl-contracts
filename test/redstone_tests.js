@@ -61,7 +61,7 @@ describe("Xoc System Tests", function () {
     expect(ticker3).to.eq(ticker4);
   });
 
-  it.only("Oracle price feed tests, should return a price value", async () => {
+  it("Oracle price feed tests, should return a price value", async () => {
     await syncTime();
     const price = await coinhouse.getLatestPrice();
     await expect(price).to.be.gt(0);
