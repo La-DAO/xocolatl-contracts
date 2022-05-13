@@ -1,38 +1,123 @@
-const { ethers } = require("hardhat");
-const { ContractFunctionVisibility } = require("hardhat/internal/hardhat-network/stack-traces/model");
+const hre = require("hardhat");
+const fs = require("fs");
+
+const { ethers, artifacts } = hre;
+const { provider } = ethers;
+
+const network = process.env.NETWORK;
+
+// Default
+let deploymentsPath = "core-version-last.deploy";
 
 /**
- * @note Get etherjs contract instances of deployed contracts
- * @param chainID EVM chain Id, defaults to rinkeby.
- * 
+ * @note Set the deployment path for the contract artifacts to be saved.
+ * @param {integer} version of the deployment.
  */
-const getDeployedContracts = async (chainID = 4) => {
+const setDeploymentsPath = async (version) => {
+  const netw = await provider.getNetwork();
+  deploymentsPath = `${hre.config.paths.artifacts}/${netw.chainId}-version-${version}.deploy`;
+};
 
-  let accountant;
-  let coinhouse;
-  let reservehouse;
-  let xoc;
-  let weth;
-  
-  // Rinkeby deployment 1-30-2022
-  if (chainID == 4) {
-    console.log("...Getting contracts from Chain Id", chainID)
-    accountant = await ethers.getContractAt('AssetsAccountant', '0xf487Ff2A5430eFBdC4B15e2735d9D83e3508F317');
-    coinhouse = await ethers.getContractAt('HouseOfCoin', '0xF3A1C091f110F7b931c02d3603ec8bC771182466');
-    reservehouse = await ethers.getContractAt('HouseOfReserve', '0x62c4014a76e21C046fc5196D81E8cD7e04C5f122');
-    xoc = await ethers.getContractAt('Xocolatl', '0x2872332fB3619F5fDbAeb04F4e3Bd8e42AF8fD04');
-    weth = await ethers.getContractAt('MockWETH', '0xDf032Bc4B9dC2782Bb09352007D4C57B75160B15');
+/**
+ * @note Get the contract abi for the contract name.
+ * @param {string} detailName to get artifacts, as defined in .deploy file.
+ */
+const getDeployments = (detailName) => {
+  let deployData;
+  if (fs.existsSync(deploymentsPath)) {
+    deployData = JSON.parse(fs.readFileSync(deploymentsPath).toString());
+  } else {
+    deployData = {};
   }
+  return deployData[detailName] || {};
+};
 
-  return {
-    accountant,
-    coinhouse,
-    reservehouse,
-    xoc,
-    weth
+/**
+ * @note Update the contract abi with new contract data.
+ * @param {string} detailName to get artifacts, as defined in .deploy file.
+ * @param {string} contractName name of the compiled contract as defined in the solidity file.
+ * @param {string} address of the contract.
+ */
+const updateDeployments = async (detailName, contractName, address) => {
+  let deployData;
+  if (fs.existsSync(deploymentsPath)) {
+    deployData = JSON.parse(fs.readFileSync(deploymentsPath).toString());
+  } else {
+    deployData = {};
   }
-}
+  const contractArtifacts = await artifacts.readArtifact(contractName);
+  deployData[detailName] = {
+    address,
+    abi: contractArtifacts.abi,
+    bytecode: contractArtifacts.bytecode,
+  };
+  fs.writeFileSync(deploymentsPath, JSON.stringify(deployData, null, 2));
+};
+
+/**
+ * @note Update the contract abi with new contract data.
+ * @param {string} detailName to get in artifacts, as defined in .deploy file.
+ */
+const getContractAddress = (detailName) => {
+  return getDeployments(detailName).address;
+};
+
+/**
+ * Deploy a contract.
+ * @param {string} detailName unique to distinguish and defined in .deploy file.  
+ * @param {string} contractName name of the compiled contract as defined in the solidity file. 
+ * @param {Array} args arguments required in contract constructor or initializer.
+ * @param {Object} overrides arguments required in some functions.
+ * @param {Object} options arguments required in some functions.
+ * @returns {Promise} resolves to an ethers.js contract object.
+ */
+const deploy = async (detailName, contractName, args = [], overrides = {}, options = {}) => {
+  const contractArgs = args || [];
+  const contractFactory = await ethers.getContractFactory(contractName, options);
+  const deployed = await contractFactory.deploy(...contractArgs, overrides);
+  await deployed.deployed();
+  const encoded = abiEncodeArgs(deployed, contractArgs);
+  fs.writeFileSync(`artifacts/${detailName}.address`, deployed.address);
+  await updateDeployments(detailName, contractName, deployed.address);
+  if (!encoded || encoded.length <= 2) return deployed;
+  fs.writeFileSync(`artifacts/${detailName}.args`, encoded.slice(2));
+  return deployed;
+};
+
+/**
+ * Redeploy a contract if it has not been deployed, otherwise contract data from artifacts.
+ * @param {string} detailName unique to distinguish and defined in .deploy file. 
+ * @param {string} contractName name of the compiled contract as defined in the solidity file.
+ * @param {Function} deployContract function call type {deploy, deployProxy}.
+ * @param {Array} args arguments required in contract constructor or initializer.
+ * @param {Object} overrides arguments required in some functions.
+ * @param {Object} options arguments required in some functions.
+ * @returns {Promise} resolves to an ethers.js contract object.
+ */
+ const redeployIf = async (detailName, contractName, deployContract, args = [], overrides={}, options = {}) => {
+  const currentDeployment = getDeployments(detailName);
+  const contractArtifacts = await artifacts.readArtifact(contractName);
+  const addr = currentDeployment.address ?? "0x0000000000000000000000000000000000000000";
+  const checkExistance = await ethers.provider.getCode(addr);
+  if (
+    checkExistance !== "0x" &&
+    currentDeployment.bytecode === contractArtifacts.bytecode &&
+    JSON.stringify(currentDeployment.abi) === JSON.stringify(contractArtifacts.abi)
+  ) {
+    console.log(detailName + ": Skipping...");
+    return currentDeployment;
+  }
+  console.log(detailName + ": Deploying...");
+  const deployed = await deployContract(detailName, contractName, args, overrides, options);
+  console.log(detailName + ": Deployed at", deployed.address);
+  return deployed;
+};
 
 module.exports = {
-  getDeployedContracts
+  setDeploymentsPath,
+  getDeployments,
+  updateDeployments,
+  getContractAddress,
+  deploy,
+  redeployIf
 };
