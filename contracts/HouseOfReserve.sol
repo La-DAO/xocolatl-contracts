@@ -48,6 +48,11 @@ contract HouseOfReserveState {
      * @param newFactor New struct indicating the factor values.
      */
     event CollateralRatioChanged(Factor newFactor);
+    /**
+     * @dev Emit when user DEFAULT_ADMIN changes the 'depositLimit' of HouseOfReserve
+     * @param newLimit uint256
+     */
+    event DepositLimitChanged(uint256 newLimit);
 
     struct Factor {
         uint256 numerator;
@@ -65,6 +70,10 @@ contract HouseOfReserveState {
     uint256 public backedTokenID;
 
     Factor public collateralRatio;
+
+    uint256 public totalDeposits;
+
+    uint256 public depositLimit;
 
     IAssetsAccountant public assetsAccountant;
 
@@ -149,6 +158,11 @@ contract HouseOfReserve is
             IERC20(reserveAsset).allowance(msg.sender, address(this)) >= amount,
             "Not enough ERC20 allowance!"
         );
+        // Check that deposit limit for this reserve has not been reached.
+        require(
+            amount + totalDeposits <= depositLimit,
+            "Deposit limit reached!"
+        );
 
         // Transfer reserveAsset amount to this contract.
         IERC20(reserveAsset).transferFrom(msg.sender, address(this), amount);
@@ -191,6 +205,17 @@ contract HouseOfReserve is
 
         // Emit event
         emit CollateralRatioChanged(collateralRatio);
+    }
+
+    /**
+     * @notice Function to set the limit of deposits in this HouseOfReserve.
+     * @param newLimit uint256, must be greater than zero.
+     * Emits a {DepositLimitChanged} event.
+     */
+    function setDepositLimit(uint256 newLimit) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require( newLimit > 0, "Invalid inputs!");
+        depositLimit = newLimit;
+        emit DepositLimitChanged(newLimit);
     }
 
     /**
@@ -260,6 +285,9 @@ contract HouseOfReserve is
         // Mint in AssetsAccountant received amount.
         assetsAccountant.mint(user, reserveTokenID, amount, "");
 
+        // Increase totalDeposits
+        totalDeposits += amount;
+
         // Emit deposit event.
         emit UserDeposit(user, reserveAsset, amount);
     }
@@ -328,6 +356,11 @@ contract HouseOfReserve is
     receive() external payable {
         uint256 preBalance = IERC20(WETH).balanceOf(address(this));
         if (reserveAsset == WETH) {
+            // Check that deposit limit for this reserve has not been reached.
+            require(
+                msg.value + totalDeposits <= depositLimit,
+                "Deposit limit reached!"
+            );
             IWETH(WETH).deposit{value: msg.value}();
             require(
                 IERC20(WETH).balanceOf(address(this)) == preBalance + msg.value,
