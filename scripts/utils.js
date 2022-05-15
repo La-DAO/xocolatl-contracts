@@ -1,8 +1,8 @@
 const hre = require("hardhat");
 const fs = require("fs");
 
-const { ethers, artifacts } = hre;
-const { provider } = ethers;
+const { ethers, artifacts, upgrades } = hre;
+const { provider, utils } = ethers;
 
 const network = process.env.NETWORK;
 
@@ -55,11 +55,38 @@ const updateDeployments = async (detailName, contractName, address) => {
 };
 
 /**
- * @note Update the contract abi with new contract data.
+ * @note Get the contract address from recorded .deploy file.
  * @param {string} detailName to get in artifacts, as defined in .deploy file.
+ * @returns {string} address of the contract. 
  */
 const getContractAddress = (detailName) => {
   return getDeployments(detailName).address;
+};
+
+/**
+ * @note Get ethersJS contract from recorded .deploy file.
+ * @param {string} detailName to get in artifacts, as defined in .deploy file.
+ * @returns {Promise} resolves to Ethersjs contract requested. 
+ */
+ const getContract = async (detailName) => {
+  const contractData = getDeployments(detailName);
+  const contract = await ethers.getContractAt(detailName, contractData.address);
+  return contract;
+};
+
+/**
+ * @dev encodes contract arguments, useful to manually verify the contracts on Etherscan
+ * @param {Object} deployed ethersjs contract returned after deployment.
+ * @param {Array} contractArgs passed in contract constructor (if any).
+ * @returns {String} of hex bytes if applicable.
+ */
+const abiEncodeArgs = (deployed, contractArgs) => {
+  // not writing abi encoded args if this does not pass
+  if (!contractArgs || !deployed ) {
+    return "";
+  }
+  const encoded = utils.defaultAbiCoder.encode(deployed.interface.deploy.inputs, contractArgs);
+  return encoded;
 };
 
 /**
@@ -75,12 +102,45 @@ const deploy = async (detailName, contractName, args = [], overrides = {}, optio
   const contractArgs = args || [];
   const contractFactory = await ethers.getContractFactory(contractName, options);
   const deployed = await contractFactory.deploy(...contractArgs, overrides);
-  await deployed.deployed();
   const encoded = abiEncodeArgs(deployed, contractArgs);
   fs.writeFileSync(`artifacts/${detailName}.address`, deployed.address);
   await updateDeployments(detailName, contractName, deployed.address);
   if (!encoded || encoded.length <= 2) return deployed;
   fs.writeFileSync(`artifacts/${detailName}.args`, encoded.slice(2));
+  return deployed;
+};
+
+/**
+ * Deploy a contract with upgradeable proxy pattern.
+ * @param {string} detailName unique to distinguish and defined in .deploy file.  
+ * @param {string} contractName name of the compiled contract as defined in the solidity file. 
+ * @param {Array} args arguments required in contract constructor or initializer.
+ * @param {Object} overrides arguments required in some functions.
+ * @param {Object} options arguments required in some functions.
+ * @returns {Promise} resolves to an ethers.js contract object.
+ */
+const deployProxy = async (detailName, contractName, args = [], overrides = {}, options = {}) => {
+  const contractArgs = args || [];
+  const proxyOpts = overrides || {};
+  const factoryOpts = options || {};
+  const contractArtifacts = await ethers.getContractFactory(contractName, factoryOpts);
+  const deployed = await upgrades.deployProxy(contractArtifacts, contractArgs, proxyOpts);
+  await deployed.deployed();
+
+  const initializeFunction = Object.keys(contractArtifacts.interface.functions).find((fname) =>
+    fname.startsWith("initialize")
+  );
+  const encoded = utils.defaultAbiCoder.encode(
+    contractArtifacts.interface.functions[initializeFunction].inputs,
+    contractArgs
+  );
+  fs.writeFileSync(`artifacts/${detailName}.address`, deployed.address);
+
+  await updateDeployments(detailName, contractName, deployed.address);
+
+  if (!encoded || encoded.length <= 2) return deployed;
+  fs.writeFileSync(`artifacts/${detailName}.args`, encoded.slice(2));
+
   return deployed;
 };
 
@@ -114,10 +174,13 @@ const deploy = async (detailName, contractName, args = [], overrides = {}, optio
 };
 
 module.exports = {
+  network,
   setDeploymentsPath,
   getDeployments,
   updateDeployments,
   getContractAddress,
+  getContract,
   deploy,
+  deployProxy,
   redeployIf
 };
