@@ -8,6 +8,7 @@ const network = process.env.NETWORK;
 
 // Default
 let deploymentsPath = "core-version-last.deploy";
+let publishPath = "core-version-last.deploy";
 
 /**
  * @note Set the deployment path for the contract artifacts to be saved.
@@ -16,6 +17,14 @@ let deploymentsPath = "core-version-last.deploy";
 const setDeploymentsPath = async (version) => {
   const netw = await provider.getNetwork();
   deploymentsPath = `${hre.config.paths.artifacts}/${netw.chainId}-version-${version}.deploy`;
+};
+
+/**
+ * @note Set the publish path for the contract artifacts to be saved.
+ */
+ const setPublishPath = async (version) => {
+  const netw = await provider.getNetwork();
+  publishPath = `${hre.config.paths.root}/scripts/${network}/${netw.chainId}-version-${version}.deploy`;
 };
 
 /**
@@ -173,9 +182,21 @@ const deployProxy = async (detailName, contractName, args = [], overrides = {}, 
   return deployed;
 };
 
+const publishUpdates = async () => {
+  const netw = await provider.getNetwork();
+  if (netw.chainId != 31337) {
+    fs.copyFile(deploymentsPath, publishPath, (err) => {
+      if (err) throw err;
+      console.log('Deployments/Updates have been published!');
+    });
+  }
+}
+
 module.exports = {
   network,
   setDeploymentsPath,
+  setPublishPath,
+  publishUpdates,
   getDeployments,
   updateDeployments,
   getContractAddress,

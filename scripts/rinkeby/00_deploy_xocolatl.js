@@ -1,4 +1,10 @@
-const { network, setDeploymentsPath } = require("../utils");
+const { 
+  network,
+  setDeploymentsPath,
+  setPublishPath, 
+  publishUpdates
+} = require("../utils");
+
 const { VERSION, RESERVE_ASSETS } = require("./utils_rinkeby");
 
 const { deployXocolatl } = require("../tasks/deployXocolatl");
@@ -13,9 +19,10 @@ const main = async () => {
     throw new Error("Set 'NETWORK=rinkeby' in .env file");
   }
   await setDeploymentsPath(VERSION);
+  await setPublishPath(VERSION);
   await deployBackedAsset();
+  await publishUpdates();
 };
-
 
 main()
   .then(() => process.exit(0))

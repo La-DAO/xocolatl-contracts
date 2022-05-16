@@ -1,4 +1,10 @@
-const { network, setDeploymentsPath, getContract } = require("../utils");
+const { 
+  network,
+  setDeploymentsPath,
+  setPublishPath, 
+  publishUpdates
+} = require("../utils");
+
 const { VERSION, RESERVE_ASSETS, WETH } = require("./utils_rinkeby");
 
 const { deployAssetsAccountant } = require("../tasks/deployAssetsAccountant");
@@ -59,7 +65,9 @@ const main = async () => {
     throw new Error("Set 'NETWORK=rinkeby' in .env file");
   }
   await setDeploymentsPath(VERSION);
+  await setPublishPath(VERSION);
   await deploySystemContracts();
+  await publishUpdates();
 };
 
 
