@@ -1,5 +1,6 @@
 const { 
   network,
+  getContract,
   setDeploymentsPath,
   setPublishPath, 
   publishUpdates

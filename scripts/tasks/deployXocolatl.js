@@ -5,7 +5,7 @@ const deployXocolatl = async () => {
   const contractName = "Xocolatl";
   const args = [];
   const proxyOpts = {
-    timeout: 10000,
+    timeout: 600000,
     unsafeAllow: (["delegatecall"]),
     kind: 'uups'
   };
