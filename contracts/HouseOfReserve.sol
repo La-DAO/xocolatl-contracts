@@ -114,7 +114,7 @@ contract HouseOfReserve is
         collateralRatio.numerator = 150;
         collateralRatio.denominator = 100;
         assetsAccountant = IAssetsAccountant(_assetsAccountant);
-        _oracleHouse_initialize();
+        _oracleHouse_init();
         _setTickers(_tickerUsdFiat, _tickerReserveAsset);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -140,6 +140,18 @@ contract HouseOfReserve is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _authorizeSigner(newtrustedSigner);
+    }
+
+    /**
+     * @notice  See '_setChainlinkAddrs()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function setChainlinkAddrs(address addrUsdFiat_, address addrReserveAsset_)
+        external
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setChainlinkAddrs(addrUsdFiat_, addrReserveAsset_);
     }
 
     /**
@@ -212,8 +224,11 @@ contract HouseOfReserve is
      * @param newLimit uint256, must be greater than zero.
      * Emits a {DepositLimitChanged} event.
      */
-    function setDepositLimit(uint256 newLimit) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require( newLimit > 0, "Invalid inputs!");
+    function setDepositLimit(uint256 newLimit)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(newLimit > 0, "Invalid inputs!");
         depositLimit = newLimit;
         emit DepositLimitChanged(newLimit);
     }
