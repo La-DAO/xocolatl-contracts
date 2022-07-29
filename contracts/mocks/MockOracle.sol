@@ -43,24 +43,57 @@ contract MockOracle is Ownable, MockOracleState, OracleHouse {
         return mxneth;
     }
 
-    /**
-     * @dev Must be implemented with admin restriction.
-     */
-    function setTickers(
-        string calldata _tickerUsdFiat,
-        string calldata _tickerReserveAsset
-    ) external override onlyOwner {
-        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+    /** see {OracleHouse-activeOracle}*/
+    function activeOracle() external override view returns (uint256) {
+        return _activeOracle;
     }
 
     /**
-     * @dev Must be implemented with admin restriction.
+     * @notice  See '_setActiveOracle()' in {OracleHouse}.
+     * @dev restricted to admin only.
      */
-    function authorizeSigner(address _trustedSigner)
+    function setActiveOracle(OracleIds id_)
         external
         override
         onlyOwner
     {
-        _authorizeSigner(_trustedSigner);
+        _setActiveOracle(id_);
     }
+
+    /**
+     * @notice  See '_setTickers()' in {OracleHouse}.
+     * @dev restricted to admin only.
+     */
+    function setTickers(
+        string memory tickerUsdFiat_,
+        string memory tickerReserveAsset_
+    ) external override onlyOwner {
+        _setTickers(tickerUsdFiat_, tickerReserveAsset_);
+    }
+
+    /**
+     * @notice  See '_authorizeSigner()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function authorizeSigner(address newtrustedSigner)
+        external
+        override
+        onlyOwner
+    {
+        _authorizeSigner(newtrustedSigner);
+    }
+
+    /**
+     * @notice  See '_setChainlinkAddrs()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function setChainlinkAddrs(address addrUsdFiat_, address addrReserveAsset_)
+        external
+        override
+        onlyOwner
+    {
+        _setChainlinkAddrs(addrUsdFiat_, addrReserveAsset_);
+    }
+
+    
 }

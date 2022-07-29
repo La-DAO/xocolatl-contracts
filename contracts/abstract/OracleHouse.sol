@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../utils/redstone/PriceAware.sol";
+import "../interfaces/chainlink/IAggregatorV3.sol";
 
 abstract contract OracleHouse is PriceAware {
     /**
@@ -18,50 +18,59 @@ abstract contract OracleHouse is PriceAware {
     }
 
     /** @dev OracleIds: 0 = redstone, 1 = uma, 2 = chainlink */
-    uint256 public activeOracle;
+    uint256 internal _activeOracle;
 
     /// redstone required state variables
-    bytes32 public tickerUsdFiat;
-    bytes32 public tickerReserveAsset;
-    bytes32[] public tickers;
-    address internal _trustedSigner;
+    bytes32 private _tickerUsdFiat;
+    bytes32 private _tickerReserveAsset;
+    bytes32[] private _tickers;
+    address private _trustedSigner;
 
     /// uma required state variables
 
     /// chainlink required state variables
-    IAggregatorV3 internal _addrUsdFiat;
-    IAggregatorV3 internal _addrReserveAsset;
+    IAggregatorV3 private _addrUsdFiat;
+    IAggregatorV3 private _addrReserveAsset;
 
     // solhint-disable-next-line func-name-mixedcase
     function _oracleHouse_init() internal {
       _oracle_redstone_init();
     }
 
-    function _getLatestPrice() internal view virtual returns (uint256 price) {
-        if (activeOracle == 0) {
-            _getLatestPriceRedstone(tickers_);
-        } else if (activeOracle == 1) {
-            _getLatestPriceUMA();
-        } else if (activeOracle == 2) {
-            _getLatestPriceChainlink();
+
+    /**
+     * @notice Returns the active oracle from House of Reserve.
+     * @dev Must be implemented in House Of Reserve ONLY.
+     */
+    function activeOracle() external view virtual returns (uint256);
+
+    /** @dev Override for House of Coin with called inputs from House Of Reserve. */
+    function _getLatestPrice(address) internal view virtual returns (uint256 price) {
+        if (_activeOracle == 0) {
+            price = _getLatestPriceRedstone(_tickers);
+        } else if (_activeOracle == 1) {
+            price = _getLatestPriceUMA();
+        } else if (_activeOracle == 2) {
+            price = _getLatestPriceChainlink(_addrUsdFiat, _addrReserveAsset);
         }
     }
 
     /**
-     * @dev Must be implemented with admin restriction and call _setActiveOracle().
+     * @dev Must be implemented in House of Reserve ONLY with admin restriction and call _setActiveOracle().
+     * Must call _setActiveOracle().
      */
     function setActiveOracle(OracleIds id_) external virtual;
 
     /**
-     * @notice  Sets the activeOracle.
+     * @notice Sets the activeOracle.
      * @dev  Restricted to admin only.
      * @param id_ restricted to enum OracleIds
      * Emits a {ActiveOracleChanged} event.
      */
 
     function _setActiveOracle(OracleIds id_) internal {
-        activeOracle = id_;
-        emit ActiveOracleChanged(id_);
+        _activeOracle = uint256(id_);
+        emit ActiveOracleChanged(_activeOracle);
     }
 
     ///////////////////////////////
@@ -79,15 +88,15 @@ abstract contract OracleHouse is PriceAware {
      * @param newtickerUsdFiat short string
      * @param newtickerReserveAsset short string
      **/
-    event TickersChanged(string newtickerUsdFiat, string newtickerReserveAsset);
+    event TickersChanged(bytes32 newtickerUsdFiat, bytes32 newtickerReserveAsset);
 
     // solhint-disable-next-line func-name-mixedcase
     function _oracle_redstone_init() private {
-        tickers.push(bytes32(0));
-        tickers.push(bytes32(0));
+        _tickers.push(bytes32(0));
+        _tickers.push(bytes32(0));
     }
 
-    function _getLatestPriceRedstone(bytes[] memory tickers_)
+    function _getLatestPriceRedstone(bytes32[] memory tickers_)
         internal
         view
         virtual
@@ -101,7 +110,22 @@ abstract contract OracleHouse is PriceAware {
     }
 
     /**
-     * @notice  Checks that signer is authorized
+     * @notice Returns the state data of Redstone oracle.
+     */
+    function getRedstoneData()
+        external
+        view
+        virtual
+        returns (bytes32 tickerUsdFiat_, bytes32 tickerReserveAsset_, bytes32[] memory tickers_, address trustedSigner_)
+    {
+      tickerUsdFiat_ = _tickerUsdFiat;
+      tickerReserveAsset_ = _tickerReserveAsset;
+      tickers_ = _tickers;
+      trustedSigner_ = _trustedSigner;
+    }
+
+    /**
+     * @notice Checks that signer is authorized
      * @dev  Required by Redstone-evm-connector.
      * @param _receviedSigner address
      */
@@ -115,42 +139,45 @@ abstract contract OracleHouse is PriceAware {
     }
 
     /**
-     * @dev Must be implemented with admin restriction and call _setTickers().
+     * @dev See '_setTickers()'.
+     * Must be implemented in House of Reserve ONLY with admin restriction.
+     * Must call _setTickers().
      */
     function setTickers(
-        string calldata _tickerUsdFiat,
-        string calldata _tickerReserveAsset
+        string calldata tickerUsdFiat_,
+        string calldata tickerReserveAsset_
     ) external virtual;
 
     /**
-     * @notice  Sets the tickers required in 'getLatestPrice'.
-     * @dev  Restricted to admin only.
-     * @param _tickerUsdFiat short string (less than 32 characters)
-     * @param _tickerReserveAsset short string (less than 32 characters)
+     * @notice  Sets the tickers required in '_getLatestPriceRedstone()'.
+     * @param tickerUsdFiat_ short string (less than 32 characters)
+     * @param tickerReserveAsset_ short string (less than 32 characters)
      * Emits a {TickersChanged} event.
      */
     function _setTickers(
-        string memory _tickerUsdFiat,
-        string memory _tickerReserveAsset
+        string memory tickerUsdFiat_,
+        string memory tickerReserveAsset_
     ) internal {
-        require(tickers.length == 2, "Not initialized!");
+        require(_tickers.length == 2, "Not initialized!");
         bytes32 ticker1;
         bytes32 ticker2;
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            ticker1 := mload(add(_tickerUsdFiat, 32))
-            ticker2 := mload(add(_tickerReserveAsset, 32))
+            ticker1 := mload(add(tickerUsdFiat_, 32))
+            ticker2 := mload(add(tickerReserveAsset_, 32))
         }
-        tickerUsdFiat = ticker1;
-        tickerReserveAsset = ticker2;
+        _tickerUsdFiat = ticker1;
+        _tickerReserveAsset = ticker2;
 
-        tickers[0] = tickerUsdFiat;
-        tickers[1] = tickerReserveAsset;
+        _tickers[0] = _tickerUsdFiat;
+        _tickers[1] = _tickerReserveAsset;
 
         emit TickersChanged(_tickerUsdFiat, _tickerReserveAsset);
     }
 
     /**
-     * @dev Must be implemented with admin restriction and call _authorizeSigner().
+     * @dev See '_setTickers()'.
+     * Must be implemented both in House of Reserve and Coin with admin restriction.
      */
     function authorizeSigner(address _trustedSigner) external virtual;
 
@@ -164,6 +191,14 @@ abstract contract OracleHouse is PriceAware {
         require(newtrustedSigner != address(0), "Zero address!");
         _trustedSigner = newtrustedSigner;
         emit TrustedSignerChanged(_trustedSigner);
+    }
+
+    //////////////////////////
+    /// UMA oracle methods ///
+    //////////////////////////
+
+    function _getLatestPriceUMA() internal pure returns (uint256 price) {
+      price =0;
     }
 
     ////////////////////////////////
@@ -180,21 +215,28 @@ abstract contract OracleHouse is PriceAware {
         address _newAddrReserveAsset
     );
 
-    function _getLatestPriceChainlink() private view returns (uint256 price) {
+    function _getLatestPriceChainlink(
+        IAggregatorV3 addrUsdFiat_,
+        IAggregatorV3 addrReserveAsset_)
+    internal view returns (uint256 price) {
         require(
-            address(_addrUsdFiat) != address(0) &&
-                address(_addrReserveAsset) != address(0),
+            address(addrUsdFiat_) != address(0) &&
+            address(addrReserveAsset_) != address(0),
             "Not initialized!"
         );
-        (, int256 usdfiat, , , ) = _addrUsdFiat.latestRoundData();
-        (, int256 usdreserve, , , ) = _addrReserveAsset.latestRoundData();
+        (, int256 usdfiat, , , ) = addrUsdFiat_.latestRoundData();
+        (, int256 usdreserve, , , ) = addrReserveAsset_.latestRoundData();
         require(usdfiat > 0 && usdreserve > 0, "oracle return invalid!");
-        price = (usdreserve * 1e8) / usdfiat;
+        price = (uint256(usdreserve) * 1e8) / uint256(usdfiat);
     }
 
+    /**
+     * @notice Returns the state data of Chainlink oracle.
+     */
     function getChainlinkData()
         external
         view
+        virtual
         returns (address addrUsdFiat_, address addrReserveAsset_)
     {
         addrUsdFiat_ = address(_addrUsdFiat);
@@ -208,6 +250,12 @@ abstract contract OracleHouse is PriceAware {
         external
         virtual;
 
+    /**
+     * @notice  Sets the chainlink addresses required in '_getLatestPriceChainlink()'.
+     * @param addrUsdFiat_ address from chainlink.
+     * @param addrReserveAsset_ address from chainlink.
+     * Emits a {ChainlinkAddressChange} event.
+     */
     function _setChainlinkAddrs(address addrUsdFiat_, address addrReserveAsset_)
         internal
     {
@@ -217,6 +265,6 @@ abstract contract OracleHouse is PriceAware {
         );
         _addrUsdFiat = IAggregatorV3(addrUsdFiat_);
         _addrReserveAsset = IAggregatorV3(addrReserveAsset_);
-        emit ChainlinkAddressChange(addrUsdFiat_, _newAddrReserveAsset);
+        emit ChainlinkAddressChange(addrUsdFiat_, addrReserveAsset_);
     }
 }

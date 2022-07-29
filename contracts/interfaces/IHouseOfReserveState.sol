@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-interface IHouseOfReserveState {
+import "./IOracle.sol";
+
+interface IHouseOfReserveState is IOracle {
 
     struct Factor{
         uint numerator;

@@ -99,12 +99,10 @@ contract HouseOfCoin is
      * @param _backedAsset ERC20 address of the asset type of coin to be minted in this contract.
      * @param _assetsAccountant Address of the {AssetsAccountant} contract.
      */
-    function initialize(
-        address _backedAsset,
-        address _assetsAccountant,
-        string memory _tickerUsdFiat,
-        string memory _tickerReserveAsset
-    ) public initializer {
+    function initialize(address _backedAsset, address _assetsAccountant)
+        public
+        initializer
+    {
         backedAsset = _backedAsset;
         backedAssetDecimals = IERC20Extension(backedAsset).decimals();
         assetsAccountant = _assetsAccountant;
@@ -123,22 +121,39 @@ contract HouseOfCoin is
         // Internal function that will transform _liqParam, compatible with backedAsset decimals
         _transformToBackAssetDecimalBase();
 
-        _oracleHouse_initialize();
-
-        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+        _oracleHouse_init();
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    /**
-     * @notice  See '_setTickers()' in {OracleHouse}.
-     * @dev restricted to admin only.
-     */
-    function setTickers(
-        string memory _tickerUsdFiat,
-        string memory _tickerReserveAsset
-    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+    /** @dev See {OracleHouse-activeOracle}. */
+    function activeOracle() external pure override returns (uint256) {
+        revert("N/A to HouseOfCoin");
+    }
+
+    /** @dev See {OracleHouse-setActiveOracle} */
+    function setActiveOracle(OracleIds) external pure override {
+        revert("N/A to HouseOfCoin");
+    }
+
+    /** @dev See {OracleHouse-setTickers} */
+    function setTickers(string memory, string memory) external pure override {
+        revert("N/A to HouseOfCoin");
+    }
+
+    /** @dev See {OracleHouse-getRedstoneData} */
+    function getRedstoneData()
+        external
+        override
+        pure
+        returns (
+            bytes32,
+            bytes32,
+            bytes32[] memory,
+            address
+        )
+    {
+        revert("N/A to HouseOfCoin");
     }
 
     /**
@@ -151,6 +166,54 @@ contract HouseOfCoin is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _authorizeSigner(newtrustedSigner);
+    }
+
+    /** @dev See {OracleHouse-getChainlinkData} */
+    function getChainlinkData()
+        external
+        pure
+        override
+        returns (address, address)
+    {
+        revert("N/A to HouseOfCoin");
+    }
+
+    /** @dev See {OracleHouse-setChainlinkAddrs} */
+    function setChainlinkAddrs(address, address) external pure override {
+        revert("N/A to HouseOfCoin");
+    }
+
+    /**
+     * @dev Call latest price according to activeOracle
+     * @param hOfReserve_ address to get data for price feed.
+     */
+    function getLatestPrice(address hOfReserve_)
+        public
+        view
+        returns (uint256 price)
+    {
+        price = _getLatestPrice(hOfReserve_);
+    }
+
+    /** @dev  Overriden See '_getLatestPrice()' in {OracleHouse} */
+    function _getLatestPrice(address hOfReserve_)
+        internal
+        view
+        override
+        returns (uint256 price)
+    {
+        IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserve_);
+        uint256 activeOracle_ = hOfReserve.activeOracle();
+        if (activeOracle_ == 0) {
+            (, , bytes32[] memory tickers_, ) = hOfReserve.getRedstoneData();
+            price = _getLatestPriceRedstone(tickers_);
+        } else if (activeOracle_ == 1) {
+            price = _getLatestPriceUMA();
+        } else if (activeOracle_ == 2) {
+            (address addrUsdFiat_, address addrReserveAsset_) = hOfReserve
+                .getChainlinkData();
+            price = _getLatestPriceChainlink(IAggregatorV3(addrUsdFiat_), IAggregatorV3(addrReserveAsset_));
+        }
     }
 
     /**
@@ -185,13 +248,13 @@ contract HouseOfCoin is
         // Validate this HouseOfCoin is active with {AssetsAccountant} and can mint backedAsset.
         require(
             bAsset.hasRole(keccak256("MINTER_ROLE"), address(this)),
-            "houseOfCoin not authorized to mint backedAsset!"
+            "Not Authorized!"
         );
 
         // Get inputs for checking minting power, collateralization factor and oracle price
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
             .collateralRatio();
-        uint256 price = getLatestPrice();
+        uint256 price = getLatestPrice(houseOfReserve);
 
         // Checks minting power of msg.sender.
         uint256 mintingPower = _checkRemainingMintingPower(
@@ -284,7 +347,7 @@ contract HouseOfCoin is
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
-        uint256 latestPrice = getLatestPrice();
+        uint256 latestPrice = getLatestPrice(hOfReserveAddr);
 
         uint256 reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
 
@@ -364,7 +427,7 @@ contract HouseOfCoin is
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
-        uint256 latestPrice = getLatestPrice();
+        uint256 latestPrice = getLatestPrice(hOfReserveAddr);
 
         return
             _computeUserHealthRatio(
@@ -403,7 +466,7 @@ contract HouseOfCoin is
 
         require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
 
-        uint256 latestPrice = getLatestPrice();
+        uint256 latestPrice = getLatestPrice(accountant.houseOfReserves(reserveTokenID));
 
         uint256 reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
 
@@ -442,14 +505,6 @@ contract HouseOfCoin is
     }
 
     /**
-     * @dev Call latest price.
-     * @dev Must be called according to 'redstone-evm-connector' documentation.
-     */
-    function getLatestPrice() public view returns (uint256 price) {
-        price = _getLatestPrice();
-    }
-
-    /**
      * @notice  External function that returns the amount of backed asset coins user can mint with unused reserve asset.
      * @param user to check minting power.
      * @param reserveAsset Address of reserve asset.
@@ -478,7 +533,7 @@ contract HouseOfCoin is
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
-        uint256 latestPrice = getLatestPrice();
+        uint256 latestPrice = getLatestPrice(hOfReserveAddr);
 
         return
             _checkRemainingMintingPower(

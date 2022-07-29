@@ -96,8 +96,8 @@ contract HouseOfReserve is
         address _reserveAsset,
         address _backedAsset,
         address _assetsAccountant,
-        string memory _tickerUsdFiat,
-        string memory _tickerReserveAsset,
+        string memory tickerUsdFiat_,
+        string memory tickerReserveAsset_,
         address _WETH
     ) public initializer {
         reserveAsset = _reserveAsset;
@@ -115,8 +115,25 @@ contract HouseOfReserve is
         collateralRatio.denominator = 100;
         assetsAccountant = IAssetsAccountant(_assetsAccountant);
         _oracleHouse_init();
-        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+        _setTickers(tickerUsdFiat_, tickerReserveAsset_);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /** see {OracleHouse-activeOracle}*/
+    function activeOracle() external override view returns (uint256) {
+        return _activeOracle;
+    }
+
+    /**
+     * @notice  See '_setActiveOracle()' in {OracleHouse}.
+     * @dev restricted to admin only.
+     */
+    function setActiveOracle(OracleIds id_)
+        external
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setActiveOracle(id_);
     }
 
     /**
@@ -124,10 +141,10 @@ contract HouseOfReserve is
      * @dev restricted to admin only.
      */
     function setTickers(
-        string memory _tickerUsdFiat,
-        string memory _tickerReserveAsset
+        string memory tickerUsdFiat_,
+        string memory tickerReserveAsset_
     ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+        _setTickers(tickerUsdFiat_, tickerReserveAsset_);
     }
 
     /**
@@ -152,6 +169,15 @@ contract HouseOfReserve is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _setChainlinkAddrs(addrUsdFiat_, addrReserveAsset_);
+    }
+
+    /**
+     * @dev Call latest price according to activeOracle
+     * @dev See _getLatestPrice() in {OracleHouse}.
+     * @dev override _getLatestPrice() as required.
+     */
+    function getLatestPrice() public view returns (uint256 price) {
+        price = _getLatestPrice(address(0));
     }
 
     /**
@@ -337,14 +363,6 @@ contract HouseOfReserve is
             // Return _reserveBal if msg.sender has no minted coin.
             return _reserveBal;
         }
-    }
-
-    /**
-     * @dev Call latest price.
-     * @dev Must be called according to 'redstone-evm-connector' documentation.
-     */
-    function getLatestPrice() public view returns (uint256 price) {
-        price = _getLatestPrice();
     }
 
     /**
