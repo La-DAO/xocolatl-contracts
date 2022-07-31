@@ -44,8 +44,8 @@ task("generate", "Create a mnemonic for builder deploys", async () => {
 /// Configuration
 
 // Identify RPC type in .env file
-if (!process.env.INFURA_ID) {
-  throw "Please set INFURA_ID in .env";
+if (!process.env.INFURA_ID || !process.env.ALCHEMY_ID) {
+  throw "Please set INFURA_ID and ALCHEMY_ID in .env";
 }
 const mainnetUrl = `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`;
 
@@ -85,6 +85,12 @@ module.exports = {
     },
     mainnet: {
       url: mainnetUrl,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
+    },
+    polygon: {
+      url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_ID}`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
