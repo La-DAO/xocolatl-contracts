@@ -1,21 +1,140 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-interface IUMAOracleHelper {
-
-  struct Request {
-    address requestor;
-    bytes32 identifier;
-    uint256 timestamp;
-    bytes ancillaryData;
-  }
-
-}
+import "../../interfaces/uma/IOptimisticOracleV2.sol";
+import "../../interfaces/uma/IdentifierWhitelistInterface.sol";
+import "../../interfaces/uma/IUMAFinder.sol";
+import "../../interfaces/uma/IAddressWhitelist.sol";
+import "./OracleInterfaces.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract UMAOracleHelper {
+    struct LastRequest {
+        uint256 timestamp;
+        IOptimisticOracleV2.State state;
+        uint256 resolvedPrice;
+    }
 
-  function requestPrice() external {
+    // Finder for UMA contracts.
+    IUMAFinder public finder;
 
-  }
-    
+    // Unique identifier for price feed ticker.
+    bytes32 private priceIdentifier;
+
+    // The collateral currency used to back the positions in this contract.
+    IERC20 public collateralCurrency;
+
+    LastRequest internal _lastRequest;
+
+    constructor(
+        address _collateralAddress,
+        address _finderAddress,
+        bytes32 _priceIdentifier
+    ) {
+        finder = IUMAFinder(_finderAddress);
+        require(
+            _getIdentifierWhitelist().isIdentifierSupported(_priceIdentifier),
+            "Unsupported price identifier"
+        );
+        require(
+            _getAddressWhitelist().isOnWhitelist(_collateralAddress),
+            "Unsupported collateral type"
+        );
+        collateralCurrency = IERC20(_collateralAddress);
+        priceIdentifier = _priceIdentifier;
+    }
+
+    // Requests a price for `priceIdentifier` at `requestedTime` from the Optimistic Oracle.
+    function requestPrice() external {
+        IOptimisticOracleV2 oracle = _getOptimisticOracle();
+
+        uint256 requestedTime = block.timestamp;
+
+        oracle.requestPrice(
+            priceIdentifier,
+            requestedTime,
+            "",
+            IERC20(collateralCurrency),
+            0
+        );
+
+        _resetLastRequest(requestedTime, IOptimisticOracleV2.State.Requested);
+    }
+
+    function requestPriceWithReward(uint256 rewardAmount) external {
+        require(
+            collateralCurrency.allowance(msg.sender, address(this)) >=
+                rewardAmount,
+            "No erc20-approval"
+        );
+        IOptimisticOracleV2 oracle = _getOptimisticOracle();
+
+        collateralCurrency.approve(address(oracle), rewardAmount);
+
+        uint256 requestedTime = block.timestamp;
+
+        oracle.requestPrice(
+            priceIdentifier,
+            requestedTime,
+            "",
+            IERC20(collateralCurrency),
+            rewardAmount
+        );
+
+        _resetLastRequest(requestedTime, IOptimisticOracleV2.State.Requested);
+    }
+
+    function setCustomLivenessLastRequest(uint256 time) external {
+        IOptimisticOracleV2 oracle = _getOptimisticOracle();
+        oracle.setCustomLiveness(
+            priceIdentifier,
+            _lastRequest.timestamp,
+            "",
+            time
+        );
+    }
+
+    function changeBond() internal {}
+
+    function _resetLastRequest(
+        uint256 requestedTime,
+        IOptimisticOracleV2.State state
+    ) internal {
+        _lastRequest.timestamp = requestedTime;
+        _lastRequest.state = state;
+        _lastRequest.resolvedPrice = 0;
+    }
+
+    function _getIdentifierWhitelist()
+        internal
+        view
+        returns (IdentifierWhitelistInterface)
+    {
+        return
+            IdentifierWhitelistInterface(
+                finder.getImplementationAddress(
+                    OracleInterfaces.IdentifierWhitelist
+                )
+            );
+    }
+
+    function _getAddressWhitelist() internal view returns (IAddressWhitelist) {
+        return
+            IAddressWhitelist(
+                finder.getImplementationAddress(
+                    OracleInterfaces.CollateralWhitelist
+                )
+            );
+    }
+
+    function _getOptimisticOracle()
+        internal
+        view
+        returns (IOptimisticOracleV2)
+    {
+        return
+            IOptimisticOracleV2(
+                finder.getImplementationAddress("OptimisticOracleV2")
+            );
+    }
 }
