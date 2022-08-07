@@ -13,6 +13,7 @@ contract UMAOracleHelper {
         uint256 timestamp;
         IOptimisticOracleV2.State state;
         uint256 resolvedPrice;
+        address proposer;
     }
 
     // Finder for UMA contracts.
@@ -46,10 +47,12 @@ contract UMAOracleHelper {
 
     // Requests a price for `priceIdentifier` at `requestedTime` from the Optimistic Oracle.
     function requestPrice() external {
-        IOptimisticOracleV2 oracle = _getOptimisticOracle();
-
+        require(
+          _lastRequest.state == IOptimisticOracleV2.State.Settled,
+          "Last request not settled!"
+        );
         uint256 requestedTime = block.timestamp;
-
+        IOptimisticOracleV2 oracle = _getOptimisticOracle();
         oracle.requestPrice(
             priceIdentifier,
             requestedTime,
@@ -57,7 +60,6 @@ contract UMAOracleHelper {
             IERC20(collateralCurrency),
             0
         );
-
         _resetLastRequest(requestedTime, IOptimisticOracleV2.State.Requested);
     }
 
@@ -94,7 +96,52 @@ contract UMAOracleHelper {
         );
     }
 
-    function changeBond() internal {}
+    function changeBondLastPriceRequest(uint256 bond) external {
+        IOptimisticOracleV2 oracle = _getOptimisticOracle();
+        oracle.setBond(priceIdentifier, _lastRequest.timestamp, "", bond);
+    }
+
+    function computeTotalBondLastRequest()
+        public
+        view
+        returns (uint256 totalBond)
+    {
+        IOptimisticOracleV2 oracle = _getOptimisticOracle();
+        IOptimisticOracleV2.Request memory request = oracle.getRequest(
+            address(this),
+            priceIdentifier,
+            _lastRequest.timestamp,
+            ""
+        );
+        totalBond = request.requestSettings.bond + request.finalFee;
+    }
+
+    function proposePriceLastRequest(uint256 proposedPrice) external {
+        uint256 totalBond = computeTotalBondLastRequest();
+        require(
+            collateralCurrency.allowance(msg.sender, address(this)) >=
+                totalBond,
+            "No allowance for propose bond"
+        );
+        IOptimisticOracleV2 oracle = _getOptimisticOracle();
+        collateralCurrency.approve(address(oracle), totalBond);
+        oracle.proposePrice(
+            address(this),
+            priceIdentifier,
+            _lastRequest.timestamp,
+            "",
+            int256(proposedPrice)
+        );
+        _lastRequest.proposer = msg.sender;
+    }
+
+    function settleAndGetPriceLastRequest() external {
+      IOptimisticOracleV2 oracle = _getOptimisticOracle();
+      int256 settledPrice = oracle.settleAndGetPrice(priceIdentifier, _lastRequest.timestamp, "");
+      require(settledPrice > 0, "Settle Price Error!");
+      _lastRequest.resolvedPrice = uint256(settledPrice);
+      collateralCurrency.transfer(_lastRequest.proposer, computeTotalBondLastRequest());
+    }
 
     function _resetLastRequest(
         uint256 requestedTime,
@@ -103,6 +150,7 @@ contract UMAOracleHelper {
         _lastRequest.timestamp = requestedTime;
         _lastRequest.state = state;
         _lastRequest.resolvedPrice = 0;
+        _lastRequest.proposer = address(0);
     }
 
     function _getIdentifierWhitelist()
