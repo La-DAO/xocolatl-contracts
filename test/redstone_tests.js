@@ -52,18 +52,15 @@ describe("Xoc System Tests", function () {
     await evmRevert(evmSnapshot0);
   });
 
-  it("Tickers should be set-up", async () => {
-    const ticker1 = await coinhouse.tickerUsdFiat();
-    const ticker2 = await reservehouse.tickerUsdFiat();
-    const ticker3 = await coinhouse.tickerReserveAsset();
-    const ticker4 = await reservehouse.tickerReserveAsset();
-    expect(ticker1).to.eq(ticker2);
-    expect(ticker3).to.eq(ticker4);
+  it("Tickers should be set-up in House Of Reserve", async () => {
+    let [tickerUsdFiat, tickerReserveAsset, tickers, trustedSigner] = await reservehouse.getRedstoneData();
+    expect(ethers.utils.parseBytes32String(tickerUsdFiat)).to.eq("MXN");
+    expect(ethers.utils.parseBytes32String(tickerReserveAsset)).to.eq("ETH");
   });
 
   it("Oracle price feed tests, should return a price value", async () => {
     await syncTime();
-    const price = await coinhouse.getLatestPrice();
+    const price = await coinhouse.getLatestPrice(reservehouse.address);
     await expect(price).to.be.gt(0);
 
     await syncTime();

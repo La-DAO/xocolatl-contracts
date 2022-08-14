@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 const { WrapperBuilder } = require("redstone-evm-connector");
 
 const syncTime = async function () {
@@ -22,15 +22,18 @@ const deploy_setup = async () => {
   let accountant = await AssetsAccountant.deploy();
   let coinhouse = await HouseOfCoin.deploy();
   let reservehouse = await HouseOfReserve.deploy();
-  let xoc = await Xocolatl.deploy();
+  let xoc = await upgrades.deployProxy(Xocolatl, [], {
+    kind: 'uups',
+    unsafeAllow: [
+      'delegatecall'
+    ]
+  });
   let mockweth = await MockWETH.deploy();
 
   // 2.- Initialize house contracts and register with accountant
   await coinhouse.initialize(
     xoc.address,
-    accountant.address,
-    "MXN",
-    "ETH"
+    accountant.address
   );
   await reservehouse.initialize(
     mockweth.address,
@@ -51,10 +54,8 @@ const deploy_setup = async () => {
 
   // 3.- Assign proper roles to coinhouse in fiat ERC20
   const minter = await xoc.MINTER_ROLE();
-  const burner = await xoc.BURNER_ROLE();
   const liquidator = await accountant.LIQUIDATOR_ROLE();
   await xoc.grantRole(minter, coinhouse.address);
-  await xoc.grantRole(burner, coinhouse.address);
   await accountant.grantRole(liquidator, coinhouse.address);
 
   // 4.- Wrap the contracts in redstone-evm-connector
