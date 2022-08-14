@@ -47,10 +47,8 @@ contract UMAOracleHelper {
 
     // Requests a price for `priceIdentifier` at `requestedTime` from the Optimistic Oracle.
     function requestPrice() external {
-        require(
-          _lastRequest.state == IOptimisticOracleV2.State.Settled,
-          "Last request not settled!"
-        );
+        _checkLastRequest();
+
         uint256 requestedTime = block.timestamp;
         IOptimisticOracleV2 oracle = _getOptimisticOracle();
         oracle.requestPrice(
@@ -64,6 +62,7 @@ contract UMAOracleHelper {
     }
 
     function requestPriceWithReward(uint256 rewardAmount) external {
+        _checkLastRequest();
         require(
             collateralCurrency.allowance(msg.sender, address(this)) >=
                 rewardAmount,
@@ -136,11 +135,27 @@ contract UMAOracleHelper {
     }
 
     function settleAndGetPriceLastRequest() external {
-      IOptimisticOracleV2 oracle = _getOptimisticOracle();
-      int256 settledPrice = oracle.settleAndGetPrice(priceIdentifier, _lastRequest.timestamp, "");
-      require(settledPrice > 0, "Settle Price Error!");
-      _lastRequest.resolvedPrice = uint256(settledPrice);
-      collateralCurrency.transfer(_lastRequest.proposer, computeTotalBondLastRequest());
+        IOptimisticOracleV2 oracle = _getOptimisticOracle();
+        int256 settledPrice = oracle.settleAndGetPrice(
+            priceIdentifier,
+            _lastRequest.timestamp,
+            ""
+        );
+        require(settledPrice > 0, "Settle Price Error!");
+        _lastRequest.resolvedPrice = uint256(settledPrice);
+        collateralCurrency.transfer(
+            _lastRequest.proposer,
+            computeTotalBondLastRequest()
+        );
+    }
+
+    function _checkLastRequest() internal {
+        if (_lastRequest.timestamp != 0) {
+            require(
+                _lastRequest.state == IOptimisticOracleV2.State.Settled,
+                "Last request not settled!"
+            );
+        }
     }
 
     function _resetLastRequest(
