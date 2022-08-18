@@ -56,18 +56,18 @@ const umaFixture = async () => {
   await accountant.grantRole(liquidator, coinhouse.address);
 
   // 4.- Wrap the contracts in redstone-evm-connector
-  const w_reservehouse = WrapperBuilder.wrapLite(reservehouse).usingPriceFeed("redstone-stocks");
-  const w_coinhouse = WrapperBuilder.wrapLite(coinhouse).usingPriceFeed("redstone-stocks");
+  // const w_reservehouse = WrapperBuilder.wrapLite(reservehouse).usingPriceFeed("redstone-stocks");
+  // const w_coinhouse = WrapperBuilder.wrapLite(coinhouse).usingPriceFeed("redstone-stocks");
 
   // 5.- Authorize Redstone Provider
   // You can check check evm addresses for providers at: https://api.redstone.finance/providers
   // 'redstone' main demo provider = 0x0C39486f770B26F5527BBBf942726537986Cd7eb; 
   // 'redstone-stocks' demo provider = 0x926E370fD53c23f8B71ad2B3217b227E41A92b12;
   // 'redstone-rapid' demo provider = 0xf786a909D559F5Dee2dc6706d8e5A81728a39aE9;
-  const txrh = await reservehouse.authorizeSigner("0x926E370fD53c23f8B71ad2B3217b227E41A92b12");
-  await txrh.wait();
-  const txch = await coinhouse.authorizeSigner("0x926E370fD53c23f8B71ad2B3217b227E41A92b12");
-  await txch.wait();
+  // const txrh = await reservehouse.authorizeSigner("0x926E370fD53c23f8B71ad2B3217b227E41A92b12");
+  // await txrh.wait();
+  // const txch = await coinhouse.authorizeSigner("0x926E370fD53c23f8B71ad2B3217b227E41A92b12");
+  // await txch.wait();
 
   // 6.- Assign deposit limit
   const depositLimitAmount = ethers.utils.parseEther("100");
@@ -80,9 +80,7 @@ const umaFixture = async () => {
   return {
     accountant,
     coinhouse,
-    w_coinhouse,
     reservehouse,
-    w_reservehouse,
     xoc,
     weth
   }

@@ -11,6 +11,11 @@ const syncTime = async function () {
   }
 };
 
+const timeTravel = async (seconds) => {
+  await ethers.provider.send("evm_increaseTime", [seconds]);
+  await ethers.provider.send("evm_mine");
+};
+
 const toBytes32 = (bn) => {
   return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
 };
@@ -56,5 +61,6 @@ module.exports = {
   evmSnapshot,
   evmRevert,
   syncTime,
+  timeTravel,
   setERC20UserBalance
 };

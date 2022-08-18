@@ -2,13 +2,16 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { createFixtureLoader } = require("ethereum-waffle");
 const { ASSETS, UMA_CONTRACTS } = require("../scripts/const");
+const { umaFixture } = require("./fixtures/uma_fixture");
 
 const { provider } = ethers;
+
 
 const {
   evmSnapshot,
   evmRevert,
-  syncTime
+  setERC20UserBalance,
+  timeTravel
 } = require("./utils.js");
 
 describe("Xoc Tests - Polygon UMA Oracle", function () {
@@ -33,11 +36,11 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
     accounts = await ethers.getSigners();
 
     const loadFixture = createFixtureLoader(accounts, provider);
-    const loadedContracts = await loadFixture(deploy_setup(false, weth));
+    const loadedContracts = await loadFixture(umaFixture);
 
     accountant = loadedContracts.accountant;
-    coinhouse = loadedContracts.w_coinhouse;
-    reservehouse = loadedContracts.w_reservehouse;
+    coinhouse = loadedContracts.coinhouse;
+    reservehouse = loadedContracts.reservehouse;
     xoc = loadedContracts.xoc;
     weth = loadedContracts.weth;
 
@@ -62,6 +65,19 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
 
   it("succesfully complete UMAOracleHelper request processs", async () => {
     await umahelper.requestPrice();
+    const proposeStake = ethers.utils.parseEther("10");
+    const proposerUser = accounts[1];
+    const priceProposal = ethers.utils.parseUnits("5",16);
+
+    await setERC20UserBalance(proposerUser.address, weth.address, 'polygon', proposeStake);
+    expect(await weth.balanceOf(proposerUser.address)).to.eq(proposeStake);
+    
+    await weth.connect(proposerUser).approve(umahelper.address, proposeStake);
+    await umahelper.connect(proposerUser).proposePriceLastRequest(priceProposal);
+    await timeTravel(60 * 60 * 24);
+    const returnedPrice = await umahelper.callStatic.settleLastRequestAndGetPrice();
+    await umahelper.settleLastRequestAndGetPrice();
+    expect(priceProposal).to.eq(returnedPrice);
   });
 
   // it("Oracle price feed tests, should return a price value", async () => {

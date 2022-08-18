@@ -8,6 +8,8 @@ import "../../interfaces/uma/IAddressWhitelist.sol";
 import "./OracleInterfaces.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import "hardhat/console.sol";
+
 contract UMAOracleHelper {
     struct LastRequest {
         uint256 timestamp;
@@ -43,6 +45,14 @@ contract UMAOracleHelper {
         );
         collateralCurrency = IERC20(_collateralAddress);
         priceIdentifier = _priceIdentifier;
+    }
+
+    function getLastRequest()
+        public
+        view
+        returns (LastRequest memory _lrequest)
+    {
+        return _lastRequest;
     }
 
     // Requests a price for `priceIdentifier` at `requestedTime` from the Optimistic Oracle.
@@ -117,12 +127,15 @@ contract UMAOracleHelper {
 
     function proposePriceLastRequest(uint256 proposedPrice) external {
         uint256 totalBond = computeTotalBondLastRequest();
+        console.log("totalBond",totalBond);
         require(
             collateralCurrency.allowance(msg.sender, address(this)) >=
                 totalBond,
             "No allowance for propose bond"
         );
+        collateralCurrency.transferFrom(msg.sender, address(this), totalBond);
         IOptimisticOracleV2 oracle = _getOptimisticOracle();
+        console.log("oracle",address(oracle));
         collateralCurrency.approve(address(oracle), totalBond);
         oracle.proposePrice(
             address(this),
@@ -134,7 +147,7 @@ contract UMAOracleHelper {
         _lastRequest.proposer = msg.sender;
     }
 
-    function settleAndGetPriceLastRequest() external {
+    function settleLastRequestAndGetPrice() external returns (uint256 price){
         IOptimisticOracleV2 oracle = _getOptimisticOracle();
         int256 settledPrice = oracle.settleAndGetPrice(
             priceIdentifier,
@@ -147,6 +160,7 @@ contract UMAOracleHelper {
             _lastRequest.proposer,
             computeTotalBondLastRequest()
         );
+        price = uint256(settledPrice);
     }
 
     function _checkLastRequest() internal {
