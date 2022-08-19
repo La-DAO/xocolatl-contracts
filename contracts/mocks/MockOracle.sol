@@ -84,6 +84,30 @@ contract MockOracle is Ownable, MockOracleState, OracleHouse {
     }
 
     /**
+     * @notice  See '_setUMAOracleHelper()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function setUMAOracleHelper(address newAddress)
+        external
+        override
+        onlyOwner
+    {
+        _setUMAOracleHelper(newAddress);
+    }
+
+    /**
+     * @notice  See '_setAcceptableUMAPriceObsolence()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function setAcceptableUMAPriceObsolence(uint256 newTime)
+        external
+        override
+        onlyOwner
+    {
+        _setAcceptableUMAPriceObsolence(newTime);
+    }
+
+    /**
      * @notice  See '_setChainlinkAddrs()' in {OracleHouse}
      * @dev  Restricted to admin only.
      */

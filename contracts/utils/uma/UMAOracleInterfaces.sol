@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 /**
  * @title Stores common interface names used throughout the DVM by registration in the Finder.
  */
-library OracleInterfaces {
+library UMAOracleInterfaces {
     bytes32 public constant Oracle = "Oracle";
     bytes32 public constant IdentifierWhitelist = "IdentifierWhitelist";
     bytes32 public constant Store = "Store";

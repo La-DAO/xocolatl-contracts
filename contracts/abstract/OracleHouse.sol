@@ -3,6 +3,8 @@ pragma solidity 0.8.13;
 
 import "../utils/redstone/PriceAware.sol";
 import "../interfaces/chainlink/IAggregatorV3.sol";
+import "../utils/uma/UMAOracleHelper.sol";
+import "../interfaces/uma/IOptimisticOracleV2.sol";
 
 import "hardhat/console.sol";
 
@@ -29,6 +31,8 @@ abstract contract OracleHouse is PriceAware {
     address private _trustedSigner;
 
     /// uma required state variables
+    UMAOracleHelper private _umaOracleHelper;
+    uint256 private _acceptableUMAPriceObselence;
 
     /// chainlink required state variables
     IAggregatorV3 private _addrUsdFiat;
@@ -37,8 +41,8 @@ abstract contract OracleHouse is PriceAware {
     // solhint-disable-next-line func-name-mixedcase
     function _oracleHouse_init() internal {
       _oracle_redstone_init();
+      _oracle_uma_init();
     }
-
 
     /**
      * @notice Returns the active oracle from House of Reserve.
@@ -83,7 +87,7 @@ abstract contract OracleHouse is PriceAware {
      * @dev emitted after the owner updates trusted signer
      * @param newSigner the address of the new signer
      **/
-    event TrustedSignerChanged(address indexed newSigner);
+    event TrustedSignerChanged(address newSigner);
 
     /**
      * @dev emitted after tickers for Redstone-evm-connector change.
@@ -200,9 +204,68 @@ abstract contract OracleHouse is PriceAware {
     /// UMA oracle methods ///
     //////////////////////////
 
-    function _getLatestPriceUMA() internal pure returns (uint256 price) {
-      price =0;
+    /**
+     * @dev emitted after the address for UMAHelper changes
+     * @param newAddress of UMAHelper
+     **/
+    event UMAHelperAddressChanged(address newAddress);
+
+    /**
+     * @dev emitted after the {acceptableUMAPriceObsolence} changes
+     * @param newTime of acceptable UMA price obsolence
+     **/
+     event AcceptableUMAPriceTimeChange(uint256 newTime);
+
+     // solhint-disable-next-line func-name-mixedcase
+     function _oracle_uma_init() private {
+        _acceptableUMAPriceObselence = 6 hours;
+     }
+
+    function _getLatestPriceUMA() internal view returns (uint256 price) {
+      UMAOracleHelper.LastRequest memory lRequest = _umaOracleHelper.getLastRequest();
+      uint256 priceObsolence = block.timestamp > lRequest.timestamp ? block.timestamp - lRequest.timestamp : type(uint256).max;
+      require(priceObsolence < _acceptableUMAPriceObselence, "Price too old!");
+      require(lRequest.state != IOptimisticOracleV2.State.Settled, "Price not settled");
+      price = lRequest.resolvedPrice;
     }
+
+    /**
+     * @dev See '_setUMAOracleHelper()'.
+     * Must be implemented in House of Reserve with admin restriction.
+     */
+    function setUMAOracleHelper(address newAddress) external virtual;
+
+    /**
+     * @notice Sets a new address for the UMAOracleHelper
+     * @dev Restricted to admin only.
+     * @param newAddress for UMAOracleHelper.
+     * Emits a {UMAHelperAddressChanged} event.
+     */
+    function _setUMAOracleHelper(address newAddress) internal {
+        require(newAddress != address(0), "Zero address!");
+        _umaOracleHelper = UMAOracleHelper(newAddress);
+        emit UMAHelperAddressChanged(newAddress);
+    }
+
+    /**
+     * @dev See '_setAcceptableUMAPriceObsolence()'.
+     * Must be implemented in House of Reserve with admin restriction.
+     */
+    function setAcceptableUMAPriceObsolence(uint256 newTime) external virtual;
+
+
+    /**
+     * @notice Sets a new acceptable UMA price feed obsolence time.
+     * @dev Restricted to admin only.
+     * @param _newTime for acceptable UMA price feed obsolence.
+     * Emits a {AcceptableUMAPriceTimeChange} event.
+     */
+    function _setAcceptableUMAPriceObsolence(uint256 _newTime) internal {
+        require(_newTime > 10 minutes, "NewTime is too small");
+        _acceptableUMAPriceObselence = _newTime;
+        emit AcceptableUMAPriceTimeChange(_newTime);
+    }
+
 
     ////////////////////////////////
     /// Chainlink oracle methods ///

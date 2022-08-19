@@ -5,7 +5,7 @@ import "../../interfaces/uma/IOptimisticOracleV2.sol";
 import "../../interfaces/uma/IdentifierWhitelistInterface.sol";
 import "../../interfaces/uma/IUMAFinder.sol";
 import "../../interfaces/uma/IAddressWhitelist.sol";
-import "./OracleInterfaces.sol";
+import "./UMAOracleInterfaces.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "hardhat/console.sol";
@@ -163,7 +163,7 @@ contract UMAOracleHelper {
         price = uint256(settledPrice);
     }
 
-    function _checkLastRequest() internal {
+    function _checkLastRequest() internal view {
         if (_lastRequest.timestamp != 0) {
             require(
                 _lastRequest.state == IOptimisticOracleV2.State.Settled,
@@ -190,7 +190,7 @@ contract UMAOracleHelper {
         return
             IdentifierWhitelistInterface(
                 finder.getImplementationAddress(
-                    OracleInterfaces.IdentifierWhitelist
+                    UMAOracleInterfaces.IdentifierWhitelist
                 )
             );
     }
@@ -199,7 +199,7 @@ contract UMAOracleHelper {
         return
             IAddressWhitelist(
                 finder.getImplementationAddress(
-                    OracleInterfaces.CollateralWhitelist
+                    UMAOracleInterfaces.CollateralWhitelist
                 )
             );
     }

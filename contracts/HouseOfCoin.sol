@@ -168,6 +168,30 @@ contract HouseOfCoin is
         _authorizeSigner(newtrustedSigner);
     }
 
+    /**
+     * @notice  See '_setUMAOracleHelper()' in {OracleHouse}
+     * @dev  Should revert.
+     */
+    function setUMAOracleHelper(address)
+        external
+        pure
+        override
+    {
+        revert("N/A to HouseOfCoin");
+    }
+
+    /**
+     * @notice  See '_setAcceptableUMAPriceObsolence()' in {OracleHouse}
+     * @dev  Should revert.
+     */
+    function setAcceptableUMAPriceObsolence(uint256)
+        external
+        pure
+        override
+    {
+        revert("N/A to HouseOfCoin");
+    }
+
     /** @dev See {OracleHouse-getChainlinkData} */
     function getChainlinkData()
         external

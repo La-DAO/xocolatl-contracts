@@ -120,7 +120,7 @@ contract HouseOfReserve is
     }
 
     /** see {OracleHouse-activeOracle}*/
-    function activeOracle() external override view returns (uint256) {
+    function activeOracle() external view override returns (uint256) {
         return _activeOracle;
     }
 
@@ -157,6 +157,30 @@ contract HouseOfReserve is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _authorizeSigner(newtrustedSigner);
+    }
+
+    /**
+     * @notice  See '_setUMAOracleHelper()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function setUMAOracleHelper(address newAddress)
+        external
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setUMAOracleHelper(newAddress);
+    }
+
+    /**
+     * @notice  See '_setAcceptableUMAPriceObsolence()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function setAcceptableUMAPriceObsolence(uint256 newTime)
+        external
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setAcceptableUMAPriceObsolence(newTime);
     }
 
     /**
