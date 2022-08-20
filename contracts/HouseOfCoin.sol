@@ -15,7 +15,7 @@ import "./interfaces/IERC20Extension.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IAssetsAccountant.sol";
 import "./interfaces/IAssetsAccountantState.Sol";
-import "./interfaces/IHouseOfReserveState.sol";
+import "./interfaces/IHouseOfReserve.sol";
 import "./abstract/OracleHouse.sol";
 
 contract HouseOfCoinState {
@@ -197,14 +197,6 @@ contract HouseOfCoin is
         revert HouseOfCoin_notApplicable();
     }
 
-    /**
-     * @notice  See '_setAcceptableUMAPriceObsolence()' in {OracleHouse}
-     * @dev  Should revert.
-     */
-    function setAcceptableUMAPriceObsolence(uint256) external pure override {
-        revert HouseOfCoin_notApplicable();
-    }
-
     /** @dev See {OracleHouse-getChainlinkData} */
     function getChainlinkData()
         external
@@ -239,13 +231,13 @@ contract HouseOfCoin is
         override
         returns (uint256 price)
     {
-        IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserve_);
+        IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserve_);
         uint256 activeOracle_ = hOfReserve.activeOracle();
         if (activeOracle_ == 0) {
             (, , bytes32[] memory tickers_, ) = hOfReserve.getRedstoneData();
             price = _getLatestPriceRedstone(tickers_);
         } else if (activeOracle_ == 1) {
-            price = _getLatestPriceUMA();
+            price = hOfReserve.getLatestPrice();
         } else if (activeOracle_ == 2) {
             (address addrUsdFiat_, address addrReserveAsset_) = hOfReserve
                 .getChainlinkData();
@@ -269,7 +261,7 @@ contract HouseOfCoin is
         address houseOfReserve,
         uint256 amount
     ) public returns (bool success) {
-        IHouseOfReserveState hOfReserve = IHouseOfReserveState(houseOfReserve);
+        IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
         IERC20Extension bAsset = IERC20Extension(backedAsset);
 
         uint256 reserveTokenID = hOfReserve.reserveTokenID();
@@ -292,7 +284,7 @@ contract HouseOfCoin is
         }
 
         // Get inputs for checking minting power, collateralization factor and oracle price
-        IHouseOfReserveState.Factor memory collatRatio = hOfReserve
+        IHouseOfReserve.Factor memory collatRatio = hOfReserve
             .collateralRatio();
         uint256 price = getLatestPrice(houseOfReserve);
 
@@ -382,9 +374,9 @@ contract HouseOfCoin is
         address hOfReserveAddr = accountant.houseOfReserves(
             accountant.reservesIds(reserveAsset, backedAsset)
         );
-        IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserveAddr);
+        IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserveAddr);
 
-        IHouseOfReserveState.Factor memory collatRatio = hOfReserve
+        IHouseOfReserve.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
         uint256 latestPrice = getLatestPrice(hOfReserveAddr);
@@ -461,9 +453,9 @@ contract HouseOfCoin is
         );
 
         address hOfReserveAddr = accountant.houseOfReserves(reserveTokenID);
-        IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserveAddr);
+        IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserveAddr);
 
-        IHouseOfReserveState.Factor memory collatRatio = hOfReserve
+        IHouseOfReserve.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
         uint256 latestPrice = getLatestPrice(hOfReserveAddr);
@@ -570,11 +562,11 @@ contract HouseOfCoin is
         uint256 _collateralPenalty
     ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (
-            _liqParam.globalBase == 0 ||
-            _liqParam.marginCallThreshold == 0 ||
-            _liqParam.liquidationThreshold == 0 ||
-            _liqParam.liquidationPricePenaltyDiscount == 0 ||
-            _liqParam.collateralPenalty == 0 ||
+            _globalBase== 0 ||
+            _marginCallThreshold == 0 ||
+            _liquidationThreshold == 0 ||
+            _liquidationPricePenaltyDiscount == 0 ||
+            _collateralPenalty == 0 ||
             _globalBase % 10 != 0 ||
             _liquidationThreshold >= _marginCallThreshold ||
             _liquidationThreshold >= _globalBase ||
@@ -623,9 +615,9 @@ contract HouseOfCoin is
 
         address hOfReserveAddr = accountant.houseOfReserves(reserveTokenID);
 
-        IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserveAddr);
+        IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserveAddr);
 
-        IHouseOfReserveState.Factor memory collatRatio = hOfReserve
+        IHouseOfReserve.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
         uint256 latestPrice = getLatestPrice(hOfReserveAddr);
@@ -667,7 +659,7 @@ contract HouseOfCoin is
         address user,
         uint256 reserveTokenID,
         uint256 backedTokenID,
-        IHouseOfReserveState.Factor memory collatRatio,
+        IHouseOfReserve.Factor memory collatRatio,
         uint256 price
     ) internal view returns (uint256) {
         // Need balances for tokenIDs of both reserves and backed asset in {AssetsAccountant}
@@ -676,7 +668,7 @@ contract HouseOfCoin is
             reserveTokenID,
             backedTokenID
         );
-
+        
         // Check if msg.sender has reserves
         if (reserveBal == 0) {
             // If msg.sender has NO reserves, minting power = 0.
@@ -707,7 +699,7 @@ contract HouseOfCoin is
     function _checkIfUserCanMintMore(
         uint256 reserveBal,
         uint256 mintedCoinBal,
-        IHouseOfReserveState.Factor memory collatRatio,
+        IHouseOfReserve.Factor memory collatRatio,
         uint256 price
     ) internal pure returns (bool canMintMore, uint256 remainingMintingPower) {
         uint256 reserveBalreducedByFactor = (reserveBal *
@@ -748,7 +740,7 @@ contract HouseOfCoin is
     function _computeUserHealthRatio(
         uint256 reserveBal,
         uint256 mintedCoinBal,
-        IHouseOfReserveState.Factor memory collatRatio,
+        IHouseOfReserve.Factor memory collatRatio,
         uint256 price
     ) internal view returns (uint256 healthRatio) {
         if (mintedCoinBal == 0 || reserveBal == 0) {

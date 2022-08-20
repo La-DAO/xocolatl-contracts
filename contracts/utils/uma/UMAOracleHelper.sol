@@ -7,10 +7,15 @@ import "../../interfaces/uma/IUMAFinder.sol";
 import "../../interfaces/uma/IAddressWhitelist.sol";
 import "./UMAOracleInterfaces.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import "hardhat/console.sol";
+import "../../interfaces/chainlink/IAggregatorV3.sol";
 
 contract UMAOracleHelper {
+    /**
+     * @dev emitted after the {acceptableUMAPriceObsolence} changes
+     * @param newTime of acceptable UMA price obsolence
+     **/
+    event AcceptableUMAPriceTimeChange(uint256 newTime);
+
     struct LastRequest {
         uint256 timestamp;
         IOptimisticOracleV2.State state;
@@ -25,14 +30,17 @@ contract UMAOracleHelper {
     bytes32 private priceIdentifier;
 
     // The collateral currency used to back the positions in this contract.
-    IERC20 public collateralCurrency;
+    IERC20 public stakeCollateralCurrency;
+    
+    uint256 public acceptableUMAPriceObselence;
 
     LastRequest internal _lastRequest;
 
     constructor(
-        address _collateralAddress,
+        address _stakeCollateralCurrency,
         address _finderAddress,
-        bytes32 _priceIdentifier
+        bytes32 _priceIdentifier,
+        uint256 _acceptableUMAPriceObselence
     ) {
         finder = IUMAFinder(_finderAddress);
         require(
@@ -40,19 +48,39 @@ contract UMAOracleHelper {
             "Unsupported price identifier"
         );
         require(
-            _getAddressWhitelist().isOnWhitelist(_collateralAddress),
+            _getAddressWhitelist().isOnWhitelist(_stakeCollateralCurrency),
             "Unsupported collateral type"
         );
-        collateralCurrency = IERC20(_collateralAddress);
+        stakeCollateralCurrency = IERC20(_stakeCollateralCurrency);
         priceIdentifier = _priceIdentifier;
+        setAcceptableUMAPriceObsolence(_acceptableUMAPriceObselence);
     }
 
-    function getLastRequest()
-        public
+    /**
+     * Returns computed price in 8 decimal places.
+     * @dev Requires chainlink price feed address for reserve asset.
+     * Requires:
+     * - price settled time is not greater than acceptableUMAPriceObselence.
+     * - last request proposed price is settled according to UMA process: 
+     *   https://docs.umaproject.org/protocol-overview/how-does-umas-oracle-work
+     */
+    function getLastRequest(address addrChainlinkReserveAsset_)
+        external
         view
-        returns (LastRequest memory _lrequest)
+        returns (
+            uint256 computedPrice
+        )
     {
-        return _lastRequest;
+        uint256 priceObsolence = block.timestamp > _lastRequest.timestamp
+            ? block.timestamp - _lastRequest.timestamp
+            : type(uint256).max;
+        require(_lastRequest.state == IOptimisticOracleV2.State.Settled, "Not settled!");
+        require(
+            priceObsolence < acceptableUMAPriceObselence,
+            "Price too old!"
+        );
+        (, int256 usdreserve, , , ) = IAggregatorV3(addrChainlinkReserveAsset_).latestRoundData();
+        computedPrice = uint256(usdreserve) * 1e18  / _lastRequest.resolvedPrice;
     }
 
     // Requests a price for `priceIdentifier` at `requestedTime` from the Optimistic Oracle.
@@ -65,7 +93,7 @@ contract UMAOracleHelper {
             priceIdentifier,
             requestedTime,
             "",
-            IERC20(collateralCurrency),
+            IERC20(stakeCollateralCurrency),
             0
         );
         _resetLastRequest(requestedTime, IOptimisticOracleV2.State.Requested);
@@ -74,13 +102,13 @@ contract UMAOracleHelper {
     function requestPriceWithReward(uint256 rewardAmount) external {
         _checkLastRequest();
         require(
-            collateralCurrency.allowance(msg.sender, address(this)) >=
+            stakeCollateralCurrency.allowance(msg.sender, address(this)) >=
                 rewardAmount,
             "No erc20-approval"
         );
         IOptimisticOracleV2 oracle = _getOptimisticOracle();
 
-        collateralCurrency.approve(address(oracle), rewardAmount);
+        stakeCollateralCurrency.approve(address(oracle), rewardAmount);
 
         uint256 requestedTime = block.timestamp;
 
@@ -88,7 +116,7 @@ contract UMAOracleHelper {
             priceIdentifier,
             requestedTime,
             "",
-            IERC20(collateralCurrency),
+            IERC20(stakeCollateralCurrency),
             rewardAmount
         );
 
@@ -125,18 +153,20 @@ contract UMAOracleHelper {
         totalBond = request.requestSettings.bond + request.finalFee;
     }
 
+    /**
+     * @dev Proposed price should be in 18 decimals per specification: 
+     * https://github.com/UMAprotocol/UMIPs/blob/master/UMIPs/umip-139.md
+     */
     function proposePriceLastRequest(uint256 proposedPrice) external {
         uint256 totalBond = computeTotalBondLastRequest();
-        console.log("totalBond",totalBond);
         require(
-            collateralCurrency.allowance(msg.sender, address(this)) >=
+            stakeCollateralCurrency.allowance(msg.sender, address(this)) >=
                 totalBond,
             "No allowance for propose bond"
         );
-        collateralCurrency.transferFrom(msg.sender, address(this), totalBond);
+        stakeCollateralCurrency.transferFrom(msg.sender, address(this), totalBond);
         IOptimisticOracleV2 oracle = _getOptimisticOracle();
-        console.log("oracle",address(oracle));
-        collateralCurrency.approve(address(oracle), totalBond);
+        stakeCollateralCurrency.approve(address(oracle), totalBond);
         oracle.proposePrice(
             address(this),
             priceIdentifier,
@@ -145,22 +175,39 @@ contract UMAOracleHelper {
             int256(proposedPrice)
         );
         _lastRequest.proposer = msg.sender;
+        _lastRequest.state = IOptimisticOracleV2.State.Proposed;
     }
 
-    function settleLastRequestAndGetPrice() external returns (uint256 price){
+    function settleLastRequestAndGetPrice() external returns (uint256 price) {
         IOptimisticOracleV2 oracle = _getOptimisticOracle();
         int256 settledPrice = oracle.settleAndGetPrice(
             priceIdentifier,
-            _lastRequest.timestamp,
+            _lastRequest.timestamp, 
             ""
         );
         require(settledPrice > 0, "Settle Price Error!");
         _lastRequest.resolvedPrice = uint256(settledPrice);
-        collateralCurrency.transfer(
+        _lastRequest.state = IOptimisticOracleV2.State.Settled;
+        stakeCollateralCurrency.transfer(
             _lastRequest.proposer,
             computeTotalBondLastRequest()
         );
         price = uint256(settledPrice);
+    }
+
+    /**
+     * @notice Sets a new acceptable UMA price feed obsolence time.
+     * @dev Restricted to admin only.
+     * @param _newTime for acceptable UMA price feed obsolence.
+     * Emits a {AcceptableUMAPriceTimeChange} event.
+     */
+    function setAcceptableUMAPriceObsolence(uint256 _newTime) public {
+        if (_newTime < 10 minutes) {
+            // NewTime is too small
+            revert("Invalid input");
+        }
+        acceptableUMAPriceObselence = _newTime;
+        emit AcceptableUMAPriceTimeChange(_newTime);
     }
 
     function _checkLastRequest() internal view {

@@ -172,18 +172,6 @@ contract HouseOfReserve is
     }
 
     /**
-     * @notice  See '_setAcceptableUMAPriceObsolence()' in {OracleHouse}
-     * @dev  Restricted to admin only.
-     */
-    function setAcceptableUMAPriceObsolence(uint256 newTime)
-        external
-        override
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        _setAcceptableUMAPriceObsolence(newTime);
-    }
-
-    /**
      * @notice  See '_setChainlinkAddrs()' in {OracleHouse}
      * @dev  Restricted to admin only.
      */

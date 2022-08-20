@@ -12,7 +12,7 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IHouseOfReserveState.sol";
+import "./interfaces/IHouseOfReserve.sol";
 import "./interfaces/IHouseOfCoinState.sol";
 
 contract AssetsAccountantState {
@@ -76,9 +76,9 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
 
         // Check type of House being registered and proceed accordingly
 
-        if(IHouseOfReserveState(houseAddress).HOUSE_TYPE() == keccak256("RESERVE_HOUSE")) {
+        if(IHouseOfReserve(houseAddress).HOUSE_TYPE() == keccak256("RESERVE_HOUSE")) {
 
-            IHouseOfReserveState hOfReserve = IHouseOfReserveState(houseAddress);
+            IHouseOfReserve hOfReserve = IHouseOfReserve(houseAddress);
             uint reserveTokenID = hOfReserve.reserveTokenID();
             address bAsset = hOfReserve.backedAsset();
 

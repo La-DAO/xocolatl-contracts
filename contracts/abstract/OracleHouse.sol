@@ -6,14 +6,23 @@ import "../interfaces/chainlink/IAggregatorV3.sol";
 import "../utils/uma/UMAOracleHelper.sol";
 import "../interfaces/uma/IOptimisticOracleV2.sol";
 
-import "hardhat/console.sol";
-
 abstract contract OracleHouse is PriceAware {
     /**
      * @dev emitted after activeOracle is changed.
      * @param newOracleNumber uint256 oracle id.
      **/
     event ActiveOracleChanged(uint256 newOracleNumber);
+
+    /// Custom errors
+
+    /** Wrong or invalid input*/
+    error OracleHouse_invalidInput();
+
+    /** Not initialized*/
+    error OracleHouse_notInitialized();
+
+    /** No valid value returned*/
+    error OracleHouse_noValue();
 
     enum OracleIds {
         redstone,
@@ -32,7 +41,6 @@ abstract contract OracleHouse is PriceAware {
 
     /// uma required state variables
     UMAOracleHelper private _umaOracleHelper;
-    uint256 private _acceptableUMAPriceObselence;
 
     /// chainlink required state variables
     IAggregatorV3 private _addrUsdFiat;
@@ -40,8 +48,7 @@ abstract contract OracleHouse is PriceAware {
 
     // solhint-disable-next-line func-name-mixedcase
     function _oracleHouse_init() internal {
-      _oracle_redstone_init();
-      _oracle_uma_init();
+        _oracle_redstone_init();
     }
 
     /**
@@ -51,7 +58,12 @@ abstract contract OracleHouse is PriceAware {
     function activeOracle() external view virtual returns (uint256);
 
     /** @dev Override for House of Coin with called inputs from House Of Reserve. */
-    function _getLatestPrice(address) internal view virtual returns (uint256 price) {
+    function _getLatestPrice(address)
+        internal
+        view
+        virtual
+        returns (uint256 price)
+    {
         if (_activeOracle == 0) {
             price = _getLatestPriceRedstone(_tickers);
         } else if (_activeOracle == 1) {
@@ -94,7 +106,10 @@ abstract contract OracleHouse is PriceAware {
      * @param newtickerUsdFiat short string
      * @param newtickerReserveAsset short string
      **/
-    event TickersChanged(bytes32 newtickerUsdFiat, bytes32 newtickerReserveAsset);
+    event TickersChanged(
+        bytes32 newtickerUsdFiat,
+        bytes32 newtickerReserveAsset
+    );
 
     // solhint-disable-next-line func-name-mixedcase
     function _oracle_redstone_init() private {
@@ -102,6 +117,10 @@ abstract contract OracleHouse is PriceAware {
         _tickers.push(bytes32(0));
     }
 
+
+    /**
+     * Returns price in 8 decimal places.
+     */
     function _getLatestPriceRedstone(bytes32[] memory tickers_)
         internal
         view
@@ -111,8 +130,9 @@ abstract contract OracleHouse is PriceAware {
         uint256[] memory oraclePrices = _getPricesFromMsg(tickers_);
         uint256 usdfiat = oraclePrices[0];
         uint256 usdReserveAsset = oraclePrices[1];
-        console.log('usdfiat', usdfiat, 'usdReserveAsset', usdReserveAsset);
-        require(usdfiat != 0 && usdReserveAsset != 0, "oracle return invalid!");
+        if (usdfiat == 0 || usdReserveAsset == 0) {
+            revert OracleHouse_noValue();
+        }
         price = (usdReserveAsset * 1e8) / usdfiat;
     }
 
@@ -123,12 +143,17 @@ abstract contract OracleHouse is PriceAware {
         external
         view
         virtual
-        returns (bytes32 tickerUsdFiat_, bytes32 tickerReserveAsset_, bytes32[] memory tickers_, address trustedSigner_)
+        returns (
+            bytes32 tickerUsdFiat_,
+            bytes32 tickerReserveAsset_,
+            bytes32[] memory tickers_,
+            address trustedSigner_
+        )
     {
-      tickerUsdFiat_ = _tickerUsdFiat;
-      tickerReserveAsset_ = _tickerReserveAsset;
-      tickers_ = _tickers;
-      trustedSigner_ = _trustedSigner;
+        tickerUsdFiat_ = _tickerUsdFiat;
+        tickerReserveAsset_ = _tickerReserveAsset;
+        tickers_ = _tickers;
+        trustedSigner_ = _trustedSigner;
     }
 
     /**
@@ -165,7 +190,9 @@ abstract contract OracleHouse is PriceAware {
         string memory tickerUsdFiat_,
         string memory tickerReserveAsset_
     ) internal {
-        require(_tickers.length == 2, "Not initialized!");
+        if (_tickers.length != 2) {
+            revert OracleHouse_notInitialized();
+        }
         bytes32 ticker1;
         bytes32 ticker2;
         // solhint-disable-next-line no-inline-assembly
@@ -195,7 +222,9 @@ abstract contract OracleHouse is PriceAware {
      * Emits a {TrustedSignerChanged} event.
      */
     function _authorizeSigner(address newtrustedSigner) internal {
-        require(newtrustedSigner != address(0), "Zero address!");
+        if (newtrustedSigner == address(0)) {
+            revert OracleHouse_invalidInput();
+        }
         _trustedSigner = newtrustedSigner;
         emit TrustedSignerChanged(_trustedSigner);
     }
@@ -210,23 +239,12 @@ abstract contract OracleHouse is PriceAware {
      **/
     event UMAHelperAddressChanged(address newAddress);
 
+
     /**
-     * @dev emitted after the {acceptableUMAPriceObsolence} changes
-     * @param newTime of acceptable UMA price obsolence
-     **/
-     event AcceptableUMAPriceTimeChange(uint256 newTime);
-
-     // solhint-disable-next-line func-name-mixedcase
-     function _oracle_uma_init() private {
-        _acceptableUMAPriceObselence = 6 hours;
-     }
-
+     * Returns price in 8 decimal places.
+     */
     function _getLatestPriceUMA() internal view returns (uint256 price) {
-      UMAOracleHelper.LastRequest memory lRequest = _umaOracleHelper.getLastRequest();
-      uint256 priceObsolence = block.timestamp > lRequest.timestamp ? block.timestamp - lRequest.timestamp : type(uint256).max;
-      require(priceObsolence < _acceptableUMAPriceObselence, "Price too old!");
-      require(lRequest.state != IOptimisticOracleV2.State.Settled, "Price not settled");
-      price = lRequest.resolvedPrice;
+        price = _umaOracleHelper.getLastRequest(address(_addrReserveAsset));
     }
 
     /**
@@ -242,30 +260,12 @@ abstract contract OracleHouse is PriceAware {
      * Emits a {UMAHelperAddressChanged} event.
      */
     function _setUMAOracleHelper(address newAddress) internal {
-        require(newAddress != address(0), "Zero address!");
+        if (newAddress == address(0)) {
+            revert OracleHouse_invalidInput();
+        }
         _umaOracleHelper = UMAOracleHelper(newAddress);
         emit UMAHelperAddressChanged(newAddress);
     }
-
-    /**
-     * @dev See '_setAcceptableUMAPriceObsolence()'.
-     * Must be implemented in House of Reserve with admin restriction.
-     */
-    function setAcceptableUMAPriceObsolence(uint256 newTime) external virtual;
-
-
-    /**
-     * @notice Sets a new acceptable UMA price feed obsolence time.
-     * @dev Restricted to admin only.
-     * @param _newTime for acceptable UMA price feed obsolence.
-     * Emits a {AcceptableUMAPriceTimeChange} event.
-     */
-    function _setAcceptableUMAPriceObsolence(uint256 _newTime) internal {
-        require(_newTime > 10 minutes, "NewTime is too small");
-        _acceptableUMAPriceObselence = _newTime;
-        emit AcceptableUMAPriceTimeChange(_newTime);
-    }
-
 
     ////////////////////////////////
     /// Chainlink oracle methods ///
@@ -281,18 +281,25 @@ abstract contract OracleHouse is PriceAware {
         address _newAddrReserveAsset
     );
 
+
+    /**
+     * Returns price in 8 decimal places.
+     */
     function _getLatestPriceChainlink(
         IAggregatorV3 addrUsdFiat_,
-        IAggregatorV3 addrReserveAsset_)
-    internal view returns (uint256 price) {
-        require(
-            address(addrUsdFiat_) != address(0) &&
-            address(addrReserveAsset_) != address(0),
-            "Not initialized!"
-        );
+        IAggregatorV3 addrReserveAsset_
+    ) internal view returns (uint256 price) {
+        if (
+            address(addrUsdFiat_) == address(0) ||
+            address(addrReserveAsset_) == address(0)
+        ) {
+            revert OracleHouse_notInitialized();
+        }
         (, int256 usdfiat, , , ) = addrUsdFiat_.latestRoundData();
         (, int256 usdreserve, , , ) = addrReserveAsset_.latestRoundData();
-        require(usdfiat > 0 && usdreserve > 0, "oracle return invalid!");
+        if (usdfiat <= 0 || usdreserve <= 0) {
+            revert OracleHouse_noValue();
+        }
         price = (uint256(usdreserve) * 1e8) / uint256(usdfiat);
     }
 
@@ -325,10 +332,9 @@ abstract contract OracleHouse is PriceAware {
     function _setChainlinkAddrs(address addrUsdFiat_, address addrReserveAsset_)
         internal
     {
-        require(
-            addrUsdFiat_ != address(0) && addrReserveAsset_ != address(0),
-            "Zero address!"
-        );
+        if (addrUsdFiat_ == address(0) || addrReserveAsset_ == address(0)) {
+            revert OracleHouse_invalidInput();
+        }
         _addrUsdFiat = IAggregatorV3(addrUsdFiat_);
         _addrReserveAsset = IAggregatorV3(addrReserveAsset_);
         emit ChainlinkAddressChange(addrUsdFiat_, addrReserveAsset_);

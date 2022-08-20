@@ -61,11 +61,11 @@ describe("Xoc Tests - Redstone Oracle", function () {
   it("Oracle price feed tests, should return a price value", async () => {
     await syncTime();
     const price = await coinhouse.getLatestPrice(reservehouse.address);
-    await expect(price).to.be.gt(0);
+    expect(price).to.be.gt(0);
 
     await syncTime();
     const price2 = await reservehouse.getLatestPrice();
-    await expect(price2).to.be.gt(0);
+    expect(price2).to.be.gt(0);
   });
 
   it("Deposit in HouseOfReserve", async () => {

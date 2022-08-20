@@ -1,9 +1,9 @@
 const { ethers, upgrades } = require("hardhat");
-const { ASSETS, UMA_CONTRACTS } = require("../../scripts/const");
+const { ASSETS, UMA_CONTRACTS, CHAINLINK_CONTRACTS } = require("../../../scripts/const");
 
 const {
   syncTime
-} = require("../utils.js");
+} = require("../../utils.js");
 
 const umaFixture = async () => {
 
@@ -12,13 +12,14 @@ const umaFixture = async () => {
   const HouseOfReserve = await ethers.getContractFactory("HouseOfReserve");
   const Xocolatl = await ethers.getContractFactory("Xocolatl");
 
-  // 0.- Set-up weth
-  const weth = await ethers.getContractAt("IERC20", ASSETS.polygon.weth.address);
+  // 0.- Set-up wrapped-native
+  const wnative = await ethers.getContractAt("IERC20", ASSETS.polygon.wmatic.address);
 
   // 1.- Deploy all contracts
   let accountant = await AssetsAccountant.deploy();
   let coinhouse = await HouseOfCoin.deploy();
   let reservehouse = await HouseOfReserve.deploy();
+  const weth = await ethers.getContractAt("IERC20", ASSETS.polygon.weth.address);
   let xoc = await upgrades.deployProxy(Xocolatl, [], {
     kind: 'uups',
     unsafeAllow: [
@@ -38,7 +39,7 @@ const umaFixture = async () => {
     accountant.address,
     "MXN",
     "ETH",
-    weth.address
+    wnative.address
   );
   await accountant.registerHouse(
     coinhouse.address,
@@ -59,16 +60,33 @@ const umaFixture = async () => {
   const depositLimitAmount = ethers.utils.parseEther("100");
   await reservehouse.setDepositLimit(depositLimitAmount);
 
+  //5.- Set-up oracle data
+  const sixhours = 60 * 60 *6;
+  const UMAHelper = await ethers.getContractFactory("UMAOracleHelper");
+  const umahelper = await UMAHelper.deploy(
+    weth.address,
+    UMA_CONTRACTS.polygon.finder.address,
+    UMA_CONTRACTS.priceIdentifiers.mxnusd,
+    sixhours
+  );
+  await reservehouse.setUMAOracleHelper(umahelper.address);
+  await reservehouse.setActiveOracle(1);
+  await reservehouse.setChainlinkAddrs(
+    CHAINLINK_CONTRACTS.polygon.mxnusd,
+    CHAINLINK_CONTRACTS.polygon.ethusd
+  );
+
   await syncTime();
 
-  console.log("complete utils!");
+  console.log('\t'+"Fixture complete!");
 
   return {
     accountant,
     coinhouse,
     reservehouse,
     xoc,
-    weth
+    weth,
+    umahelper
   }
 }
 

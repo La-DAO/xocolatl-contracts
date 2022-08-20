@@ -6,6 +6,12 @@ const ASSETS = {
         balanceOf: 0,
       },
     },
+    wmatic: {
+      address: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    }
   },
 }
 
@@ -21,7 +27,15 @@ const UMA_CONTRACTS = {
   },
 }
 
+const CHAINLINK_CONTRACTS = {
+  polygon: {
+    ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
+    mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
+  }
+}
+
 module.exports = {
   ASSETS,
-  UMA_CONTRACTS
+  UMA_CONTRACTS,
+  CHAINLINK_CONTRACTS
 }
