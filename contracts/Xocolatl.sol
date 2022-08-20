@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20FlashMintUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -15,12 +16,33 @@ contract Xocolatl is
     ERC20BurnableUpgradeable,
     PausableUpgradeable,
     AccessControlUpgradeable,
+    ERC20PermitUpgradeable,
     ERC20FlashMintUpgradeable,
     UUPSUpgradeable
 {
+    /**
+     * @dev Emit when FlashFee changes
+     * @param newFlashFee Factor
+     */
+    event FlashFeeChanged(Factor newFlashFee);
+
+    /**
+     * @dev Emit when FlashFeeReceiver changes
+     * @param newAddress address
+     */
+    event FlashFeeReceiverChanged(address newAddress);
+
+    struct Factor {
+        uint256 numerator;
+        uint256 denominator;
+    }
+
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+
+    Factor internal _flashFee;
+    address public flashFeeReceiver;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -32,6 +54,7 @@ contract Xocolatl is
         __ERC20Burnable_init();
         __Pausable_init();
         __AccessControl_init();
+        __ERC20Permit_init("Xocolatl MXN Stablecoin");
         __ERC20FlashMint_init();
         __UUPSUpgradeable_init();
 
@@ -39,6 +62,10 @@ contract Xocolatl is
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
+
+        // Default flash fee 0.01%
+        _flashFee.numerator = 1;
+        _flashFee.denominator = 10000;
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
@@ -49,17 +76,77 @@ contract Xocolatl is
         _unpause();
     }
 
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount)
+        public
+        onlyRole(MINTER_ROLE)
+        whenNotPaused
+    {
         _mint(to, amount);
+    }
+
+    function burn(uint256) public pure override {
+        revert("No self burn!");
     }
 
     function burn(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _burn(to, amount);
     }
 
-    function burn(uint256 amount) public pure override {
-        amount;
-        revert("Self burn not allowed!");
+    function maxFlashLoan(address token)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return token == address(this) ? totalSupply() : 0;
+    }
+
+    function flashFee(address token, uint256 amount)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        require(token == address(this), "ERC20FlashMint: wrong token");
+        return (amount * _flashFee.numerator) / _flashFee.denominator;
+    }
+
+    /**
+     * @dev Sets the flash fees as a percentage using Factor struct type.
+     * Example: 1% flash fee: struct Factor{numerator:1, denominator:100}.
+     * Restrictions:
+     *  - Should be restricted to admin function.
+     *  - The numerator should be less than denominator.
+     */
+    function setFlashFee(Factor memory _newFlashFee)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(
+            _newFlashFee.numerator < _newFlashFee.denominator,
+            "Invalid input!"
+        );
+        _flashFee = _newFlashFee;
+        emit FlashFeeChanged(_newFlashFee);
+    }
+
+    /**
+     * @dev Sets the flash fees receiver address.
+     * If address(0) fees are burned.
+     */
+    function setFlashFeeReceiver(address _flashFeeReceiverAddr)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        flashFeeReceiver = _flashFeeReceiverAddr;
+        emit FlashFeeReceiverChanged(_flashFeeReceiverAddr);
+    }
+
+    /** Override from {ERC20FlashMintUpgradeable} to send flash fees to 
+     *  established 'flashFeeReceiver' address 
+     */
+    function _flashFeeReceiver() internal view override returns (address) {
+        return flashFeeReceiver;
     }
 
     function _beforeTokenTransfer(
