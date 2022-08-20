@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-interface IHouseOfReserveState {
+import "./IOracle.sol";
+
+interface IHouseOfReserve is IOracle {
 
     struct Factor{
         uint numerator;
@@ -33,4 +35,18 @@ interface IHouseOfReserveState {
      */
     function collateralRatio() external view returns(Factor memory);
 
+    /**
+     * @dev Returns the latest price according to activeOracle
+     */
+    function getLatestPrice() external view returns(uint256 price);
+
+    /**
+     * @dev Deposit reserves in this contract on behalf caller.
+     */
+    function deposit(uint256 amount) external;
+
+    /**
+     * @dev Withdraw reserves in this contract on behalf caller.
+     */
+    function withdraw(uint256 amount) external;
 }

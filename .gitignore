@@ -17,3 +17,6 @@ scripts/output/*.json
 
 #Yarn log files
 *.log
+
+#Debug files
+temp.json

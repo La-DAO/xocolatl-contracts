@@ -96,8 +96,8 @@ contract HouseOfReserve is
         address _reserveAsset,
         address _backedAsset,
         address _assetsAccountant,
-        string memory _tickerUsdFiat,
-        string memory _tickerReserveAsset,
+        string memory tickerUsdFiat_,
+        string memory tickerReserveAsset_,
         address _WETH
     ) public initializer {
         reserveAsset = _reserveAsset;
@@ -114,9 +114,26 @@ contract HouseOfReserve is
         collateralRatio.numerator = 150;
         collateralRatio.denominator = 100;
         assetsAccountant = IAssetsAccountant(_assetsAccountant);
-        _oracleHouse_initialize();
-        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+        _oracleHouse_init();
+        _setTickers(tickerUsdFiat_, tickerReserveAsset_);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /** see {OracleHouse-activeOracle}*/
+    function activeOracle() external view override returns (uint256) {
+        return _activeOracle;
+    }
+
+    /**
+     * @notice  See '_setActiveOracle()' in {OracleHouse}.
+     * @dev restricted to admin only.
+     */
+    function setActiveOracle(OracleIds id_)
+        external
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setActiveOracle(id_);
     }
 
     /**
@@ -124,10 +141,10 @@ contract HouseOfReserve is
      * @dev restricted to admin only.
      */
     function setTickers(
-        string memory _tickerUsdFiat,
-        string memory _tickerReserveAsset
+        string memory tickerUsdFiat_,
+        string memory tickerReserveAsset_
     ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTickers(_tickerUsdFiat, _tickerReserveAsset);
+        _setTickers(tickerUsdFiat_, tickerReserveAsset_);
     }
 
     /**
@@ -140,6 +157,39 @@ contract HouseOfReserve is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         _authorizeSigner(newtrustedSigner);
+    }
+
+    /**
+     * @notice  See '_setUMAOracleHelper()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function setUMAOracleHelper(address newAddress)
+        external
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setUMAOracleHelper(newAddress);
+    }
+
+    /**
+     * @notice  See '_setChainlinkAddrs()' in {OracleHouse}
+     * @dev  Restricted to admin only.
+     */
+    function setChainlinkAddrs(address addrUsdFiat_, address addrReserveAsset_)
+        external
+        override
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setChainlinkAddrs(addrUsdFiat_, addrReserveAsset_);
+    }
+
+    /**
+     * @dev Call latest price according to activeOracle
+     * @dev See _getLatestPrice() in {OracleHouse}.
+     * @dev override _getLatestPrice() as required.
+     */
+    function getLatestPrice() public view returns (uint256 price) {
+        price = _getLatestPrice(address(0));
     }
 
     /**
@@ -212,8 +262,11 @@ contract HouseOfReserve is
      * @param newLimit uint256, must be greater than zero.
      * Emits a {DepositLimitChanged} event.
      */
-    function setDepositLimit(uint256 newLimit) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require( newLimit > 0, "Invalid inputs!");
+    function setDepositLimit(uint256 newLimit)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(newLimit > 0, "Invalid inputs!");
         depositLimit = newLimit;
         emit DepositLimitChanged(newLimit);
     }
@@ -322,14 +375,6 @@ contract HouseOfReserve is
             // Return _reserveBal if msg.sender has no minted coin.
             return _reserveBal;
         }
-    }
-
-    /**
-     * @dev Call latest price.
-     * @dev Must be called according to 'redstone-evm-connector' documentation.
-     */
-    function getLatestPrice() public view returns (uint256 price) {
-        price = _getLatestPrice();
     }
 
     /**
