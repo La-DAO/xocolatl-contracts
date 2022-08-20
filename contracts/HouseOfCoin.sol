@@ -66,7 +66,8 @@ contract HouseOfCoinState {
     event Liquidation(
         address indexed userLiquidated,
         address indexed liquidator,
-        uint256 collateralAmount
+        uint256 collateralAmount,
+        uint256 debtAmount
     );
 
     /**
@@ -824,6 +825,6 @@ contract HouseOfCoin is
         bAsset.burn(address(this), costofLiquidation);
 
         // Emit event
-        emit Liquidation(user, msg.sender, collatPenaltyBal);
+        emit Liquidation(user, msg.sender, collatPenaltyBal, costofLiquidation);
     }
 }
