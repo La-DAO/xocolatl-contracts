@@ -69,6 +69,35 @@ contract HouseOfCoinState {
         uint256 collateralAmount
     );
 
+    /**
+     * @dev Log when liquidation params change
+     * @param marginCallThreshold value.
+     * @param liquidationThreshold value.
+     * @param liquidationPricePenaltyDiscount value.
+     * @param collateralPenalty value.
+     */
+    event LiquidationParamsChanges(
+        uint256 globalBase,
+        uint256 marginCallThreshold,
+        uint256 liquidationThreshold,
+        uint256 liquidationPricePenaltyDiscount,
+        uint256 collateralPenalty
+    );
+
+    /// Custom errors
+
+    /** Function is disabled by implementation*/
+    error HouseOfCoin_notApplicable();
+
+    /** Wrong or invalid input*/
+    error HouseOfCoin_invalidInput();
+
+    /** Not authorized*/
+    error HouseOfCoin_notAuthorized();
+
+    /** Not enough reserves, or minted coin*/
+    error HouseOfCoin_noBalances();
+
     struct LiquidationParameters {
         uint256 globalBase;
         uint256 marginCallThreshold;
@@ -107,45 +136,37 @@ contract HouseOfCoin is
         backedAssetDecimals = IERC20Extension(backedAsset).decimals();
         assetsAccountant = _assetsAccountant;
 
-        // Defines all LiquidationParameters as base 100 decimal numbers.
-        _liqParam.globalBase = 100;
-        // Margin call when health ratio = 1 or below. This means maxMintPower = mintedDebt, accounting the collateralization factors.
-        _liqParam.marginCallThreshold = 100;
-        // Liquidation starts health ratio = 0.95 or below.
-        _liqParam.liquidationThreshold = 95;
-        // User's unhealthy position sells collateral at penalty discount of 10%, bring them back to a good HealthRatio.
-        _liqParam.liquidationPricePenaltyDiscount = 10;
-        // Percentage amount of unhealthy user's collateral that will be sold to bring user's to good HealthRatio.
-        _liqParam.collateralPenalty = 75;
-
-        // Internal function that will transform _liqParam, compatible with backedAsset decimals
-        _transformToBackAssetDecimalBase();
-
-        _oracleHouse_init();
-
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _oracleHouse_init();
+        setLiqParams(
+            100, // define all liquidation parameters as base 100 decimal numbers.
+            100, // margin call when health ratio is 1 or below. This means maxMintPower = mintedDebt, accounting the collateralization factors.
+            95, // liquidation starts when health ratio drops to 0.95 or below.
+            10, // 10% price discount for liquidated user collateral.
+            75 // 75% collateral of liquidated will be sold to bring user's to good HealthRatio.
+        );
     }
 
     /** @dev See {OracleHouse-activeOracle}. */
     function activeOracle() external pure override returns (uint256) {
-        revert("N/A to HouseOfCoin");
+        revert HouseOfCoin_notApplicable();
     }
 
     /** @dev See {OracleHouse-setActiveOracle} */
     function setActiveOracle(OracleIds) external pure override {
-        revert("N/A to HouseOfCoin");
+        revert HouseOfCoin_notApplicable();
     }
 
     /** @dev See {OracleHouse-setTickers} */
     function setTickers(string memory, string memory) external pure override {
-        revert("N/A to HouseOfCoin");
+        revert HouseOfCoin_notApplicable();
     }
 
     /** @dev See {OracleHouse-getRedstoneData} */
     function getRedstoneData()
         external
-        override
         pure
+        override
         returns (
             bytes32,
             bytes32,
@@ -153,7 +174,7 @@ contract HouseOfCoin is
             address
         )
     {
-        revert("N/A to HouseOfCoin");
+        revert HouseOfCoin_notApplicable();
     }
 
     /**
@@ -172,24 +193,16 @@ contract HouseOfCoin is
      * @notice  See '_setUMAOracleHelper()' in {OracleHouse}
      * @dev  Should revert.
      */
-    function setUMAOracleHelper(address)
-        external
-        pure
-        override
-    {
-        revert("N/A to HouseOfCoin");
+    function setUMAOracleHelper(address) external pure override {
+        revert HouseOfCoin_notApplicable();
     }
 
     /**
      * @notice  See '_setAcceptableUMAPriceObsolence()' in {OracleHouse}
      * @dev  Should revert.
      */
-    function setAcceptableUMAPriceObsolence(uint256)
-        external
-        pure
-        override
-    {
-        revert("N/A to HouseOfCoin");
+    function setAcceptableUMAPriceObsolence(uint256) external pure override {
+        revert HouseOfCoin_notApplicable();
     }
 
     /** @dev See {OracleHouse-getChainlinkData} */
@@ -199,12 +212,12 @@ contract HouseOfCoin is
         override
         returns (address, address)
     {
-        revert("N/A to HouseOfCoin");
+        revert HouseOfCoin_notApplicable();
     }
 
     /** @dev See {OracleHouse-setChainlinkAddrs} */
     function setChainlinkAddrs(address, address) external pure override {
-        revert("N/A to HouseOfCoin");
+        revert HouseOfCoin_notApplicable();
     }
 
     /**
@@ -236,7 +249,10 @@ contract HouseOfCoin is
         } else if (activeOracle_ == 2) {
             (address addrUsdFiat_, address addrReserveAsset_) = hOfReserve
                 .getChainlinkData();
-            price = _getLatestPriceChainlink(IAggregatorV3(addrUsdFiat_), IAggregatorV3(addrReserveAsset_));
+            price = _getLatestPriceChainlink(
+                IAggregatorV3(addrUsdFiat_),
+                IAggregatorV3(addrReserveAsset_)
+            );
         }
     }
 
@@ -259,21 +275,21 @@ contract HouseOfCoin is
         uint256 reserveTokenID = hOfReserve.reserveTokenID();
         uint256 backedTokenID = getBackedTokenID(reserveAsset);
 
-        // Validate reserveAsset is active with {AssetsAccountant} and check houseOfReserve inputs.
-        require(
+        // Validate reserveAsset is active with {AssetsAccountant} and check houseOfReserve input.
+        if (
             IAssetsAccountantState(assetsAccountant).houseOfReserves(
                 reserveTokenID
-            ) !=
-                address(0) &&
-                hOfReserve.reserveAsset() == reserveAsset,
-            "Not valid reserveAsset!"
-        );
+            ) ==
+            address(0) ||
+            hOfReserve.reserveAsset() != reserveAsset
+        ) {
+            revert HouseOfCoin_invalidInput();
+        }
 
-        // Validate this HouseOfCoin is active with {AssetsAccountant} and can mint backedAsset.
-        require(
-            bAsset.hasRole(keccak256("MINTER_ROLE"), address(this)),
-            "Not Authorized!"
-        );
+        // Validate this HouseOfCoin is active in {AssetsAccountant} and can mint backedAsset.
+        if (!bAsset.hasRole(keccak256("MINTER_ROLE"), address(this))) {
+            revert HouseOfCoin_notAuthorized();
+        }
 
         // Get inputs for checking minting power, collateralization factor and oracle price
         IHouseOfReserveState.Factor memory collatRatio = hOfReserve
@@ -288,10 +304,9 @@ contract HouseOfCoin is
             collatRatio,
             price
         );
-        require(
-            mintingPower > 0 && mintingPower >= amount,
-            "No reserves to mint amount!"
-        );
+        if (mintingPower == 0 || amount > mintingPower) {
+            revert HouseOfCoin_noBalances();
+        }
 
         // Update state in AssetAccountant
         IAssetsAccountant(assetsAccountant).mint(
@@ -325,14 +340,16 @@ contract HouseOfCoin is
             _backedTokenID
         );
 
-        // Check in {AssetsAccountant} that msg.sender backedAsset was created with assets '_backedTokenID'
-        require(userTokenIDBal >= 0, "No _backedTokenID balance!");
-
-        // Check that amount is less than '_backedTokenID' in {Assetsaccountant}
-        require(userTokenIDBal >= amount, "amount >  _backedTokenID balance!");
-
-        // Check that msg.sender has the intended backed ERC20 asset.
-        require(bAsset.balanceOf(msg.sender) >= amount, "No ERC20 allowance!");
+        // Check in {AssetsAccountant} that msg.sender backedAsset was created with assets '_backedTokenID' and
+        // that amount is less than '_backedTokenID' balance in {Assetsaccountant} and
+        // Check that msg.sender has the intended backed ERC20 asset to be burned.
+        if (
+            userTokenIDBal == 0 ||
+            amount > userTokenIDBal ||
+            amount > bAsset.balanceOf(msg.sender)
+        ) {
+            revert HouseOfCoin_invalidInput();
+        }
 
         // Burn amount of ERC20 tokens paybacked.
         bAsset.burn(msg.sender, amount);
@@ -361,7 +378,6 @@ contract HouseOfCoin is
             accountant.reservesIds(reserveAsset, backedAsset),
             getBackedTokenID(reserveAsset)
         );
-        require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
 
         address hOfReserveAddr = accountant.houseOfReserves(
             accountant.reservesIds(reserveAsset, backedAsset)
@@ -443,7 +459,6 @@ contract HouseOfCoin is
             reserveTokenID,
             backedTokenID
         );
-        require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
 
         address hOfReserveAddr = accountant.houseOfReserves(reserveTokenID);
         IHouseOfReserveState hOfReserve = IHouseOfReserveState(hOfReserveAddr);
@@ -482,15 +497,18 @@ contract HouseOfCoin is
         );
         uint256 backedTokenID = getBackedTokenID(reserveAsset);
 
-        (uint256 reserveBal, uint256 mintedCoinBal) = _checkBalances(
+        (uint256 reserveBal, ) = _checkBalances(
             user,
             reserveTokenID,
             backedTokenID
         );
+        if (reserveBal == 0) {
+            revert HouseOfCoin_noBalances();
+        }
 
-        require(mintedCoinBal > 0 && reserveBal > 0, "No balance!");
-
-        uint256 latestPrice = getLatestPrice(accountant.houseOfReserves(reserveTokenID));
+        uint256 latestPrice = getLatestPrice(
+            accountant.houseOfReserves(reserveTokenID)
+        );
 
         uint256 reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
 
@@ -526,6 +544,59 @@ contract HouseOfCoin is
      */
     function getLiqParams() public view returns (LiquidationParameters memory) {
         return _liqParam;
+    }
+
+    /**
+     * @dev Sets the liquidation parameters.
+     * @param _globalBase defines the base number of all liquidation parameters.
+     * @param _marginCallThreshold defines the health ratio at which margin call is triggered.
+     * @param _liquidationThreshold defines the health ratio at which liquidation can be triggered.
+     * @param _liquidationPricePenaltyDiscount price discount at which liquidated user collateral is sold.
+     * @param _collateralPenalty percent of liquidated user's reserves that are sold during a liquidation event.
+     * Requirements:
+     *  - function Should be admin restricted.
+     *  - no inputs can be zero.
+     *  - _globalBase modulo 10 should be zero.
+     *  - _marginCallThreshold  should be greater than _liquidationThreshold.
+     *  - _liquidationThreshold should be less than _globalBase.
+     *  - _liquidationPricePenaltyDiscount should be less than _globalBase.
+     *  - _collateralPenalty should be less than _globalBase.
+     */
+    function setLiqParams(
+        uint256 _globalBase,
+        uint256 _marginCallThreshold,
+        uint256 _liquidationThreshold,
+        uint256 _liquidationPricePenaltyDiscount,
+        uint256 _collateralPenalty
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (
+            _liqParam.globalBase == 0 ||
+            _liqParam.marginCallThreshold == 0 ||
+            _liqParam.liquidationThreshold == 0 ||
+            _liqParam.liquidationPricePenaltyDiscount == 0 ||
+            _liqParam.collateralPenalty == 0 ||
+            _globalBase % 10 != 0 ||
+            _liquidationThreshold >= _marginCallThreshold ||
+            _liquidationThreshold >= _globalBase ||
+            _liquidationPricePenaltyDiscount >= _globalBase ||
+            _collateralPenalty >= _globalBase
+        ) {
+            revert HouseOfCoin_invalidInput();
+        }
+        _liqParam.globalBase = _globalBase;
+        _liqParam.marginCallThreshold = _marginCallThreshold;
+        _liqParam.liquidationThreshold = _liquidationThreshold;
+        _liqParam
+            .liquidationPricePenaltyDiscount = _liquidationPricePenaltyDiscount;
+        _liqParam.collateralPenalty = _collateralPenalty;
+        _transformToBackAssetDecimalBase();
+        emit LiquidationParamsChanges(
+            _liqParam.globalBase,
+            _liqParam.marginCallThreshold,
+            _liqParam.liquidationThreshold,
+            _liqParam.liquidationPricePenaltyDiscount,
+            _liqParam.collateralPenalty
+        );
     }
 
     /**
@@ -655,16 +726,6 @@ contract HouseOfCoin is
      * @dev  Internal function that transforms _liqParams to backedAsset decimal base.
      */
     function _transformToBackAssetDecimalBase() internal {
-        require(backedAssetDecimals > 0, "No backedAsset decimals!");
-        require(
-            _liqParam.globalBase > 0 &&
-                _liqParam.marginCallThreshold > 0 &&
-                _liqParam.liquidationThreshold > 0 &&
-                _liqParam.liquidationPricePenaltyDiscount > 0 &&
-                _liqParam.collateralPenalty > 0,
-            "Empty _liqParam!"
-        );
-
         LiquidationParameters memory ltemp;
 
         ltemp.globalBase = 10**backedAssetDecimals;
@@ -690,6 +751,9 @@ contract HouseOfCoin is
         IHouseOfReserveState.Factor memory collatRatio,
         uint256 price
     ) internal view returns (uint256 healthRatio) {
+        if (mintedCoinBal == 0 || reserveBal == 0) {
+            revert HouseOfCoin_noBalances();
+        }
         // Check current maxMintableAmount with current price
         uint256 reserveBalreducedByFactor = (reserveBal *
             collatRatio.denominator) / collatRatio.numerator;
