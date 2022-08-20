@@ -5,14 +5,14 @@ const { WrapperBuilder } = require("redstone-evm-connector");
 
 const { provider } = ethers;
 
+const {redstoneFixture} = require("./fixtures/redstone_fixture");
 const {
-  deploy_setup,
   evmSnapshot,
   evmRevert,
   syncTime
 } = require("./utils.js");
 
-describe("Xoc System Tests", function () {
+describe("Xoc System Tests - Deposit Limit", function () {
 
   // Global Test variables
   let accounts;
@@ -20,7 +20,7 @@ describe("Xoc System Tests", function () {
   let coinhouse;
   let reservehouse;
   let xoc;
-  let mockweth;
+  let weth;
 
   let rid;
   let bid;
@@ -34,13 +34,13 @@ describe("Xoc System Tests", function () {
     accounts = await ethers.getSigners();
 
     const loadFixture = createFixtureLoader(accounts, provider);
-    const loadedContracts = await loadFixture(deploy_setup);
+    const loadedContracts = await loadFixture(redstoneFixture);
 
     accountant = loadedContracts.accountant;
     coinhouse = loadedContracts.coinhouse;
     reservehouse = loadedContracts.reservehouse;
     xoc = loadedContracts.xoc;
-    mockweth = loadedContracts.mockweth;
+    weth = loadedContracts.weth;
 
     rid = await reservehouse.reserveTokenID();
     bid = await reservehouse.backedTokenID();
@@ -58,8 +58,8 @@ describe("Xoc System Tests", function () {
   it("User makes deposit in HouseOfReserve", async () => {
     const depositAmount = ethers.utils.parseUnits("8", 18);
     const user = accounts[1];
-    await mockweth.connect(user).deposit({ value: depositAmount });
-    await mockweth.connect(user).approve(reservehouse.address, depositAmount);
+    await weth.connect(user).deposit({ value: depositAmount });
+    await weth.connect(user).approve(reservehouse.address, depositAmount);
     await reservehouse.connect(user).deposit(depositAmount);
     expect(await accountant.balanceOf(user.address, rid)).to.eq(depositAmount);
     expect(await reservehouse.totalDeposits()).to.eq(depositAmount);
@@ -81,8 +81,8 @@ describe("Xoc System Tests", function () {
   it("Should revert when additional user tries to deposit after 'depositLimit' is reached", async () => {
     const depositAmount = ethers.utils.parseUnits("5", 18);
     const user = accounts[3];
-    await mockweth.connect(user).deposit({ value: depositAmount });
-    await mockweth.connect(user).approve(reservehouse.address, depositAmount);
+    await weth.connect(user).deposit({ value: depositAmount });
+    await weth.connect(user).approve(reservehouse.address, depositAmount);
     await expect(reservehouse.connect(user).deposit(depositAmount)).to.be.reverted;
   });
 

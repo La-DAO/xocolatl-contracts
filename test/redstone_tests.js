@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { createFixtureLoader } = require("ethereum-waffle");
-const {redstoneFixture} = require("./fixtures/redstone_fixture")
+const {redstoneFixture} = require("./fixtures/redstone_fixture");
 const { WrapperBuilder } = require("redstone-evm-connector");
 
 const { provider } = ethers;
