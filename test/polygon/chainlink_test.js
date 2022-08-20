@@ -42,7 +42,6 @@ describe("Xoc Tests - Polygon Chainlink Oracle", function () {
     reservehouse = loadedContracts.reservehouse;
     xoc = loadedContracts.xoc;
     weth = loadedContracts.weth;
-    umahelper = loadedContracts.umahelper;
 
     rid = await reservehouse.reserveTokenID();
     bid = await reservehouse.backedTokenID();

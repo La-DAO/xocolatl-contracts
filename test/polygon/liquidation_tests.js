@@ -1,20 +1,19 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { createFixtureLoader } = require("ethereum-waffle");
-const { WrapperBuilder } = require("redstone-evm-connector");
+const { chainlinkFixture } = require("./fixture/chainlink_fixture");
 
 const { provider } = ethers;
 
 const {
-  deploy_setup,
   evmSnapshot,
   evmRevert,
-  syncTime
-} = require("./utils.js");
+  setERC20UserBalance
+} = require("../utils.js");
 
 const DEBUG = false;
 
-describe("Xoc System Tests", function () {
+describe("Xoc Liquidation Tests: using chainlink oracle", function () {
 
   // Global Test variables
   let accounts;
@@ -22,12 +21,13 @@ describe("Xoc System Tests", function () {
   let coinhouse;
   let reservehouse;
   let xoc;
-  let mockweth;
+  let weth;
 
   let rid;
   let bid;
 
   let evmSnapshot0;
+  let evmSnapshot1;
 
   let liquidator;
   let dumbUser;
@@ -35,6 +35,7 @@ describe("Xoc System Tests", function () {
   const largeAmountXoc = ethers.utils.parseUnits("1000000", 18);
 
   before(async () => {
+    evmSnapshot0 = await evmSnapshot();
 
     accounts = await ethers.getSigners();
 
@@ -42,13 +43,13 @@ describe("Xoc System Tests", function () {
     dumbUser = accounts[10];
 
     const loadFixture = createFixtureLoader(accounts, provider);
-    const loadedContracts = await loadFixture(deploy_setup);
+    const loadedContracts = await loadFixture(chainlinkFixture);
 
     accountant = loadedContracts.accountant;
-    coinhouse = loadedContracts.w_coinhouse;
-    reservehouse = loadedContracts.w_reservehouse;
+    coinhouse = loadedContracts.coinhouse;
+    reservehouse = loadedContracts.reservehouse;
     xoc = loadedContracts.xoc;
-    mockweth = loadedContracts.mockweth;
+    weth = loadedContracts.weth;
 
     rid = await reservehouse.reserveTokenID();
     bid = await reservehouse.backedTokenID();
@@ -57,11 +58,12 @@ describe("Xoc System Tests", function () {
     await xoc.mint(liquidator.address, largeAmountXoc);
   });
 
-  beforeEach(async () => {
-    evmSnapshot0 = await evmSnapshot();
+  beforeEach(async function () {
+    if (evmSnapshot1) await evmRevert(evmSnapshot1);
+    evmSnapshot1 = await evmSnapshot();
   });
 
-  afterEach(async () => {
+  after(async () => {
     await evmRevert(evmSnapshot0);
   });
 
@@ -71,16 +73,10 @@ describe("Xoc System Tests", function () {
   * @param {ethers.BigNumber} mintAmount - Etherjs compatible BigNumber.
   */
   const depositMintRoutine = async (depositAmount, mintAmount) => {
-    await mockweth.connect(dumbUser).deposit({ value: depositAmount });
-    await mockweth.connect(dumbUser).approve(reservehouse.address, depositAmount);
-    await syncTime();
-    let localreservehouseD = reservehouse.connect(dumbUser);
-    localreservehouseD = WrapperBuilder.wrapLite(localreservehouseD).usingPriceFeed("redstone-stocks");
-    await localreservehouseD.deposit(depositAmount);
-    await syncTime();
-    let localcoinhouseD = coinhouse.connect(dumbUser);
-    localcoinhouseD = WrapperBuilder.wrapLite(localcoinhouseD).usingPriceFeed("redstone-stocks");
-    await localcoinhouseD.mintCoin(mockweth.address, reservehouse.address, mintAmount);
+    await setERC20UserBalance(dumbUser.address, weth.address, 'polygon', depositAmount);
+    await weth.connect(dumbUser).approve(reservehouse.address, depositAmount);
+    await reservehouse.connect(dumbUser).deposit(depositAmount);
+    await coinhouse.connect(dumbUser).mintCoin(weth.address, reservehouse.address, mintAmount);
     expect(await xoc.balanceOf(dumbUser.address)).to.eq(mintAmount);
   }
 
@@ -89,17 +85,11 @@ describe("Xoc System Tests", function () {
   * Must followed a 'depositMintRoutine' function call.
   */
   const makeARiskyPosition = async () => {
-    let localcoinhouseD = coinhouse.connect(dumbUser);
-    localcoinhouseD = WrapperBuilder.wrapLite(localcoinhouseD).usingPriceFeed("redstone-stocks");
-
-    const remainingMintingPower = await localcoinhouseD.checkRemainingMintingPower(dumbUser.address, mockweth.address);
-
+    const remainingMintingPower = await coinhouse.checkRemainingMintingPower(dumbUser.address, weth.address);
     const percentDesired = ethers.BigNumber.from("99");
     const percentBase = ethers.BigNumber.from("100");
-
     const extraToMint = remainingMintingPower.mul(percentDesired).div(percentBase);
-
-    await localcoinhouseD.mintCoin(mockweth.address, reservehouse.address, extraToMint);
+    await coinhouse.connect(dumbUser).mintCoin(weth.address, reservehouse.address, extraToMint);
   }
 
 
@@ -111,19 +101,17 @@ describe("Xoc System Tests", function () {
     await depositMintRoutine(depositAmount, mintAmount);
 
     // Liquidator actions
-    let localcoinhouseL = coinhouse.connect(liquidator);
-    localcoinhouseL = WrapperBuilder.wrapLite(localcoinhouseL).usingPriceFeed("redstone-stocks");
+    let coinhouseL = coinhouse.connect(liquidator);
 
-    const liqParam = await localcoinhouseL.liqParam();
-    const price = await localcoinhouseL.redstoneGetLastPrice();
-    const healthRatio = await localcoinhouseL.computeUserHealthRatio(dumbUser.address, mockweth.address);
+    const liqParam = await coinhouseL.getLiqParams();
+    const price = await coinhouseL.getLatestPrice(reservehouse.address);
+    const healthRatio = await coinhouseL.computeUserHealthRatio(dumbUser.address, weth.address);
 
     if (DEBUG) {
       console.log("restoneLastPrice", price.toString());
       console.log("liqParam", liqParam.map(each => each.toString()));
       console.log("healthRatio", healthRatio.toString())
     }
-
     expect(healthRatio).to.be.gt(liqParam.globalBase);
   });
 
@@ -134,10 +122,9 @@ describe("Xoc System Tests", function () {
     await depositMintRoutine(depositAmount, mintAmount);
 
     // Liquidator actions
-    let localcoinhouseL = coinhouse.connect(liquidator);
-    localcoinhouseL = WrapperBuilder.wrapLite(localcoinhouseL).usingPriceFeed("redstone-stocks");
+    let coinhouseL = coinhouse.connect(liquidator);
 
-    expect(localcoinhouseL.liquidateUser(dumbUser.address, mockweth.address)).to.be.reverted;
+    await expect(coinhouseL.liquidateUser(dumbUser.address, weth.address)).to.be.reverted;
   });
 
   it("Should return a bad health ratio", async () => {
@@ -152,11 +139,10 @@ describe("Xoc System Tests", function () {
     await accountant.connect(accounts[0]).burn(dumbUser.address, rid, burnAmount);
 
     // Liquidator actions
-    let localcoinhouseL = coinhouse.connect(liquidator);
-    localcoinhouseL = WrapperBuilder.wrapLite(localcoinhouseL).usingPriceFeed("redstone-stocks");
+    let coinhouseL = coinhouse.connect(liquidator);
 
-    const liqParam = await localcoinhouseL.liqParam();
-    const healthRatio = await localcoinhouseL.computeUserHealthRatio(dumbUser.address, mockweth.address);
+    const liqParam = await coinhouseL.getLiqParams();
+    const healthRatio = await coinhouseL.computeUserHealthRatio(dumbUser.address, weth.address);
 
     if (DEBUG) {
       console.log("liqParam", liqParam.map(each => each.toString()));
@@ -178,10 +164,9 @@ describe("Xoc System Tests", function () {
     await accountant.connect(accounts[0]).burn(dumbUser.address, rid, burnAmount);
 
     // Liquidator actions
-    let localcoinhouseL = coinhouse.connect(liquidator);
-    localcoinhouseL = WrapperBuilder.wrapLite(localcoinhouseL).usingPriceFeed("redstone-stocks");
+    let coinhouseL = coinhouse.connect(liquidator);
 
-    const txResponse = await localcoinhouseL.liquidateUser(dumbUser.address, mockweth.address);
+    const txResponse = await coinhouseL.liquidateUser(dumbUser.address, weth.address);
     const txReceipt = await txResponse.wait();
 
     if (DEBUG) {
@@ -197,7 +182,7 @@ describe("Xoc System Tests", function () {
     let expectedTopics = [
       ethers.utils.hexZeroPad(dumbUser.address, 32),
       ethers.utils.hexZeroPad(xoc.address, 32),
-      ethers.utils.hexZeroPad(mockweth.address, 32)
+      ethers.utils.hexZeroPad(weth.address, 32)
     ]
 
     expectedTopics = expectedTopics.map(each => each.toLowerCase());
@@ -224,16 +209,15 @@ describe("Xoc System Tests", function () {
     await accountant.connect(accounts[0]).burn(dumbUser.address, rid, burnAmount);
 
     // Liquidator actions
-    let localcoinhouseL = coinhouse.connect(liquidator);
-    localcoinhouseL = WrapperBuilder.wrapLite(localcoinhouseL).usingPriceFeed("redstone-stocks");
+    let coinhouseL = coinhouse.connect(liquidator);
 
     [
       costAmount,
       collateralPenalty
-    ] = await localcoinhouseL.computeCostOfLiquidation(dumbUser.address, mockweth.address);
+    ] = await coinhouseL.computeCostOfLiquidation(dumbUser.address, weth.address);
 
     let computedPrice = costAmount.mul(ethers.utils.parseUnits("1", 8)).div(collateralPenalty);
-    let oraclePrice = await localcoinhouseL.redstoneGetLastPrice();
+    let oraclePrice = await coinhouseL.getLatestPrice(reservehouse.address);
 
     if (DEBUG) {
       console.log("costAmount", costAmount.toString(), "collateralPenalty", collateralPenalty.toString());
@@ -255,31 +239,30 @@ describe("Xoc System Tests", function () {
     await accountant.connect(accounts[0]).burn(dumbUser.address, rid, burnAmount);
 
     // Liquidator actions
-    let localcoinhouseL = coinhouse.connect(liquidator);
-    localcoinhouseL = WrapperBuilder.wrapLite(localcoinhouseL).usingPriceFeed("redstone-stocks");
+    let coinhouseL = coinhouse.connect(liquidator);
 
     [
       costAmount,
       collateralPenalty
-    ] = await localcoinhouseL.computeCostOfLiquidation(dumbUser.address, mockweth.address);
+    ] = await coinhouseL.computeCostOfLiquidation(dumbUser.address, weth.address);
 
     await xoc.connect(liquidator).approve(coinhouse.address, costAmount);
 
-    const mockwethBalBefore = await accountant.balanceOf(liquidator.address, rid);
+    const wethBalBefore = await accountant.balanceOf(liquidator.address, rid);
     const xocBalBefore = await xoc.balanceOf(liquidator.address);
 
-    await localcoinhouseL.liquidateUser(dumbUser.address, mockweth.address);
+    await coinhouseL.liquidateUser(dumbUser.address, weth.address);
 
-    const mockwethBalAfter = await accountant.balanceOf(liquidator.address, rid);
+    const wethBalAfter = await accountant.balanceOf(liquidator.address, rid);
     const xocBalAfter = await xoc.balanceOf(liquidator.address);
 
     if (DEBUG) {
-      console.log("mockwethBalBefore", mockwethBalBefore.toString(), "mockwethBalAfter", mockwethBalAfter.toString());
+      console.log("wethBalBefore", wethBalBefore.toString(), "wethBalAfter", wethBalAfter.toString());
       console.log("xocBalBefore", xocBalBefore.toString(), "xocBalAfter", xocBalAfter.toString());
     }
 
-    expect(mockwethBalAfter).to.be.gt(mockwethBalBefore);
-    expect(mockwethBalAfter).to.eq(collateralPenalty);
+    expect(wethBalAfter).to.be.gt(wethBalBefore);
+    expect(wethBalAfter).to.eq(collateralPenalty);
     expect(xocBalAfter).to.be.lt(xocBalBefore);
     expect(xocBalAfter).to.eq(xocBalBefore.sub(costAmount));
   });
