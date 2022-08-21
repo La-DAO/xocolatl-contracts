@@ -6,6 +6,14 @@ const PIPILADAO_MULTISIGS = {
 }
 
 const ASSETS = {
+  rinkeby: {
+    weth: {
+      address: "0xDf032Bc4B9dC2782Bb09352007D4C57B75160B15",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
   polygon: {
     weth: {
       address: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
@@ -29,7 +37,7 @@ const UMA_CONTRACTS = {
   },
   polygon: {
     finder: {
-      "address": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64"
+      address: "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64"
     },
   },
 }

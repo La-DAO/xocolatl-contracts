@@ -9,7 +9,7 @@ const RESERVE_CAPS = {
   },
 }
 
-const WNATIVE = ASSETS.rinkeby.weth.address;
+const WNATIVE = ASSETS.polygon.wmatic.address;
 
 module.exports = {
   VERSION,

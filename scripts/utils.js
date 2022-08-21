@@ -24,7 +24,7 @@ const setDeploymentsPath = async (version) => {
  */
  const setPublishPath = async (version) => {
   const netw = await provider.getNetwork();
-  publishPath = `${hre.config.paths.root}/scripts/${network}/${netw.chainId}-version-${version}.deploy`;
+  publishPath = `${hre.config.paths.root}/deployments/${network}/${netw.chainId}-version-${version}.deploy`;
 };
 
 /**
@@ -174,7 +174,7 @@ const deployProxy = async (detailName, contractName, args = [], overrides = {}, 
     JSON.stringify(currentDeployment.abi) === JSON.stringify(contractArtifacts.abi)
   ) {
     console.log(detailName + ": Skipping...");
-    return currentDeployment;
+    return ethers.getContractAt(contractName, currentDeployment.address);
   }
   console.log(detailName + ": Deploying...");
   const deployed = await deployContract(detailName, contractName, args, overrides, options);

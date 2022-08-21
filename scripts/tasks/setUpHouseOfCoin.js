@@ -1,15 +1,14 @@
 const { ethers } = require("hardhat");
 const { WrapperBuilder } = require("redstone-evm-connector");
 
-const initialSetUpHouseOfCoin = async (contract, xocAddr, accountantAddr, ticker1, ticker2) => {
+const initialSetUpHouseOfCoin = async (contract, xocAddr, accountantAddr) => {
 
   const stx = await contract.initialize(
     xocAddr,
-    accountantAddr,
-    ticker1,
-    ticker2
+    accountantAddr
   );
   await stx.wait();
+  console.log("...house of coin initialized");
 
   // Authorize Redstone Provider
   // You can check check evm addresses for providers at: https://api.redstone.finance/providers
@@ -29,9 +28,10 @@ const initialPermissionGranting = async (contract, xocContract, accountantContra
   const liquidator = await accountantContract.LIQUIDATOR_ROLE();
   const stx1 = await xocContract.grantRole(minter, contract.address);
   await stx1.wait();
+  console.log("...minter XOC role assigned House of Coin");
   const stx2 = await accountantContract.grantRole(liquidator, contract.address);
   await stx2.wait();
-
+  console.log("...liquidator AssetsAccountant role assgined to House Of Coin");
 }
 
 module.exports = {
