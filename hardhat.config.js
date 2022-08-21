@@ -73,6 +73,9 @@ module.exports = {
     localhost: {
       url: "http://localhost:8545/",
       timeout: 2000000,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
       /*
         no mnemonic here? it will just use account 0 of the hardhat node to deploy
         (add mnemonic() here to set the deployer locally)
@@ -91,13 +94,19 @@ module.exports = {
         { mnemonic: mnemonic() },
     },
     arbitrum: {
-      url: `https://arb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_ID}`,
+      url: `https://arb-mainnet.g.alchemy.com/v2/nQlwlw3b9-tYPR-m6ClifsoQW8uZiuwl`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
     optimism: {
-      url: `https://opt-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_ID}`,
+      url: `https://opt-mainnet.g.alchemy.com/v2/wnUjek6Gv5MSSiGwLD-UjE9oQ_3qIui2`,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
+    },
+    gnosis: {
+      url: `https://rpc.ankr.com/gnosis`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },

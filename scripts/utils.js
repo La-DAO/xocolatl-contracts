@@ -129,7 +129,7 @@ const deploy = async (detailName, contractName, args = [], overrides = {}, optio
  * @returns {Promise} resolves to an ethers.js contract object.
  */
 const deployProxy = async (detailName, contractName, args = [], overrides = {}, options = {}) => {
-  const contractArgs = args || [];
+  const contractArgs = args || [{gasLimit: 8000000}];
   const proxyOpts = overrides || {};
   const factoryOpts = options || {};
   const contractArtifacts = await ethers.getContractFactory(contractName, factoryOpts);

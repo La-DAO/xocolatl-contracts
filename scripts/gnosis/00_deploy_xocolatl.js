@@ -5,7 +5,7 @@ const {
   publishUpdates
 } = require("../utils");
 
-const { VERSION } = require("./utils_optimism");
+const { VERSION } = require("./utils_gnosis");
 
 const { deployXocolatl } = require("../tasks/deployXocolatl");
 
@@ -15,8 +15,8 @@ const deployBackedAsset = async () => {
 }
 
 const main = async () => {
-  if (network !== "optimism") {
-    throw new Error("Set 'NETWORK=optimism' in .env file");
+  if (network !== "gnosis") {
+    throw new Error("Set 'NETWORK=gnosis' in .env file");
   }
   await setDeploymentsPath(VERSION);
   await setPublishPath(VERSION);

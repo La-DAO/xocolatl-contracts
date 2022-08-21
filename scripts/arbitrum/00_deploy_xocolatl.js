@@ -5,7 +5,7 @@ const {
   publishUpdates
 } = require("../utils");
 
-const { VERSION } = require("./utils_polygon");
+const { VERSION } = require("./utils_arbitrum");
 
 const { deployXocolatl } = require("../tasks/deployXocolatl");
 

@@ -3,20 +3,29 @@ const PIPILADAO_MULTISIGS = {
   polygon: "0x707C5E55277A0C2f598f191b269c9e773516052A",
   arbitrum: "0x80Ea762B09883Bddf09d3F7E4142ca6E1e697490",
   optimism: "0xC6A1425bC0D0c3FcE5055da85032d36893f91D03",
+  gnosis: "0x2CBe215Eae3e926f11291560be0e4cda9556DCBb"
 }
 
 const ASSETS = {
-  rinkeby: {
+  mainnet: {
     weth: {
-      address: "0xDf032Bc4B9dC2782Bb09352007D4C57B75160B15",
+      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       storageSlots: {
         balanceOf: 3,
       },
     },
   },
-  mainnet: {
+  arbitrum: {
     weth: {
-      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      address: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
+  optimism: {
+    weth: {
+      address: "0x4200000000000000000000000000000000000006",
       storageSlots: {
         balanceOf: 3,
       },
@@ -35,6 +44,22 @@ const ASSETS = {
         balanceOf: 3,
       },
     }
+  },
+  gnosis: {
+    weth: {
+      address: "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1",
+      storageSlots: {
+        balanceOf: 0,
+      },
+    },
+  },
+  rinkeby: {
+    weth: {
+      address: "0xDf032Bc4B9dC2782Bb09352007D4C57B75160B15",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
   },
 }
 
