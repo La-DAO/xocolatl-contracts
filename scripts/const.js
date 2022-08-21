@@ -1,3 +1,10 @@
+const PIPILADAO_MULTISIGS = {
+  mainnet: "0xaaE1A89e827Ac63d92f3633Be2e0dDd6edafd34a",
+  polygon: "0x707C5E55277A0C2f598f191b269c9e773516052A",
+  arbitrum: "0x80Ea762B09883Bddf09d3F7E4142ca6E1e697490",
+  optimism: "0xC6A1425bC0D0c3FcE5055da85032d36893f91D03",
+}
+
 const ASSETS = {
   polygon: {
     weth: {
@@ -35,6 +42,7 @@ const CHAINLINK_CONTRACTS = {
 }
 
 module.exports = {
+  PIPILADAO_MULTISIGS,
   ASSETS,
   UMA_CONTRACTS,
   CHAINLINK_CONTRACTS

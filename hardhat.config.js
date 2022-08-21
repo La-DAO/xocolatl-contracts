@@ -24,18 +24,13 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 });
 
 // Task to generate a wallet with a randomly created mnemonic
-task("generate", "Create a mnemonic for builder deploys", async () => {
-
-  const newWallet = hre.ethers.Wallet.createRandom();
-  const mnemonic = newWallet.mnemonic.phrase;
-  console.log(mnemonic);
+task("generate", "Create a wallet for builder deploys", async (_, { ethers }) => {
+  const newWallet = ethers.Wallet.createRandom();
   const address = newWallet.address;
-
+  const mnemonic = newWallet.mnemonic.phrase
   console.log("🔐 Account Generated as " + address + " and set as mnemonic in packages/hardhat");
-  console.log("privateKey", newWallet.privateKey);
-
-  fs.writeFileSync("./" + address + ".txt", mnemonic);
-  fs.writeFileSync("./mnemonic.txt", newWallet.privateKey);
+  fs.writeFileSync("./" + address + ".txt", `${address}\n${mnemonic.toString()}\n${newWallet.privateKey}`);
+  fs.writeFileSync("./mnemonic.txt", mnemonic.toString());
 });
 
 // You need to export an object to set up your config
