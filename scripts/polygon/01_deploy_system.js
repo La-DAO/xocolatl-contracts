@@ -6,16 +6,16 @@ const {
   publishUpdates
 } = require("../utils");
 
-const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_rinkeby");
+const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_polygon");
 
 const { deployAssetsAccountant } = require("../tasks/deployAssetsAccountant");
 const { deployHouseOfCoin } = require("../tasks/deployHouseOfCoin");
 const { deployHouseOfReserve } = require("../tasks/deployHouseOfReserve");
+const { deployUMAOracleHelper } = require("../tasks/deployUMAOracleHelper");
 
 const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
 const { initialSetUpHouseOfCoin, initialPermissionGranting } = require("../tasks/setUpHouseOfCoin");
 const { setUpHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
-const { ethers } = require("hardhat");
 
 const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
@@ -24,6 +24,7 @@ const deploySystemContracts = async () => {
   const accountant = await deployAssetsAccountant();
   const coinhouse = await deployHouseOfCoin();
   const reservehouse = await deployHouseOfReserve("HouseOfReserveWETH");
+  const umahelper = await deployUMAOracleHelper("UMAOracleHelper");
 
   await initialSetUpHouseOfCoin(
     coinhouse,

@@ -1,13 +1,11 @@
 const { ethers } = require("hardhat");
 const { WrapperBuilder } = require("redstone-evm-connector");
 
-const initialSetUpHouseOfCoin = async (contract, xocAddr, accountantAddr, ticker1, ticker2) => {
+const initialSetUpHouseOfCoin = async (contract, xocAddr, accountantAddr) => {
 
   const stx = await contract.initialize(
     xocAddr,
-    accountantAddr,
-    ticker1,
-    ticker2
+    accountantAddr
   );
   await stx.wait();
 

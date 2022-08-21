@@ -8,9 +8,9 @@ const setUpHouseOfReserve = async (
   accountantAddr,
   ticker1,
   ticker2,
-  WETHAddr,
+  WNativeAddr,
   initialDepositLimit
-  ) => {
+) => {
 
   const stx1 = await contract.initialize(
     reserveAddr,
@@ -18,7 +18,7 @@ const setUpHouseOfReserve = async (
     accountantAddr,
     ticker1,
     ticker2,
-    WETHAddr
+    WNativeAddr
   );
   await stx1.wait();
 
@@ -32,9 +32,13 @@ const setUpHouseOfReserve = async (
   // 'redstone-rapid' demo provider = 0xf786a909D559F5Dee2dc6706d8e5A81728a39aE9;
   const w_reservehouse = WrapperBuilder.wrapLite(contract)
     .usingPriceFeed("redstone-stocks");
-  
+
   const atx = await w_reservehouse.authorizeProvider();
   await atx.wait();
+}
+
+const setUpOraclesHouseOfReserve = async () => {
+
 }
 
 module.exports = {
