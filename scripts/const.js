@@ -14,6 +14,14 @@ const ASSETS = {
       },
     },
   },
+  mainnet: {
+    weth: {
+      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
   polygon: {
     weth: {
       address: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
