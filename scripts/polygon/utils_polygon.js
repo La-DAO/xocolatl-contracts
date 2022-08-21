@@ -14,5 +14,6 @@ const WNATIVE = ASSETS.polygon.wmatic.address;
 module.exports = {
   VERSION,
   WNATIVE,
-  RESERVE_CAPS
+  RESERVE_CAPS,
+  ASSETS
 };

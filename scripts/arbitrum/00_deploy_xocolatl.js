@@ -15,8 +15,8 @@ const deployBackedAsset = async () => {
 }
 
 const main = async () => {
-  if (network !== "polygon") {
-    throw new Error("Set 'NETWORK=polygon' in .env file");
+  if (network !== "arbitrum") {
+    throw new Error("Set 'NETWORK=arbitrum' in .env file");
   }
   await setDeploymentsPath(VERSION);
   await setPublishPath(VERSION);

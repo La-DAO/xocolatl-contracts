@@ -1,5 +1,6 @@
 const { ethers } = require("hardhat");
 const { WrapperBuilder } = require("redstone-evm-connector");
+const { CHAINLINK_CONTRACTS } = require("../const");
 
 const setUpHouseOfReserve = async (
   contract,
@@ -24,6 +25,7 @@ const setUpHouseOfReserve = async (
 
   const stx2 = await contract.setDepositLimit(initialDepositLimit);
   await stx2.wait();
+  console.log("...house of reserve initialized");
 
   // Authorize Redstone Provider
   // You can check check evm addresses for providers at: https://api.redstone.finance/providers
@@ -37,10 +39,24 @@ const setUpHouseOfReserve = async (
   await atx.wait();
 }
 
-const setUpOraclesHouseOfReserve = async () => {
-
+const setUpOraclesHouseOfReserve = async (
+  contract,
+  umaOracleHelperAddr
+) => {
+  let tx = await contract.setUMAOracleHelper(umaOracleHelperAddr);
+  await tx.wait();
+  
+  tx = await contract.setActiveOracle(2);
+  await tx.wait();
+  
+  tx = await contract.setChainlinkAddrs(
+    CHAINLINK_CONTRACTS.polygon.mxnusd,
+    CHAINLINK_CONTRACTS.polygon.ethusd
+  );
+  await tx.wait();
 }
 
 module.exports = {
-  setUpHouseOfReserve
+  setUpHouseOfReserve,
+  setUpOraclesHouseOfReserve
 };

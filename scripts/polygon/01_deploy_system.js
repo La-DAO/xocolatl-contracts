@@ -1,12 +1,13 @@
-const { 
+const {
   network,
   getContract,
   setDeploymentsPath,
-  setPublishPath, 
+  setPublishPath,
   publishUpdates
 } = require("../utils");
 
 const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_polygon");
+const { UMA_CONTRACTS } = require("../const");
 
 const { deployAssetsAccountant } = require("../tasks/deployAssetsAccountant");
 const { deployHouseOfCoin } = require("../tasks/deployHouseOfCoin");
@@ -15,7 +16,7 @@ const { deployUMAOracleHelper } = require("../tasks/deployUMAOracleHelper");
 
 const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
 const { initialSetUpHouseOfCoin, initialPermissionGranting } = require("../tasks/setUpHouseOfCoin");
-const { setUpHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
+const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
 
 const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
@@ -24,7 +25,14 @@ const deploySystemContracts = async () => {
   const accountant = await deployAssetsAccountant();
   const coinhouse = await deployHouseOfCoin();
   const reservehouse = await deployHouseOfReserve("HouseOfReserveWETH");
-  const umahelper = await deployUMAOracleHelper("UMAOracleHelper");
+
+  const sixhours = 6 * 60 * 60;
+  const umahelper = await deployUMAOracleHelper(
+    ASSETS.polygon.weth.address,
+    UMA_CONTRACTS.polygon.finder.address,
+    UMA_CONTRACTS.priceIdentifiers.mxnusd,
+    sixhours
+  );
 
   await initialSetUpHouseOfCoin(
     coinhouse,
@@ -34,7 +42,7 @@ const deploySystemContracts = async () => {
 
   await setUpHouseOfReserve(
     reservehouse,
-    ASSETS.rinkeby.weth.address,
+    ASSETS.polygon.weth.address,
     xoc.address,
     accountant.address,
     "MXN",
@@ -43,12 +51,17 @@ const deploySystemContracts = async () => {
     RESERVE_CAPS.weth.defaultInitialLimit
   );
 
+  await setUpOraclesHouseOfReserve(
+    reservehouse,
+    umahelper.address
+  );
+
   await setUpAssetsAccountant(
     accountant,
-    coinhouse.address, 
+    coinhouse.address,
     xoc.address,
     reservehouse.address,
-    ASSETS.rinkeby.weth.address
+    ASSETS.polygon.weth.address
   );
 
   await initialPermissionGranting(
@@ -61,8 +74,8 @@ const deploySystemContracts = async () => {
 }
 
 const main = async () => {
-  if (network !== "rinkeby") {
-    throw new Error("Set 'NETWORK=rinkeby' in .env file");
+  if (network !== "polygon") {
+    throw new Error("Set 'NETWORK=polygon' in .env file");
   }
   await setDeploymentsPath(VERSION);
   await setPublishPath(VERSION);
