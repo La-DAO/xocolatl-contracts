@@ -94,7 +94,7 @@ module.exports = {
         { mnemonic: mnemonic() },
     },
     arbitrum: {
-      url: `https://arb-mainnet.g.alchemy.com/v2/nQlwlw3b9-tYPR-m6ClifsoQW8uZiuwl`,
+      url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
