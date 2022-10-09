@@ -6,6 +6,8 @@ const { provider, utils } = ethers;
 
 const network = process.env.NETWORK;
 
+const DEBUG = true;
+
 // Default
 let deploymentsPath = "core-version-last.deploy";
 let publishPath = "core-version-last.deploy";
@@ -16,15 +18,21 @@ let publishPath = "core-version-last.deploy";
  */
 const setDeploymentsPath = async (version) => {
   const netw = await provider.getNetwork();
-  deploymentsPath = `${hre.config.paths.artifacts}/${netw.chainId}-version-${version}.deploy`;
+  deploymentsPath = `${hre.config.paths.root}/deployments/${network}/${netw.chainId}-version-${version}.deploy`;
+  if (DEBUG) {
+    console.log("deploymentsPath", deploymentsPath);
+  }
 };
 
 /**
  * @note Set the publish path for the contract artifacts to be saved.
  */
- const setPublishPath = async (version) => {
+const setPublishPath = async (version) => {
   const netw = await provider.getNetwork();
   publishPath = `${hre.config.paths.root}/deployments/${network}/${netw.chainId}-version-${version}.deploy`;
+  if (DEBUG) {
+    console.log("publishPath", publishPath);
+  }
 };
 
 /**
@@ -77,9 +85,12 @@ const getContractAddress = (detailName) => {
  * @param {string} detailName to get in artifacts, as defined in .deploy file.
  * @returns {Promise} resolves to Ethersjs contract requested. 
  */
- const getContract = async (detailName) => {
+const getContract = async (detailName) => {
   const contractData = getDeployments(detailName);
   const contract = await ethers.getContractAt(detailName, contractData.address);
+  if (DEBUG) {
+    console.log("detailName", contract.address);
+  }
   return contract;
 };
 
@@ -91,7 +102,7 @@ const getContractAddress = (detailName) => {
  */
 const abiEncodeArgs = (deployed, contractArgs) => {
   // not writing abi encoded args if this does not pass
-  if (!contractArgs || !deployed ) {
+  if (!contractArgs || !deployed) {
     return "";
   }
   const encoded = utils.defaultAbiCoder.encode(deployed.interface.deploy.inputs, contractArgs);
@@ -129,7 +140,7 @@ const deploy = async (detailName, contractName, args = [], overrides = {}, optio
  * @returns {Promise} resolves to an ethers.js contract object.
  */
 const deployProxy = async (detailName, contractName, args = [], overrides = {}, options = {}) => {
-  const contractArgs = args || [{gasLimit: 8000000}];
+  const contractArgs = args || [{ gasLimit: 8000000 }];
   const proxyOpts = overrides || {};
   const factoryOpts = options || {};
   const contractArtifacts = await ethers.getContractFactory(contractName, factoryOpts);
@@ -163,7 +174,7 @@ const deployProxy = async (detailName, contractName, args = [], overrides = {}, 
  * @param {Object} options arguments required in some functions.
  * @returns {Promise} resolves to an ethers.js contract object.
  */
- const redeployIf = async (detailName, contractName, deployContract, args = [], overrides={}, options = {}) => {
+const redeployIf = async (detailName, contractName, deployContract, args = [], overrides = {}, options = {}) => {
   const currentDeployment = getDeployments(detailName);
   const contractArtifacts = await artifacts.readArtifact(contractName);
   const addr = currentDeployment.address ?? "0x0000000000000000000000000000000000000000";

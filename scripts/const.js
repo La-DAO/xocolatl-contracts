@@ -73,12 +73,21 @@ const UMA_CONTRACTS = {
       address: "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64"
     },
   },
+  gnosis: {
+    finder: {
+      address: "0xeF684C38F94F48775959ECf2012D7E864ffb9dd4"
+    }
+  }
 }
 
 const CHAINLINK_CONTRACTS = {
   polygon: {
     ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
     mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
+  },
+  gnosis: {
+    ethusd: "0xa767f745331D267c7751297D982b050c93985627",
+    mxnusd: "0xe9cea51a7b1b9B32E057ff62762a2066dA933cD2"
   }
 }
 

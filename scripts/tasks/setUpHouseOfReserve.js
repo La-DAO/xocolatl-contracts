@@ -40,18 +40,24 @@ const setUpHouseOfReserve = async (
 }
 
 const setUpOraclesHouseOfReserve = async (
+  chain,
   contract,
   umaOracleHelperAddr
 ) => {
-  let tx = await contract.setUMAOracleHelper(umaOracleHelperAddr);
-  await tx.wait();
-  
+
+  let tx;
+
+  if (chain == 'polygon') {
+    tx = await contract.setUMAOracleHelper(umaOracleHelperAddr);
+    await tx.wait();
+  }
+
   tx = await contract.setActiveOracle(2);
   await tx.wait();
-  
+
   tx = await contract.setChainlinkAddrs(
-    CHAINLINK_CONTRACTS.polygon.mxnusd,
-    CHAINLINK_CONTRACTS.polygon.ethusd
+    CHAINLINK_CONTRACTS[chain].mxnusd,
+    CHAINLINK_CONTRACTS[chain].ethusd
   );
   await tx.wait();
 }

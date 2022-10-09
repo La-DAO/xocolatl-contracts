@@ -6,7 +6,7 @@ const {
   publishUpdates
 } = require("../utils");
 
-const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_polygon");
+const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_gnosis");
 const { UMA_CONTRACTS } = require("../const");
 
 const { deployAssetsAccountant } = require("../tasks/deployAssetsAccountant");
@@ -26,13 +26,15 @@ const deploySystemContracts = async () => {
   const coinhouse = await deployHouseOfCoin();
   const reservehouse = await deployHouseOfReserve("HouseOfReserveWETH");
 
-  const sixhours = 6 * 60 * 60;
-  const umahelper = await deployUMAOracleHelper(
-    ASSETS.polygon.weth.address,
-    UMA_CONTRACTS.polygon.finder.address,
-    UMA_CONTRACTS.priceIdentifiers.mxnusd,
-    sixhours
-  );
+  // UMAHelper not deployed on gnosis
+
+  // const sixhours = 6 * 60 * 60;
+  // const umahelper = await deployUMAOracleHelper(
+  //   ASSETS.gnosis.weth.address,
+  //   UMA_CONTRACTS.gnosis.finder.address,
+  //   UMA_CONTRACTS.priceIdentifiers.mxnusd,
+  //   sixhours
+  // );
 
   await initialSetUpHouseOfCoin(
     coinhouse,
@@ -42,7 +44,7 @@ const deploySystemContracts = async () => {
 
   await setUpHouseOfReserve(
     reservehouse,
-    ASSETS.polygon.weth.address,
+    ASSETS.gnosis.weth.address,
     xoc.address,
     accountant.address,
     "MXN",
@@ -52,9 +54,9 @@ const deploySystemContracts = async () => {
   );
 
   await setUpOraclesHouseOfReserve(
-    'polygon',
+    'gnosis',
     reservehouse,
-    umahelper.address
+    '0x0000000000000000000000000000000000000000' // UMAHelper not deployed on gnosis
   );
 
   await setUpAssetsAccountant(
@@ -62,21 +64,23 @@ const deploySystemContracts = async () => {
     coinhouse.address,
     xoc.address,
     reservehouse.address,
-    ASSETS.polygon.weth.address
+    ASSETS.gnosis.weth.address
   );
 
-  await initialPermissionGranting(
-    coinhouse,
-    xoc,
-    accountant
-  );
+  // Permission granting must be done via the MultiSig.
+
+  // await initialPermissionGranting(
+  //   coinhouse,
+  //   xoc,
+  //   accountant
+  // );
 
 
 }
 
 const main = async () => {
-  if (network !== "polygon") {
-    throw new Error("Set 'NETWORK=polygon' in .env file");
+  if (network !== "gnosis") {
+    throw new Error("Set 'NETWORK=gnosis' in .env file");
   }
   await setDeploymentsPath(VERSION);
   await setPublishPath(VERSION);
