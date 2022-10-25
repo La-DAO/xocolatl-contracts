@@ -56,7 +56,7 @@ const deploySystemContracts = async () => {
   await setUpOraclesHouseOfReserve(
     'gnosis',
     reservehouse,
-    'daiusd'
+    'daiusd',
     '0x0000000000000000000000000000000000000000' // UMAHelper not deployed on gnosis
   );
 
