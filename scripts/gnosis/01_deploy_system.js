@@ -65,7 +65,7 @@ const deploySystemContracts = async () => {
     coinhouse.address,
     xoc.address,
     reservehouse.address,
-    ASSETS.gnosis.weth.address
+    ASSETS.gnosis.wxdai.address
   );
 
   // Permission granting must be done via the MultiSig.
