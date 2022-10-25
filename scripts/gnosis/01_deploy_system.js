@@ -44,11 +44,11 @@ const deploySystemContracts = async () => {
 
   await setUpHouseOfReserve(
     reservehouse,
-    ASSETS.gnosis.wxdai.address,
+    ASSETS.gnosis.weth.address,
     xoc.address,
     accountant.address,
     "MXN",
-    "WXDAI",
+    "WETH",
     WNATIVE,
     RESERVE_CAPS.weth.defaultInitialLimit
   );
@@ -56,16 +56,16 @@ const deploySystemContracts = async () => {
   await setUpOraclesHouseOfReserve(
     'gnosis',
     reservehouse,
-    'daiusd',
+    'ethusd',
     '0x0000000000000000000000000000000000000000' // UMAHelper not deployed on gnosis
-  );
+  );  
 
   await setUpAssetsAccountant(
     accountant,
     coinhouse.address,
     xoc.address,
     reservehouse.address,
-    ASSETS.gnosis.wxdai.address
+    ASSETS.gnosis.weth.address
   );
 
   // Permission granting must be done via the MultiSig.
