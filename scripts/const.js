@@ -52,6 +52,12 @@ const ASSETS = {
         balanceOf: 0,
       },
     },
+    xdai: {
+      address: "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
   },
   rinkeby: {
     weth: {
