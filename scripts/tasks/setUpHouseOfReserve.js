@@ -42,6 +42,7 @@ const setUpHouseOfReserve = async (
 const setUpOraclesHouseOfReserve = async (
   chain,
   contract,
+  reserveUsdTicker,
   umaOracleHelperAddr
 ) => {
 
@@ -57,7 +58,7 @@ const setUpOraclesHouseOfReserve = async (
 
   tx = await contract.setChainlinkAddrs(
     CHAINLINK_CONTRACTS[chain].mxnusd,
-    CHAINLINK_CONTRACTS[chain].ethusd
+    CHAINLINK_CONTRACTS[chain][reserveUsdTicker]
   );
   await tx.wait();
 }

@@ -52,7 +52,7 @@ const ASSETS = {
         balanceOf: 0,
       },
     },
-    xdai: {
+    wxdai: {
       address: "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
       storageSlots: {
         balanceOf: 3,
@@ -93,6 +93,7 @@ const CHAINLINK_CONTRACTS = {
   },
   gnosis: {
     ethusd: "0xa767f745331D267c7751297D982b050c93985627",
+    daiusd: "0x678df3415fc31947dA4324eC63212874be5a82f8",
     mxnusd: "0xe9cea51a7b1b9B32E057ff62762a2066dA933cD2"
   }
 }

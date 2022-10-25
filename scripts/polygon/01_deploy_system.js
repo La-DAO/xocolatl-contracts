@@ -54,6 +54,7 @@ const deploySystemContracts = async () => {
   await setUpOraclesHouseOfReserve(
     'polygon',
     reservehouse,
+    'ethusd',
     umahelper.address
   );
 

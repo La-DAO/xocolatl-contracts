@@ -9,7 +9,7 @@ const RESERVE_CAPS = {
   },
 }
 
-const WNATIVE = ASSETS.gnosis.weth.address;
+const WNATIVE = ASSETS.gnosis.wxdai.address;
 
 module.exports = {
   VERSION,

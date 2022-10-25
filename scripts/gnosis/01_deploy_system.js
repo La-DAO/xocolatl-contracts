@@ -44,11 +44,11 @@ const deploySystemContracts = async () => {
 
   await setUpHouseOfReserve(
     reservehouse,
-    ASSETS.gnosis.weth.address,
+    ASSETS.gnosis.wxdai.address,
     xoc.address,
     accountant.address,
     "MXN",
-    "ETH",
+    "WXDAI",
     WNATIVE,
     RESERVE_CAPS.weth.defaultInitialLimit
   );
@@ -56,6 +56,7 @@ const deploySystemContracts = async () => {
   await setUpOraclesHouseOfReserve(
     'gnosis',
     reservehouse,
+    'daiusd'
     '0x0000000000000000000000000000000000000000' // UMAHelper not deployed on gnosis
   );
 
