@@ -216,17 +216,12 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
     * @dev See {safeTransferFrom}.
     */
     function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) public pure override {
-        from;
-        to;
-        ids;
-        amounts;
-        data;
         revert("Non-transferable!");
     }
 
