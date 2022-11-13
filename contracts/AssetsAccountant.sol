@@ -29,7 +29,7 @@ contract AssetsAccountantState {
     mapping(address => bool) internal _isARegisteredHouse;
 
     // Contract Token name
-    string internal constant NAME = "AssetAccountant";
+    string internal constant NAME = "AssetsAccountant";
 
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
 
@@ -65,9 +65,8 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
     * @dev Register a house address in this contract.
     * @dev Requires caller to have DEFAULT_ADMIN_ROLE.
     * @param houseAddress Address of house registered.
-    * @param asset ERC20 address of either reserve asset or backed asset.
     */
-    function registerHouse(address houseAddress, address asset) 
+    function registerHouse(address houseAddress) 
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
@@ -81,49 +80,40 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
             IHouseOfReserve hOfReserve = IHouseOfReserve(houseAddress);
             uint reserveTokenID = hOfReserve.reserveTokenID();
             address bAsset = hOfReserve.backedAsset();
+            address rAsset = hOfReserve.reserveAsset();
 
             // Check that asset has NOT a house address assigned
             require(houseOfReserves[reserveTokenID] == address(0), "ReserveAsset already registered!");
 
-            // Check intended asset matches House
-            require(
-                hOfReserve.reserveAsset() == asset,
-                "Asset input does not matche reserveAsset in houseAddress!"
-            );
-
             // Register mappings
             houseOfReserves[reserveTokenID] = houseAddress;
             _isARegisteredHouse[houseAddress] = true;
-            reservesIds[asset][bAsset] = reserveTokenID;
+            reservesIds[rAsset][bAsset] = reserveTokenID;
 
             // Assign Roles
-            _setupRole(MINTER_ROLE, houseAddress);
-            _setupRole(BURNER_ROLE, houseAddress);
+            _grantRole(MINTER_ROLE, houseAddress);
+            _grantRole(BURNER_ROLE, houseAddress);
 
-            emit HouseRegistered(houseAddress, hOfReserve.HOUSE_TYPE(), asset);
+            emit HouseRegistered(houseAddress, hOfReserve.HOUSE_TYPE(), rAsset);
             
         } else if (IHouseOfCoinState(houseAddress).HOUSE_TYPE() == keccak256("COIN_HOUSE")) {
 
             IHouseOfCoinState hOfCoin = IHouseOfCoinState(houseAddress);
+            address bAsset = hOfCoin.backedAsset();
 
             // Check that asset has NOT a house address assigned
-            require(houseOfCoins[asset] == address(0), "backedAsset already registered!");
+            require(houseOfCoins[bAsset] == address(0), "backedAsset already registered!");
 
-            // Check intended asset matches House
-            require(
-                hOfCoin.backedAsset() == asset,
-                "Asset input does not matche backedAsset in houseAddress!"
-            );
 
             // Register mappings
-            houseOfCoins[asset] = houseAddress;
+            houseOfCoins[bAsset] = houseAddress;
             _isARegisteredHouse[houseAddress] = true;
 
             // Assign Roles
-            _setupRole(MINTER_ROLE, houseAddress);
-            _setupRole(BURNER_ROLE, houseAddress);
+            _grantRole(MINTER_ROLE, houseAddress);
+            _grantRole(BURNER_ROLE, houseAddress);
 
-            emit HouseRegistered(houseAddress, hOfCoin.HOUSE_TYPE(), asset);
+            emit HouseRegistered(houseAddress, hOfCoin.HOUSE_TYPE(), bAsset);
 
         } else {
             revert("house address type invalid!");
