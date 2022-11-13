@@ -54,11 +54,12 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
     event HouseRegistered(address house, bytes32 indexed typeOfHouse, address indexed asset);
 
     // AssetsAccountant custom errors
-    
+
     error AssetsAccountant_houseAddressAlreadyRegistered();
     error AssetsAccountant_reserveTokenIdAlreadyRegistered();
     error AssetsAccountant_backedAssetAlreadyRegistered();
     error AssetsAccountant_houseAddressTypeNotRecognized();
+    error AssetsAccountant_callerAddressNotRecognizedAsValidHouse();
 
     constructor() ERC1155("https://xocolatl.finance/") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -211,6 +212,10 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
         uint256 amount,
         bytes calldata data
     ) public override onlyRole(LIQUIDATOR_ROLE) {
+        // check msg.sender `_isARegisteredHouse`.
+        if (!_isARegisteredHouse[msg.sender]) {
+            revert AssetsAccountant_callerAddressNotRecognizedAsValidHouse();
+        }
         _safeTransferFrom(from, to, id, amount, data);
     }
 
