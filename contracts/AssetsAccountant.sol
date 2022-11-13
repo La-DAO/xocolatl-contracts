@@ -53,6 +53,13 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
     */
     event HouseRegistered(address house, bytes32 indexed typeOfHouse, address indexed asset);
 
+    // AssetsAccountant custom errors
+    
+    error AssetsAccountant_houseAddressAlreadyRegistered();
+    error AssetsAccountant_reserveTokenIdAlreadyRegistered();
+    error AssetsAccountant_backedAssetAlreadyRegistered();
+    error AssetsAccountant_houseAddressTypeNotRecognized();
+
     constructor() ERC1155("https://xocolatl.finance/") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(URI_SETTER_ROLE, msg.sender);
@@ -70,20 +77,24 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        // Check if House has been previously registered.
-        require(!_isARegisteredHouse[houseAddress], "House already registered!");
+        // Check if `houseAddress` has been previously registered.
+        if (_isARegisteredHouse[houseAddress]) {
+            revert AssetsAccountant_houseAddressAlreadyRegistered();
+        }
 
         // Check type of House being registered and proceed accordingly
 
-        if(IHouseOfReserve(houseAddress).HOUSE_TYPE() == keccak256("RESERVE_HOUSE")) {
+        if (IHouseOfReserve(houseAddress).HOUSE_TYPE() == keccak256("RESERVE_HOUSE")) {
 
             IHouseOfReserve hOfReserve = IHouseOfReserve(houseAddress);
             uint reserveTokenID = hOfReserve.reserveTokenID();
             address bAsset = hOfReserve.backedAsset();
             address rAsset = hOfReserve.reserveAsset();
 
-            // Check that asset has NOT a house address assigned
-            require(houseOfReserves[reserveTokenID] == address(0), "ReserveAsset already registered!");
+            // Check that `reserveTokenID` has NOT a house address assigned
+            if (houseOfReserves[reserveTokenID] != address(0)) {
+                revert AssetsAccountant_reserveTokenIdAlreadyRegistered();
+            }
 
             // Register mappings
             houseOfReserves[reserveTokenID] = houseAddress;
@@ -101,9 +112,10 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
             IHouseOfCoinState hOfCoin = IHouseOfCoinState(houseAddress);
             address bAsset = hOfCoin.backedAsset();
 
-            // Check that asset has NOT a house address assigned
-            require(houseOfCoins[bAsset] == address(0), "backedAsset already registered!");
-
+            // Check that `bAsset` has NOT already a HouseOfCoin address assigned
+            if (houseOfCoins[bAsset] != address(0)) {
+                revert AssetsAccountant_backedAssetAlreadyRegistered();
+            }
 
             // Register mappings
             houseOfCoins[bAsset] = houseAddress;
@@ -116,7 +128,7 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
             emit HouseRegistered(houseAddress, hOfCoin.HOUSE_TYPE(), bAsset);
 
         } else {
-            revert("house address type invalid!");
+            revert AssetsAccountant_houseAddressTypeNotRecognized();
         }
     }
 
