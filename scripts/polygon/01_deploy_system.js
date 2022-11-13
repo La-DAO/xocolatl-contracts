@@ -59,9 +59,7 @@ const deploySystemContracts = async () => {
   await setUpAssetsAccountant(
     accountant,
     coinhouse.address,
-    xoc.address,
-    reservehouse.address,
-    ASSETS.polygon.weth.address
+    reservehouse.address
   );
 
   await initialPermissionGranting(
