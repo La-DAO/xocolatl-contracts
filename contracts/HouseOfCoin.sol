@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 /**
  * @title The house Of coin minting contract.
- * @author daigaro.eth
+ * @author xocolatl.eth
  * @notice  Allows users with acceptable reserves to mint backedAsset.
  * @notice  Allows user to burn their minted asset to release their reserve.
  * @dev  Contracts are split into state and functionality.

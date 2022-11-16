@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 /**
  * @title The house of reserves contract.
- * @author daigaro.eth
+ * @author xocolatl.eth
  * @notice Custodies all deposits, to allow minting of the backedAsset.
  * @notice Users can only deposit and withdraw from this contract.
  * @dev  Contracts are split into state and functionality.

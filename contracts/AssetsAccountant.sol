@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 /**
 * @title Assets accountant contract.
-* @author daigaro.eth
+* @author xocolatl.eth
 * @notice Keeps records of all deposits, withdrawals, and minted assets by users using ERC1155 tokens.
 * @dev Contracts are split into state and functionality.
 * @dev At time of deployment, deployer is DEFAULT_ADMIN, however, this role should be transferred to a governance system.
