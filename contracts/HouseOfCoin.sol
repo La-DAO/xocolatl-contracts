@@ -268,8 +268,11 @@ contract HouseOfCoin is
         uint256 reserveTokenID = hOfReserve.reserveTokenID();
         uint256 backedTokenID = getBackedTokenID(reserveAsset);
 
-        // Validate reserveAsset is active with {AssetsAccountant} and check houseOfReserve input.
+        // Validate reserveAsset and houseOfReserve are active with {AssetsAccountant}.
         if (
+            !IAssetsAccountantState(assetsAccountant).isARegisteredHouse(
+                houseOfReserve
+            ) ||
             IAssetsAccountantState(assetsAccountant).houseOfReserves(
                 reserveTokenID
             ) ==
@@ -563,7 +566,7 @@ contract HouseOfCoin is
         uint256 _collateralPenalty
     ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (
-            _globalBase== 0 ||
+            _globalBase == 0 ||
             _marginCallThreshold == 0 ||
             _liquidationThreshold == 0 ||
             _liquidationPricePenaltyDiscount == 0 ||
@@ -669,7 +672,7 @@ contract HouseOfCoin is
             reserveTokenID,
             backedTokenID
         );
-        
+
         // Check if msg.sender has reserves
         if (reserveBal == 0) {
             // If msg.sender has NO reserves, minting power = 0.

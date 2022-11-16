@@ -18,4 +18,9 @@ interface IAssetsAccountantState {
     */
     function houseOfCoins(address backedAsset) external view returns(address);
 
+    /**
+     * @notice Returns true if house addres is registered.
+     */
+     function isARegisteredHouse(address house) external view returns (bool);
+
 }
