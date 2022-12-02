@@ -1,5 +1,4 @@
-const { ethers, upgrades } = require("hardhat");
-const { WrapperBuilder } = require("redstone-evm-connector");
+const { ethers } = require("hardhat");
 const { ASSETS } = require("../scripts/const");
 
 const syncTime = async function () {
