@@ -133,6 +133,9 @@ contract HouseOfCoin is
         public
         initializer
     {
+        if (_backedAsset == address(0) || _assetsAccountant == address(0)) {
+            revert HouseOfCoin_invalidInput();
+        }
         backedAsset = _backedAsset;
         backedAssetDecimals = IERC20Extension(backedAsset).decimals();
         assetsAccountant = _assetsAccountant;
@@ -232,6 +235,14 @@ contract HouseOfCoin is
         override
         returns (uint256 price)
     {
+        if (
+            hOfReserve_ == address(0) ||
+            !IAssetsAccountantState(assetsAccountant).isARegisteredHouse(
+                hOfReserve_
+            )
+        ) {
+            revert HouseOfCoin_invalidInput();
+        }
         IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserve_);
         uint256 activeOracle_ = hOfReserve.activeOracle();
         if (activeOracle_ == 0) {
