@@ -374,15 +374,15 @@ contract HouseOfReserve is
      * @dev  Internal function to check max withdrawal amount.
      */
     function _checkMaxWithdrawal(
-        uint256 _reserveBal,
-        uint256 _mintedCoinBal,
+        uint256 reserveBal_,
+        uint256 mintedCoinBal_,
         uint256 price
     ) internal view returns (uint256) {
         // Check if msg.sender has minted backedAsset, if yes compute:
         // The minimum required balance to back 100% all minted coins of backedAsset.
         // Else, return 0.
-        uint256 minReqReserveBal = _mintedCoinBal > 0
-            ? (_mintedCoinBal * 1e8) / price
+        uint256 minReqReserveBal = mintedCoinBal_ > 0
+            ? (mintedCoinBal_ * 1e8) / price
             : 0;
 
         // Apply Collateralization Factors to MinReqReserveBal
@@ -390,15 +390,15 @@ contract HouseOfReserve is
             (minReqReserveBal * collateralRatio.numerator) /
             collateralRatio.denominator;
 
-        if (minReqReserveBal > _reserveBal) {
+        if (minReqReserveBal > reserveBal_) {
             // Return zero if undercollateralized or insolvent
             return 0;
-        } else if (minReqReserveBal > 0 && minReqReserveBal <= _reserveBal) {
+        } else if (minReqReserveBal > 0 && minReqReserveBal <= reserveBal_) {
             // Return the max withrawal amount, if msg.sender has mintedCoin balance and in healthy collateralized
-            return (_reserveBal - minReqReserveBal);
+            return (reserveBal_ - minReqReserveBal);
         } else {
-            // Return _reserveBal if msg.sender has no minted coin.
-            return _reserveBal;
+            // Return reserveBal_ if msg.sender has no minted coin.
+            return reserveBal_;
         }
     }
 
@@ -407,16 +407,16 @@ contract HouseOfReserve is
      */
     function _checkBalances(
         address user,
-        uint256 _reservesTokenID,
-        uint256 _bAssetRTokenID
+        uint256 reservesTokenID_,
+        uint256 bAssetRTokenID_
     ) internal view returns (uint256 reserveBal, uint256 mintedCoinBal) {
         reserveBal = IERC1155(address(assetsAccountant)).balanceOf(
             user,
-            _reservesTokenID
+            reservesTokenID_
         );
         mintedCoinBal = IERC1155(address(assetsAccountant)).balanceOf(
             user,
-            _bAssetRTokenID
+            bAssetRTokenID_
         );
     }
 

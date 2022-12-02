@@ -126,19 +126,19 @@ contract HouseOfCoin is
 {
     /**
      * @dev Initializes this contract by setting:
-     * @param _backedAsset ERC20 address of the asset type of coin to be minted in this contract.
-     * @param _assetsAccountant Address of the {AssetsAccountant} contract.
+     * @param backedAsset_ ERC20 address of the asset type of coin to be minted in this contract.
+     * @param assetsAccountant_ Address of the {AssetsAccountant} contract.
      */
-    function initialize(address _backedAsset, address _assetsAccountant)
+    function initialize(address backedAsset_, address assetsAccountant_)
         public
         initializer
     {
-        if (_backedAsset == address(0) || _assetsAccountant == address(0)) {
+        if (backedAsset_ == address(0) || assetsAccountant_ == address(0)) {
             revert HouseOfCoin_invalidInput();
         }
-        backedAsset = _backedAsset;
+        backedAsset = backedAsset_;
         backedAssetDecimals = IERC20Extension(backedAsset).decimals();
-        assetsAccountant = _assetsAccountant;
+        assetsAccountant = assetsAccountant_;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _oracleHouse_init();
@@ -334,21 +334,21 @@ contract HouseOfCoin is
     /**
      * @notice  Function to payback ERC20 'backedAsset' of this HouseOfCoin.
      * @dev Requires knowledge of the reserve asset used to back the minted coins.
-     * @param _backedTokenID Token Id in {AssetsAccountant}, releases the reserve asset used in 'getTokenID'.
+     * @param backedTokenID_ Token Id in {AssetsAccountant}, releases the reserve asset used in 'getTokenID'.
      * @param amount To payback.
      * Emits a {CoinPayback} event.
      */
-    function paybackCoin(uint256 _backedTokenID, uint256 amount) public {
+    function paybackCoin(uint256 backedTokenID_, uint256 amount) public {
         IAssetsAccountant accountant = IAssetsAccountant(assetsAccountant);
         IERC20Extension bAsset = IERC20Extension(backedAsset);
 
         uint256 userTokenIDBal = accountant.balanceOf(
             msg.sender,
-            _backedTokenID
+            backedTokenID_
         );
 
-        // Check in {AssetsAccountant} that msg.sender backedAsset was created with assets '_backedTokenID' and
-        // that amount is less than '_backedTokenID' balance in {Assetsaccountant} and
+        // Check in {AssetsAccountant} that msg.sender backedAsset was created with assets 'backedTokenID_' and
+        // that amount is less than 'backedTokenID_' balance in {Assetsaccountant} and
         // Check that msg.sender has the intended backed ERC20 asset to be burned.
         if (
             userTokenIDBal == 0 ||
@@ -361,10 +361,10 @@ contract HouseOfCoin is
         // Burn amount of ERC20 tokens paybacked.
         bAsset.burn(msg.sender, amount);
 
-        // Burn amount of _backedTokenID in {AssetsAccountant}
-        accountant.burn(msg.sender, _backedTokenID, amount);
+        // Burn amount of backedTokenID_ in {AssetsAccountant}
+        accountant.burn(msg.sender, backedTokenID_, amount);
 
-        emit CoinPayback(msg.sender, _backedTokenID, amount);
+        emit CoinPayback(msg.sender, backedTokenID_, amount);
     }
 
     /**
@@ -531,9 +531,9 @@ contract HouseOfCoin is
     /**
      *
      * @dev  Get backedTokenID to be used in {AssetsAccountant}
-     * @param _reserveAsset ERC20 address of the reserve asset used to back coin.
+     * @param reserveAsset_ ERC20 address of the reserve asset used to back coin.
      */
-    function getBackedTokenID(address _reserveAsset)
+    function getBackedTokenID(address reserveAsset_)
         public
         view
         returns (uint256)
@@ -541,7 +541,7 @@ contract HouseOfCoin is
         return
             uint256(
                 keccak256(
-                    abi.encodePacked(_reserveAsset, backedAsset, "backedAsset")
+                    abi.encodePacked(reserveAsset_, backedAsset, "backedAsset")
                 )
             );
     }
@@ -555,47 +555,47 @@ contract HouseOfCoin is
 
     /**
      * @dev Sets the liquidation parameters.
-     * @param _globalBase defines the base number of all liquidation parameters.
-     * @param _marginCallThreshold defines the health ratio at which margin call is triggered.
-     * @param _liquidationThreshold defines the health ratio at which liquidation can be triggered.
-     * @param _liquidationPricePenaltyDiscount price discount at which liquidated user collateral is sold.
-     * @param _collateralPenalty percent of liquidated user's reserves that are sold during a liquidation event.
+     * @param globalBase_ defines the base number of all liquidation parameters.
+     * @param marginCallThreshold_ defines the health ratio at which margin call is triggered.
+     * @param liquidationThreshold_ defines the health ratio at which liquidation can be triggered.
+     * @param liquidationPricePenaltyDiscount_ price discount at which liquidated user collateral is sold.
+     * @param collateralPenalty_ percent of liquidated user's reserves that are sold during a liquidation event.
      * Requirements:
      *  - function Should be admin restricted.
      *  - no inputs can be zero.
-     *  - _globalBase modulo 10 should be zero.
-     *  - _marginCallThreshold  should be greater than _liquidationThreshold.
-     *  - _liquidationThreshold should be less than _globalBase.
-     *  - _liquidationPricePenaltyDiscount should be less than _globalBase.
-     *  - _collateralPenalty should be less than _globalBase.
+     *  - globalBase_ modulo 10 should be zero.
+     *  - marginCallThreshold_  should be greater than liquidationThreshold_.
+     *  - liquidationThreshold_ should be less than globalBase_.
+     *  - liquidationPricePenaltyDiscount_ should be less than globalBase_.
+     *  - collateralPenalty_ should be less than globalBase_.
      */
     function setLiqParams(
-        uint256 _globalBase,
-        uint256 _marginCallThreshold,
-        uint256 _liquidationThreshold,
-        uint256 _liquidationPricePenaltyDiscount,
-        uint256 _collateralPenalty
+        uint256 globalBase_,
+        uint256 marginCallThreshold_,
+        uint256 liquidationThreshold_,
+        uint256 liquidationPricePenaltyDiscount_,
+        uint256 collateralPenalty_
     ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (
-            _globalBase == 0 ||
-            _marginCallThreshold == 0 ||
-            _liquidationThreshold == 0 ||
-            _liquidationPricePenaltyDiscount == 0 ||
-            _collateralPenalty == 0 ||
-            _globalBase % 10 != 0 ||
-            _liquidationThreshold >= _marginCallThreshold ||
-            _liquidationThreshold >= _globalBase ||
-            _liquidationPricePenaltyDiscount >= _globalBase ||
-            _collateralPenalty >= _globalBase
+            globalBase_ == 0 ||
+            marginCallThreshold_ == 0 ||
+            liquidationThreshold_ == 0 ||
+            liquidationPricePenaltyDiscount_ == 0 ||
+            collateralPenalty_ == 0 ||
+            globalBase_ % 10 != 0 ||
+            liquidationThreshold_ >= marginCallThreshold_ ||
+            liquidationThreshold_ >= globalBase_ ||
+            liquidationPricePenaltyDiscount_ >= globalBase_ ||
+            collateralPenalty_ >= globalBase_
         ) {
             revert HouseOfCoin_invalidInput();
         }
-        _liqParam.globalBase = _globalBase;
-        _liqParam.marginCallThreshold = _marginCallThreshold;
-        _liqParam.liquidationThreshold = _liquidationThreshold;
+        _liqParam.globalBase = globalBase_;
+        _liqParam.marginCallThreshold = marginCallThreshold_;
+        _liqParam.liquidationThreshold = liquidationThreshold_;
         _liqParam
-            .liquidationPricePenaltyDiscount = _liquidationPricePenaltyDiscount;
-        _liqParam.collateralPenalty = _collateralPenalty;
+            .liquidationPricePenaltyDiscount = liquidationPricePenaltyDiscount_;
+        _liqParam.collateralPenalty = collateralPenalty_;
         _transformToBackAssetDecimalBase();
         emit LiquidationParamsChanges(
             _liqParam.globalBase,
@@ -654,16 +654,16 @@ contract HouseOfCoin is
      */
     function _checkBalances(
         address user,
-        uint256 _reservesTokenID,
-        uint256 _bAssetRTokenID
+        uint256 reservesTokenID_,
+        uint256 bAssetRTokenID_
     ) internal view returns (uint256 reserveBal, uint256 mintedCoinBal) {
         reserveBal = IERC1155(assetsAccountant).balanceOf(
             user,
-            _reservesTokenID
+            reservesTokenID_
         );
         mintedCoinBal = IERC1155(assetsAccountant).balanceOf(
             user,
-            _bAssetRTokenID
+            bAssetRTokenID_
         );
     }
 
