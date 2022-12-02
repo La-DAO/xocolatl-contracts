@@ -137,6 +137,8 @@ contract HouseOfCoin is
             revert HouseOfCoin_invalidInput();
         }
         backedAsset = backedAsset_;
+        // Decimals from the backedAsset are stored is to optimize gas 
+        // and avoid multiple external calls during execution of some functions.
         backedAssetDecimals = IERC20Extension(backedAsset).decimals();
         assetsAccountant = assetsAccountant_;
 
