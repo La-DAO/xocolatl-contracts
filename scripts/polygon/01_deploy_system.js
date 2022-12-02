@@ -67,8 +67,6 @@ const deploySystemContracts = async () => {
     xoc,
     accountant
   );
-
-
 }
 
 const main = async () => {
