@@ -42,12 +42,10 @@ const redstoneFixture = async () => {
     weth.address
   );
   await accountant.registerHouse(
-    coinhouse.address,
-    xoc.address
+    coinhouse.address
   );
   await accountant.registerHouse(
-    reservehouse.address,
-    weth.address
+    reservehouse.address
   );
 
   // 3.- Assign proper roles to coinhouse in fiat ERC20
@@ -76,7 +74,7 @@ const redstoneFixture = async () => {
 
   await syncTime();
 
-  console.log("complete utils!");
+  console.log("\tCompleted fixture routine!");
 
   return {
     accountant,
