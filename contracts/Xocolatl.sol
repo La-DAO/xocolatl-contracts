@@ -44,6 +44,8 @@ contract Xocolatl is
     Factor internal _flashFee;
     address public flashFeeReceiver;
 
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -88,7 +90,7 @@ contract Xocolatl is
         revert("No self burn!");
     }
 
-    function burn(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function burn(address to, uint256 amount) public onlyRole(BURNER_ROLE) {
         _burn(to, amount);
     }
 
@@ -142,8 +144,8 @@ contract Xocolatl is
         emit FlashFeeReceiverChanged(_flashFeeReceiverAddr);
     }
 
-    /** Override from {ERC20FlashMintUpgradeable} to send flash fees to 
-     *  established 'flashFeeReceiver' address 
+    /** Override from {ERC20FlashMintUpgradeable} to send flash fees to
+     *  established 'flashFeeReceiver' address
      */
     function _flashFeeReceiver() internal view override returns (address) {
         return flashFeeReceiver;

@@ -42,18 +42,18 @@ const redstoneFixture = async () => {
     weth.address
   );
   await accountant.registerHouse(
-    coinhouse.address,
-    xoc.address
+    coinhouse.address
   );
   await accountant.registerHouse(
-    reservehouse.address,
-    weth.address
+    reservehouse.address
   );
 
   // 3.- Assign proper roles to coinhouse in fiat ERC20
   const minter = await xoc.MINTER_ROLE();
+  const burner = await xoc.BURNER_ROLE();
   const liquidator = await accountant.LIQUIDATOR_ROLE();
   await xoc.grantRole(minter, coinhouse.address);
+  await xoc.grantRole(burner, coinhouse.address);
   await accountant.grantRole(liquidator, coinhouse.address);
 
   // 4.- Wrap the contracts in redstone-evm-connector
@@ -76,7 +76,7 @@ const redstoneFixture = async () => {
 
   await syncTime();
 
-  console.log("complete utils!");
+  console.log("\tCompleted fixture routine!");
 
   return {
     accountant,

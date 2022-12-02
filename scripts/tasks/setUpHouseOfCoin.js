@@ -25,12 +25,16 @@ const initialSetUpHouseOfCoin = async (contract, xocAddr, accountantAddr) => {
 
 const initialPermissionGranting = async (contract, xocContract, accountantContract) => {
   const minter = await xocContract.MINTER_ROLE();
+  const burner = await xocContract.BURNER_ROLE();
   const liquidator = await accountantContract.LIQUIDATOR_ROLE();
   const stx1 = await xocContract.grantRole(minter, contract.address);
   await stx1.wait();
   console.log("...minter XOC role assigned House of Coin");
-  const stx2 = await accountantContract.grantRole(liquidator, contract.address);
+  const stx2 = await xocContract.grantRole(burner, contract.address);
   await stx2.wait();
+  console.log("...burner XOC role assigned House of Coin");
+  const stx3 = await accountantContract.grantRole(liquidator, contract.address);
+  await stx3.wait();
   console.log("...liquidator AssetsAccountant role assgined to House Of Coin");
 }
 

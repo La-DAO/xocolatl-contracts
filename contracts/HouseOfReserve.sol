@@ -19,6 +19,11 @@ import "./interfaces/IAssetsAccountant.sol";
 import "./abstract/OracleHouse.sol";
 
 contract HouseOfReserveState {
+    struct Factor {
+        uint256 numerator;
+        uint256 denominator;
+    }
+
     // HouseOfReserve Events
 
     /**
@@ -53,11 +58,15 @@ contract HouseOfReserveState {
      * @param newLimit uint256
      */
     event DepositLimitChanged(uint256 newLimit);
+    /**
+     * @dev Emit when `assetsAccountant` changes.
+     * @param newAccountant address.
+     */
+    event AssetsAccountantChanged(address newAccountant);
 
-    struct Factor {
-        uint256 numerator;
-        uint256 denominator;
-    }
+    /// Custom errors
+
+    error HouseOfReserve_zeroAddress();
 
     address public WETH;
 
@@ -122,6 +131,22 @@ contract HouseOfReserve is
     /** see {OracleHouse-activeOracle}*/
     function activeOracle() external view override returns (uint256) {
         return _activeOracle;
+    }
+
+    /**
+     * @notice Sets the `assetsAccountant` for this HouseOfReserve.
+     * @dev restricted to admin only.
+     * Emits a
+     */
+    function setAssetsAccountant(address accountant)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (accountant == address(0)) {
+            revert HouseOfReserve_zeroAddress();
+        }
+        assetsAccountant = IAssetsAccountant(accountant);
+        emit AssetsAccountantChanged(accountant);
     }
 
     /**
