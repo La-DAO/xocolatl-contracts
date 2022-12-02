@@ -120,16 +120,16 @@ contract Xocolatl is
      *  - Should be restricted to admin function.
      *  - The numerator should be less than denominator.
      */
-    function setFlashFee(Factor memory _newFlashFee)
+    function setFlashFee(Factor memory newFlashFee_)
         public
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(
-            _newFlashFee.numerator < _newFlashFee.denominator,
+            newFlashFee_.numerator < newFlashFee_.denominator,
             "Invalid input!"
         );
-        _flashFee = _newFlashFee;
-        emit FlashFeeChanged(_newFlashFee);
+        _flashFee = newFlashFee_;
+        emit FlashFeeChanged(newFlashFee_);
     }
 
     /**
