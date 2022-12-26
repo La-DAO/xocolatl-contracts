@@ -4,8 +4,7 @@ pragma solidity 0.8.13;
 import "./IOracle.sol";
 
 interface IHouseOfReserve is IOracle {
-
-    struct Factor{
+    struct Factor {
         uint numerator;
         uint denominator;
     }
@@ -13,32 +12,37 @@ interface IHouseOfReserve is IOracle {
     /**
      * @dev Returns the reserveAsset of this HouseOfReserve.
      */
-    function reserveAsset() external view returns(address);
+    function reserveAsset() external view returns (address);
 
     /**
      * @dev Returns the backedAsset of this HouseOfReserve.
      */
-    function backedAsset() external view returns(address);
+    function backedAsset() external view returns (address);
 
     /**
-     * @dev Returns the reserveTokenID (used in {AssetsAccountant}) in HouseOfReserve.
+     * @dev Returns the reserveTokenID (used in {AssetsAccountant}) for this HouseOfReserve.
      */
-    function reserveTokenID() external view returns(uint);
+    function reserveTokenID() external view returns (uint);
 
     /**
-    * @dev Returns the type of House Contract.
-    */
-    function HOUSE_TYPE() external returns(bytes32);
+     * @dev Returns the backedTokenID (used in {AssetsAccountant}) for this HouseOfReserve.
+     */
+    function backedTokenID() external view returns (uint);
+
+    /**
+     * @dev Returns the type of House Contract.
+     */
+    function HOUSE_TYPE() external returns (bytes32);
 
     /**
      * @dev Returns the collateralizationRatio of a HouseOfReserve.
      */
-    function collateralRatio() external view returns(Factor memory);
+    function collateralRatio() external view returns (Factor memory);
 
     /**
      * @dev Returns the latest price according to activeOracle
      */
-    function getLatestPrice() external view returns(uint256 price);
+    function getLatestPrice() external view returns (uint256 price);
 
     /**
      * @dev Deposit reserves in this contract on behalf caller.

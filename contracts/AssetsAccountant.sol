@@ -19,8 +19,8 @@ contract AssetsAccountantState {
     // reserveTokenID => houseOfReserve
     mapping(uint => address) public houseOfReserves;
 
-    // reserveAsset => backAsset => reserveTokenID
-    mapping(address => mapping(address => uint)) public reservesIds;
+    // reserveAsset => backAsset => array of reserveTokenID
+    mapping(address => mapping(address => uint256[])) internal _reservesIds;
 
     // backedAsset  => houseOfCoin
     mapping(address => address) public houseOfCoins;
@@ -103,7 +103,7 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
             // Register mappings
             houseOfReserves[reserveTokenID] = houseAddress;
             isARegisteredHouse[houseAddress] = true;
-            reservesIds[rAsset][bAsset] = reserveTokenID;
+            _reservesIds[rAsset][bAsset].push(reserveTokenID);
 
             // Assign Roles
             _grantRole(MINTER_ROLE, houseAddress);
@@ -134,6 +134,14 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
         } else {
             revert AssetsAccountant_houseAddressTypeNotRecognized();
         }
+    }
+
+    function getReserveIds(address reserveAsset, address backedAsset)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        return _reservesIds[reserveAsset][backedAsset];
     }
 
     /**

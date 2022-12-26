@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 interface IOracle {
     function activeOracle() external view returns (uint256);
-    
+
     function getRedstoneData()
         external
         view

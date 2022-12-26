@@ -85,7 +85,7 @@ describe("Xoc Liquidation Tests: using chainlink oracle", function () {
   * Must followed a 'depositMintRoutine' function call.
   */
   const makeARiskyPosition = async () => {
-    const remainingMintingPower = await coinhouse.checkRemainingMintingPower(dumbUser.address, weth.address);
+    const remainingMintingPower = await coinhouse.checkRemainingMintingPower(dumbUser.address, reservehouse.address);
     const percentDesired = ethers.BigNumber.from("99");
     const percentBase = ethers.BigNumber.from("100");
     const extraToMint = remainingMintingPower.mul(percentDesired).div(percentBase);
@@ -105,7 +105,7 @@ describe("Xoc Liquidation Tests: using chainlink oracle", function () {
 
     const liqParam = await coinhouseL.getLiqParams();
     const price = await coinhouseL.getLatestPrice(reservehouse.address);
-    const healthRatio = await coinhouseL.computeUserHealthRatio(dumbUser.address, weth.address);
+    const healthRatio = await coinhouseL.computeUserHealthRatio(dumbUser.address, reservehouse.address);
 
     if (DEBUG) {
       console.log("restoneLastPrice", price.toString());
@@ -124,7 +124,7 @@ describe("Xoc Liquidation Tests: using chainlink oracle", function () {
     // Liquidator actions
     let coinhouseL = coinhouse.connect(liquidator);
 
-    await expect(coinhouseL.liquidateUser(dumbUser.address, weth.address)).to.be.reverted;
+    await expect(coinhouseL.liquidateUser(dumbUser.address, reservehouse.address)).to.be.reverted;
   });
 
   it("Should return a bad health ratio", async () => {
@@ -142,7 +142,7 @@ describe("Xoc Liquidation Tests: using chainlink oracle", function () {
     let coinhouseL = coinhouse.connect(liquidator);
 
     const liqParam = await coinhouseL.getLiqParams();
-    const healthRatio = await coinhouseL.computeUserHealthRatio(dumbUser.address, weth.address);
+    const healthRatio = await coinhouseL.computeUserHealthRatio(dumbUser.address, reservehouse.address);
 
     if (DEBUG) {
       console.log("liqParam", liqParam.map(each => each.toString()));
@@ -166,7 +166,7 @@ describe("Xoc Liquidation Tests: using chainlink oracle", function () {
     // Liquidator actions
     let coinhouseL = coinhouse.connect(liquidator);
 
-    const txResponse = await coinhouseL.liquidateUser(dumbUser.address, weth.address);
+    const txResponse = await coinhouseL.liquidateUser(dumbUser.address, reservehouse.address);
     const txReceipt = await txResponse.wait();
 
     if (DEBUG) {
@@ -214,7 +214,7 @@ describe("Xoc Liquidation Tests: using chainlink oracle", function () {
     [
       costAmount,
       collateralPenalty
-    ] = await coinhouseL.computeCostOfLiquidation(dumbUser.address, weth.address);
+    ] = await coinhouseL.computeCostOfLiquidation(dumbUser.address, reservehouse.address);
 
     let computedPrice = costAmount.mul(ethers.utils.parseUnits("1", 8)).div(collateralPenalty);
     let oraclePrice = await coinhouseL.getLatestPrice(reservehouse.address);
@@ -244,14 +244,14 @@ describe("Xoc Liquidation Tests: using chainlink oracle", function () {
     [
       costAmount,
       collateralPenalty
-    ] = await coinhouseL.computeCostOfLiquidation(dumbUser.address, weth.address);
+    ] = await coinhouseL.computeCostOfLiquidation(dumbUser.address, reservehouse.address);
 
     await xoc.connect(liquidator).approve(coinhouse.address, costAmount);
 
     const wethBalBefore = await accountant.balanceOf(liquidator.address, rid);
     const xocBalBefore = await xoc.balanceOf(liquidator.address);
 
-    await coinhouseL.liquidateUser(dumbUser.address, weth.address);
+    await coinhouseL.liquidateUser(dumbUser.address, reservehouse.address);
 
     const wethBalAfter = await accountant.balanceOf(liquidator.address, rid);
     const xocBalAfter = await xoc.balanceOf(liquidator.address);

@@ -49,6 +49,17 @@ contract HouseOfReserveState {
         uint256 amount
     );
     /**
+     * @dev Emit during initialization
+     * @param TokenID_ number of `reserveTokenID` used in `assetsAccountant`.
+     */
+    event ReserveTokenIdSet(uint256 TokenID_);
+    /**
+     * @dev Emit during initialization
+     * @param TokenID_ number of `backedTokenID` used in `assetsAccountant`.
+     */
+    event BackedTokenIdSet(uint256 TokenID_);
+
+    /**
      * @dev Emit when user DEFAULT_ADMIN changes the collateralization factor of this HouseOfReserve
      * @param newFactor New struct indicating the factor values.
      */
@@ -126,20 +137,33 @@ contract HouseOfReserve is
         reserveAsset = reserveAsset_;
         backedAsset = backedAsset_;
         WRAPPED_NATIVE = wrappedNative; // WETH
-        reserveTokenID = uint256(
-            keccak256(abi.encodePacked(reserveAsset, backedAsset, "collateral"))
-        );
-        backedTokenID = uint256(
-            keccak256(
-                abi.encodePacked(reserveAsset, backedAsset, "backedAsset")
-            )
-        );
+
         collateralRatio.numerator = 150;
         collateralRatio.denominator = 100;
         assetsAccountant = IAssetsAccountant(assetsAccountant_);
+
         _oracleHouse_init();
         _setTickers(tickerUsdFiat_, tickerReserveAsset_);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
+        reserveTokenID = uint256(
+            keccak256(
+                abi.encodePacked(
+                    reserveAsset,
+                    backedAsset,
+                    "collateral",
+                    block.number
+                )
+            )
+        );
+        emit ReserveTokenIdSet(reserveTokenID);
+
+        backedTokenID = uint256(
+            keccak256(
+                abi.encodePacked(reserveTokenID, backedAsset, "backedAsset")
+            )
+        );
+        emit BackedTokenIdSet(backedTokenID);
     }
 
     /** see {OracleHouse-activeOracle}*/
