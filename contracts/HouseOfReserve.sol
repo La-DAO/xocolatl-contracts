@@ -65,10 +65,14 @@ contract HouseOfReserveState {
     event AssetsAccountantChanged(address newAccountant);
 
     /// Custom errors
+    error HouseOfReserve_invalidInput();
+    error HouseOfReserve_notEnoughERC20Allowance();
+    error HouseOfReserve_depositLimitReached();
+    error HouseOfReserve_invalidWithdrawMoreThanMax();
+    error HouseOfReserve_wrongReserveAsset();
+    error HouseOfReserve_depositFailed();
 
-    error HouseOfReserve_zeroAddress();
-
-    address public WETH;
+    address public WRAPPED_NATIVE;
 
     address public reserveAsset;
 
@@ -100,6 +104,9 @@ contract HouseOfReserve is
      * @param reserveAsset_ ERC20 address of reserve asset handled in this contract.
      * @param backedAsset_ ERC20 address of the asset type of coin that can be backed with this reserves.
      * @param assetsAccountant_ Address of the {AssetsAccountant} contract.
+     * @param tickerUsdFiat_ used in Redstone oracle
+     * @param tickerReserveAsset_ used in Redstone oracle
+     * @param wrappedNative address (WETH equivalent)
      */
     function initialize(
         address reserveAsset_,
@@ -107,11 +114,18 @@ contract HouseOfReserve is
         address assetsAccountant_,
         string memory tickerUsdFiat_,
         string memory tickerReserveAsset_,
-        address _WETH
+        address wrappedNative
     ) public initializer {
+        if (
+            reserveAsset_ == address(0) ||
+            backedAsset_ == address(0) ||
+            assetsAccountant_ == address(0)
+        ) {
+            revert HouseOfReserve_invalidInput();
+        }
         reserveAsset = reserveAsset_;
         backedAsset = backedAsset_;
-        WETH = _WETH;
+        WRAPPED_NATIVE = wrappedNative; // WETH
         reserveTokenID = uint256(
             keccak256(abi.encodePacked(reserveAsset, backedAsset, "collateral"))
         );
@@ -143,7 +157,7 @@ contract HouseOfReserve is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         if (accountant == address(0)) {
-            revert HouseOfReserve_zeroAddress();
+            revert HouseOfReserve_invalidInput();
         }
         assetsAccountant = IAssetsAccountant(accountant);
         emit AssetsAccountantChanged(accountant);
@@ -226,18 +240,20 @@ contract HouseOfReserve is
      */
     function deposit(uint256 amount) public {
         // Validate input amount.
-        require(amount > 0, "Zero input amount!");
+        if (amount == 0) {
+            revert HouseOfReserve_invalidInput();
+        }
 
         // Check ERC20 approval of msg.sender.
-        require(
-            IERC20(reserveAsset).allowance(msg.sender, address(this)) >= amount,
-            "Not enough ERC20 allowance!"
-        );
+        if (
+            amount > IERC20(reserveAsset).allowance(msg.sender, address(this))
+        ) {
+            revert HouseOfReserve_notEnoughERC20Allowance();
+        }
         // Check that deposit limit for this reserve has not been reached.
-        require(
-            amount + totalDeposits <= depositLimit,
-            "Deposit limit reached!"
-        );
+        if (amount + totalDeposits > depositLimit) {
+            revert HouseOfReserve_depositLimitReached();
+        }
 
         // Transfer reserveAsset amount to this contract.
         IERC20(reserveAsset).transferFrom(msg.sender, address(this), amount);
@@ -269,10 +285,9 @@ contract HouseOfReserve is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         // Check inputs
-        require(
-            numerator > 0 && denominator > 0 && numerator > denominator,
-            "Invalid inputs!"
-        );
+        if (numerator == 0 || denominator == 0 || denominator > numerator) {
+            revert HouseOfReserve_invalidInput();
+        }
 
         // Set new collateralization ratio
         collateralRatio.numerator = numerator;
@@ -291,7 +306,10 @@ contract HouseOfReserve is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        require(newLimit > 0, "Invalid inputs!");
+        // Check `newLimit` is not zero
+        if (newLimit == 0) {
+            revert HouseOfReserve_invalidInput();
+        }
         depositLimit = newLimit;
         emit DepositLimitChanged(newLimit);
     }
@@ -305,6 +323,9 @@ contract HouseOfReserve is
         view
         returns (uint256 max)
     {
+        if (user == address(0)) {
+            revert HouseOfReserve_invalidInput();
+        }
         uint256 price = getLatestPrice();
         // Need balances for tokenIDs of both reserves and backed asset in {AssetsAccountant}
         (uint256 reserveBal, uint256 mintedCoinBal) = _checkBalances(
@@ -328,11 +349,11 @@ contract HouseOfReserve is
             backedTokenID
         );
 
-        // Validate user has reserveBal, and input amount is greater than zero, and less than msg.sender reserves deposits.
-        require(
-            reserveBal > 0 && amount > 0 && amount <= reserveBal,
-            "Invalid input amount!"
-        );
+        // Validate user has reserveBal, and input `amount` is not zero, and
+        // intended withdraw `amount` is less than msg.sender deposits.
+        if (reserveBal == 0 || amount == 0 || amount > reserveBal) {
+            revert HouseOfReserve_invalidInput();
+        }
 
         // Get max withdrawal amount
         uint256 maxWithdrawal = _checkMaxWithdrawal(
@@ -341,8 +362,10 @@ contract HouseOfReserve is
             price
         );
 
-        // Check maxWithdrawal is greater than or equal to the withdraw amount.
-        require(maxWithdrawal >= amount, "Invalid input amount!");
+        // Check intended withdraw `amount` is less than user's maxWithdrawal.
+        if (amount > maxWithdrawal) {
+            revert HouseOfReserve_invalidWithdrawMoreThanMax();
+        }
 
         // Burn at AssetAccountant withdrawal amount.
         assetsAccountant.burn(msg.sender, reserveTokenID, amount);
@@ -424,21 +447,23 @@ contract HouseOfReserve is
      * @dev  Handle direct sending of native-token.
      */
     receive() external payable {
-        uint256 preBalance = IERC20(WETH).balanceOf(address(this));
-        if (reserveAsset == WETH) {
+        uint256 preBalance = IERC20(WRAPPED_NATIVE).balanceOf(address(this));
+        if (reserveAsset == WRAPPED_NATIVE) {
             // Check that deposit limit for this reserve has not been reached.
-            require(
-                msg.value + totalDeposits <= depositLimit,
-                "Deposit limit reached!"
-            );
-            IWETH(WETH).deposit{value: msg.value}();
-            require(
-                IERC20(WETH).balanceOf(address(this)) == preBalance + msg.value,
-                "deposit failed!"
-            );
+            if (msg.value + totalDeposits > depositLimit) {
+                revert HouseOfReserve_depositLimitReached();
+            }
+            IWETH(WRAPPED_NATIVE).deposit{value: msg.value}();
+            // Check WRAPPED_NATIVE amount was received.
+            if (
+                IERC20(WRAPPED_NATIVE).balanceOf(address(this)) !=
+                preBalance + msg.value
+            ) {
+                revert HouseOfReserve_depositFailed();
+            }
             _deposit(msg.sender, msg.value);
         } else {
-            revert("Wrong reserveAsset!");
+            revert HouseOfReserve_wrongReserveAsset();
         }
     }
 }
