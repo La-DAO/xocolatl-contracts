@@ -97,20 +97,20 @@ contract HouseOfReserve is
 {
     /**
      * @dev Initializes this contract by setting:
-     * @param _reserveAsset ERC20 address of reserve asset handled in this contract.
-     * @param _backedAsset ERC20 address of the asset type of coin that can be backed with this reserves.
-     * @param _assetsAccountant Address of the {AssetsAccountant} contract.
+     * @param reserveAsset_ ERC20 address of reserve asset handled in this contract.
+     * @param backedAsset_ ERC20 address of the asset type of coin that can be backed with this reserves.
+     * @param assetsAccountant_ Address of the {AssetsAccountant} contract.
      */
     function initialize(
-        address _reserveAsset,
-        address _backedAsset,
-        address _assetsAccountant,
+        address reserveAsset_,
+        address backedAsset_,
+        address assetsAccountant_,
         string memory tickerUsdFiat_,
         string memory tickerReserveAsset_,
         address _WETH
     ) public initializer {
-        reserveAsset = _reserveAsset;
-        backedAsset = _backedAsset;
+        reserveAsset = reserveAsset_;
+        backedAsset = backedAsset_;
         WETH = _WETH;
         reserveTokenID = uint256(
             keccak256(abi.encodePacked(reserveAsset, backedAsset, "collateral"))
@@ -122,7 +122,7 @@ contract HouseOfReserve is
         );
         collateralRatio.numerator = 150;
         collateralRatio.denominator = 100;
-        assetsAccountant = IAssetsAccountant(_assetsAccountant);
+        assetsAccountant = IAssetsAccountant(assetsAccountant_);
         _oracleHouse_init();
         _setTickers(tickerUsdFiat_, tickerReserveAsset_);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
