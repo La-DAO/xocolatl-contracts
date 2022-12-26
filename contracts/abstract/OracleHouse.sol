@@ -117,7 +117,6 @@ abstract contract OracleHouse is PriceAware {
         _tickers.push(bytes32(0));
     }
 
-
     /**
      * Returns price in 8 decimal places.
      */
@@ -239,7 +238,6 @@ abstract contract OracleHouse is PriceAware {
      **/
     event UMAHelperAddressChanged(address newAddress);
 
-
     /**
      * Returns price in 8 decimal places.
      */
@@ -280,7 +278,6 @@ abstract contract OracleHouse is PriceAware {
         address _newAddrUsdFiat,
         address _newAddrReserveAsset
     );
-
 
     /**
      * Returns price in 8 decimal places.
