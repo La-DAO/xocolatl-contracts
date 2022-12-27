@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IUMAFinder.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IUMAFinder} from "./IUMAFinder.sol";
 
 /**
  * @title Simplified interface for UMA Optimistic V2 oracle interface.
@@ -43,11 +43,11 @@ interface IOptimisticOracleV2 {
         uint256 finalFee; // Final fee to pay to the Store upon request to the DVM.
     }
 
-    function defaultLiveness() external view  returns (uint256);
+    function defaultLiveness() external view returns (uint256);
 
-    function finder() external view  returns (IUMAFinder);
+    function finder() external view returns (IUMAFinder);
 
-    function getCurrentTime() external view  returns (uint256);
+    function getCurrentTime() external view returns (uint256);
 
     /**
      * @notice Requests a new price.
@@ -67,7 +67,7 @@ interface IOptimisticOracleV2 {
         bytes memory ancillaryData,
         IERC20 currency,
         uint256 reward
-    ) external  returns (uint256 totalBond);
+    ) external returns (uint256 totalBond);
 
     /**
      * @notice Set the proposal bond associated with a price request.
@@ -83,7 +83,7 @@ interface IOptimisticOracleV2 {
         uint256 timestamp,
         bytes memory ancillaryData,
         uint256 bond
-    ) external  returns (uint256 totalBond);
+    ) external returns (uint256 totalBond);
 
     /**
      * @notice Sets the request to refund the reward if the proposal is disputed. This can help to "hedge" the caller
@@ -97,7 +97,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external ;
+    ) external;
 
     /**
      * @notice Sets a custom liveness value for the request. Liveness is the amount of time a proposal must wait before
@@ -112,7 +112,7 @@ interface IOptimisticOracleV2 {
         uint256 timestamp,
         bytes memory ancillaryData,
         uint256 customLiveness
-    ) external ;
+    ) external;
 
     /**
      * @notice Sets the request to be an "event-based" request.
@@ -135,7 +135,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external ;
+    ) external;
 
     /**
      * @notice Sets which callbacks should be enabled for the request.
@@ -153,7 +153,7 @@ interface IOptimisticOracleV2 {
         bool callbackOnPriceProposed,
         bool callbackOnPriceDisputed,
         bool callbackOnPriceSettled
-    ) external ;
+    ) external;
 
     /**
      * @notice Proposes a price value on another address' behalf. Note: this address will receive any rewards that come
@@ -174,7 +174,7 @@ interface IOptimisticOracleV2 {
         uint256 timestamp,
         bytes memory ancillaryData,
         int256 proposedPrice
-    ) external  returns (uint256 totalBond);
+    ) external returns (uint256 totalBond);
 
     /**
      * @notice Proposes a price value for an existing price request.
@@ -192,7 +192,7 @@ interface IOptimisticOracleV2 {
         uint256 timestamp,
         bytes memory ancillaryData,
         int256 proposedPrice
-    ) external  returns (uint256 totalBond);
+    ) external returns (uint256 totalBond);
 
     /**
      * @notice Disputes a price request with an active proposal on another address' behalf. Note: this address will
@@ -211,7 +211,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external  returns (uint256 totalBond);
+    ) external returns (uint256 totalBond);
 
     /**
      * @notice Disputes a price value for an existing price request with an active proposal.
@@ -227,7 +227,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external  returns (uint256 totalBond);
+    ) external returns (uint256 totalBond);
 
     /**
      * @notice Retrieves a price that was previously requested by a caller. Reverts if the request is not settled
@@ -242,7 +242,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external  returns (int256);
+    ) external returns (int256);
 
     /**
      * @notice Attempts to settle an outstanding price request. Will revert if it isn't settleable.
@@ -258,7 +258,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external  returns (uint256 payout);
+    ) external returns (uint256 payout);
 
     /**
      * @notice Gets the current data structure containing all information about a price request.
@@ -273,7 +273,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external view  returns (Request memory);
+    ) external view returns (Request memory);
 
     /**
      * @notice Returns the state of a price request.
@@ -288,7 +288,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external view  returns (State);
+    ) external view returns (State);
 
     /**
      * @notice Checks if a given request has resolved or been settled (i.e the optimistic oracle has a price).
@@ -303,7 +303,7 @@ interface IOptimisticOracleV2 {
         bytes32 identifier,
         uint256 timestamp,
         bytes memory ancillaryData
-    ) external view  returns (bool);
+    ) external view returns (bool);
 
     function stampAncillaryData(bytes memory ancillaryData, address requester)
         external

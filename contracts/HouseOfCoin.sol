@@ -9,14 +9,14 @@ pragma solidity 0.8.13;
  * @dev  Contracts are split into state and functionality.
  */
 
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "./interfaces/IERC20Extension.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IAssetsAccountant.sol";
-import "./interfaces/IAssetsAccountantState.Sol";
-import "./interfaces/IHouseOfReserve.sol";
-import "./abstract/OracleHouse.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC20Extension} from "./interfaces/IERC20Extension.sol";
+import {IAssetsAccountant} from "./interfaces/IAssetsAccountant.sol";
+import {IAggregatorV3} from "./interfaces/chainlink/IAggregatorV3.sol";
+import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
+import {OracleHouse} from "./abstract/OracleHouse.sol";
 
 contract HouseOfCoinState {
     // HouseOfCoinMinting Events
@@ -137,7 +137,7 @@ contract HouseOfCoin is
             revert HouseOfCoin_invalidInput();
         }
         backedAsset = backedAsset_;
-        // Decimals from the backedAsset are stored is to optimize gas 
+        // Decimals from the backedAsset are stored to optimize gas
         // and avoid multiple external calls during execution of some functions.
         backedAssetDecimals = IERC20Extension(backedAsset).decimals();
         assetsAccountant = assetsAccountant_;
@@ -239,9 +239,7 @@ contract HouseOfCoin is
     {
         if (
             hOfReserve_ == address(0) ||
-            !IAssetsAccountantState(assetsAccountant).isARegisteredHouse(
-                hOfReserve_
-            )
+            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(hOfReserve_)
         ) {
             revert HouseOfCoin_invalidInput();
         }
@@ -279,14 +277,14 @@ contract HouseOfCoin is
         IERC20Extension bAsset = IERC20Extension(backedAsset);
 
         uint256 reserveTokenID = hOfReserve.reserveTokenID();
-        uint256 backedTokenID = getBackedTokenID(reserveAsset);
+        uint256 backedTokenID = hOfReserve.backedTokenID();
 
         // Validate reserveAsset and houseOfReserve are active with {AssetsAccountant}.
         if (
-            !IAssetsAccountantState(assetsAccountant).isARegisteredHouse(
+            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(
                 houseOfReserve
             ) ||
-            IAssetsAccountantState(assetsAccountant).houseOfReserves(
+            IAssetsAccountant(assetsAccountant).houseOfReserves(
                 reserveTokenID
             ) ==
             address(0) ||
@@ -372,31 +370,28 @@ contract HouseOfCoin is
     /**
      * @dev Called to liquidate a user or publish margin call event.
      * @param userToLiquidate address to liquidate.
-     * @param reserveAsset the reserve asset address user is using to back debt.
+     * @param houseOfReserve address in where user has collateral backing debt.
      */
-    function liquidateUser(address userToLiquidate, address reserveAsset)
+    function liquidateUser(address userToLiquidate, address houseOfReserve)
         external
     {
         // Get all the required inputs.
-        IAssetsAccountantState accountant = IAssetsAccountantState(
-            assetsAccountant
-        );
+        IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
+        address reserveAsset = hOfReserve.reserveAsset();
+
+        uint256 reserveTokenID_ = hOfReserve.reserveTokenID();
+        uint256 backedTokenID_ = hOfReserve.backedTokenID();
 
         (uint256 reserveBal, uint256 mintedCoinBal) = _checkBalances(
             userToLiquidate,
-            accountant.reservesIds(reserveAsset, backedAsset),
-            getBackedTokenID(reserveAsset)
+            reserveTokenID_,
+            backedTokenID_
         );
-
-        address hOfReserveAddr = accountant.houseOfReserves(
-            accountant.reservesIds(reserveAsset, backedAsset)
-        );
-        IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserveAddr);
 
         IHouseOfReserve.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
-        uint256 latestPrice = getLatestPrice(hOfReserveAddr);
+        uint256 latestPrice = getLatestPrice(houseOfReserve);
 
         uint256 reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
 
@@ -432,8 +427,8 @@ contract HouseOfCoin is
 
                 _executeLiquidation(
                     userToLiquidate,
-                    accountant.reservesIds(reserveAsset, backedAsset),
-                    getBackedTokenID(reserveAsset),
+                    reserveTokenID_,
+                    backedTokenID_,
                     costofLiquidation,
                     collatPenaltyBal
                 );
@@ -446,36 +441,29 @@ contract HouseOfCoin is
     /**
      * @notice  Function to get the health ratio of user.
      * @param user address.
-     * @param reserveAsset address being used as collateral.
+     * @param houseOfReserve address in where user has collateral backing debt.
      */
-    function computeUserHealthRatio(address user, address reserveAsset)
+    function computeUserHealthRatio(address user, address houseOfReserve)
         public
         view
         returns (uint256)
     {
         // Get all the required inputs.
-        IAssetsAccountantState accountant = IAssetsAccountantState(
-            assetsAccountant
-        );
-        uint256 reserveTokenID = accountant.reservesIds(
-            reserveAsset,
-            backedAsset
-        );
-        uint256 backedTokenID = getBackedTokenID(reserveAsset);
+        IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
+
+        uint256 reserveTokenID_ = hOfReserve.reserveTokenID();
+        uint256 backedTokenID_ = hOfReserve.backedTokenID();
 
         (uint256 reserveBal, uint256 mintedCoinBal) = _checkBalances(
             user,
-            reserveTokenID,
-            backedTokenID
+            reserveTokenID_,
+            backedTokenID_
         );
-
-        address hOfReserveAddr = accountant.houseOfReserves(reserveTokenID);
-        IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserveAddr);
 
         IHouseOfReserve.Factor memory collatRatio = hOfReserve
             .collateralRatio();
 
-        uint256 latestPrice = getLatestPrice(hOfReserveAddr);
+        uint256 latestPrice = getLatestPrice(houseOfReserve);
 
         return
             _computeUserHealthRatio(
@@ -489,37 +477,34 @@ contract HouseOfCoin is
     /**
      * @notice  Function to get the theoretical cost of liquidating a user.
      * @param user address.
-     * @param reserveAsset address being used as collateral.
+     * * @param houseOfReserve address in where user has collateral backing debt.
      */
-    function computeCostOfLiquidation(address user, address reserveAsset)
+    function computeCostOfLiquidation(address user, address houseOfReserve)
         public
         view
         returns (uint256 costAmount, uint256 collateralAtPenalty)
     {
         // Get all the required inputs.
-        IAssetsAccountantState accountant = IAssetsAccountantState(
-            assetsAccountant
-        );
-        uint256 reserveTokenID = accountant.reservesIds(
-            reserveAsset,
-            backedAsset
-        );
-        uint256 backedTokenID = getBackedTokenID(reserveAsset);
+        // Get all the required inputs.
+        IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
+
+        uint256 reserveTokenID_ = hOfReserve.reserveTokenID();
+        uint256 backedTokenID_ = hOfReserve.backedTokenID();
 
         (uint256 reserveBal, ) = _checkBalances(
             user,
-            reserveTokenID,
-            backedTokenID
+            reserveTokenID_,
+            backedTokenID_
         );
         if (reserveBal == 0) {
             revert HouseOfCoin_noBalances();
         }
 
-        uint256 latestPrice = getLatestPrice(
-            accountant.houseOfReserves(reserveTokenID)
-        );
+        uint256 latestPrice = getLatestPrice(houseOfReserve);
 
-        uint256 reserveAssetDecimals = IERC20Extension(reserveAsset).decimals();
+        uint256 reserveAssetDecimals = IERC20Extension(
+            hOfReserve.reserveAsset()
+        ).decimals();
 
         (costAmount, collateralAtPenalty) = _computeCostOfLiquidation(
             reserveBal,
@@ -528,24 +513,6 @@ contract HouseOfCoin is
         );
 
         return (costAmount, collateralAtPenalty);
-    }
-
-    /**
-     *
-     * @dev  Get backedTokenID to be used in {AssetsAccountant}
-     * @param reserveAsset_ ERC20 address of the reserve asset used to back coin.
-     */
-    function getBackedTokenID(address reserveAsset_)
-        public
-        view
-        returns (uint256)
-    {
-        return
-            uint256(
-                keccak256(
-                    abi.encodePacked(reserveAsset_, backedAsset, "backedAsset")
-                )
-            );
     }
 
     /**
@@ -611,28 +578,18 @@ contract HouseOfCoin is
     /**
      * @notice  External function that returns the amount of backed asset coins user can mint with unused reserve asset.
      * @param user to check minting power.
-     * @param reserveAsset Address of reserve asset.
+     * @param hOfReserveAddr Address of house of reserve which assets will be used as collateral.
      */
-    function checkRemainingMintingPower(address user, address reserveAsset)
+    function checkRemainingMintingPower(address user, address hOfReserveAddr)
         public
         view
         returns (uint256)
     {
         // Get all required inputs
-        IAssetsAccountantState accountant = IAssetsAccountantState(
-            assetsAccountant
-        );
-
-        uint256 reserveTokenID = accountant.reservesIds(
-            reserveAsset,
-            backedAsset
-        );
-
-        uint256 backedTokenID = getBackedTokenID(reserveAsset);
-
-        address hOfReserveAddr = accountant.houseOfReserves(reserveTokenID);
-
         IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserveAddr);
+
+        uint256 reserveTokenID = hOfReserve.reserveTokenID();
+        uint256 backedTokenID = hOfReserve.backedTokenID();
 
         IHouseOfReserve.Factor memory collatRatio = hOfReserve
             .collateralRatio();

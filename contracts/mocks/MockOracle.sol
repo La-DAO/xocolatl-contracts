@@ -5,8 +5,8 @@ pragma solidity 0.8.13;
  * @title Mock Oracle contract used for testing.
  */
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "../abstract/OracleHouse.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OracleHouse} from "../abstract/OracleHouse.sol";
 
 contract MockOracleState {
     string public trackingAssetSymbol;
@@ -44,7 +44,7 @@ contract MockOracle is Ownable, MockOracleState, OracleHouse {
     }
 
     /** see {OracleHouse-activeOracle}*/
-    function activeOracle() external override view returns (uint256) {
+    function activeOracle() external view override returns (uint256) {
         return _activeOracle;
     }
 
@@ -52,11 +52,7 @@ contract MockOracle is Ownable, MockOracleState, OracleHouse {
      * @notice  See '_setActiveOracle()' in {OracleHouse}.
      * @dev restricted to admin only.
      */
-    function setActiveOracle(OracleIds id_)
-        external
-        override
-        onlyOwner
-    {
+    function setActiveOracle(OracleIds id_) external override onlyOwner {
         _setActiveOracle(id_);
     }
 
@@ -106,6 +102,4 @@ contract MockOracle is Ownable, MockOracleState, OracleHouse {
     {
         _setChainlinkAddrs(addrUsdFiat_, addrReserveAsset_);
     }
-
-    
 }
