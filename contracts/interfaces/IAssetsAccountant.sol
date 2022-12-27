@@ -1,9 +1,27 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 interface IAssetsAccountant is IERC1155 {
+    /**
+     * @dev Returns the address of the HouseOfReserve corresponding to reserveAsset.
+     */
+    function houseOfReserves(uint reserveAssetTokenID)
+        external
+        view
+        returns (address);
+
+    /**
+     * @dev Returns the address of the HouseOfCoin corresponding to backedAsset.
+     */
+    function houseOfCoins(address backedAsset) external view returns (address);
+
+    /**
+     * @notice Returns true if house addres is registered.
+     */
+    function isARegisteredHouse(address house) external view returns (bool);
+
     /**
      * @dev Returns the reserve Token Ids that correspond to reserveAsset and backedAsset
      */

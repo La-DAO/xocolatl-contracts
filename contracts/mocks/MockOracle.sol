@@ -5,8 +5,8 @@ pragma solidity 0.8.13;
  * @title Mock Oracle contract used for testing.
  */
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "../abstract/OracleHouse.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OracleHouse} from "../abstract/OracleHouse.sol";
 
 contract MockOracleState {
     string public trackingAssetSymbol;

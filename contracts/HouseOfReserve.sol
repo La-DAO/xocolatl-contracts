@@ -10,13 +10,13 @@ pragma solidity 0.8.13;
  * @dev A HouseOfReserve is required to back a specific backedAsset.
  */
 
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IWETH.sol";
-import "./interfaces/IAssetsAccountant.sol";
-import "./abstract/OracleHouse.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IWETH} from "./interfaces/IWETH.sol";
+import {IAssetsAccountant} from "./interfaces/IAssetsAccountant.sol";
+import {OracleHouse} from "./abstract/OracleHouse.sol";
 
 contract HouseOfReserveState {
     struct Factor {

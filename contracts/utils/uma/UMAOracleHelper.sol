@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import "../../interfaces/uma/IOptimisticOracleV2.sol";
-import "../../interfaces/uma/IdentifierWhitelistInterface.sol";
-import "../../interfaces/uma/IUMAFinder.sol";
-import "../../interfaces/uma/IAddressWhitelist.sol";
-import "./UMAOracleInterfaces.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../../interfaces/chainlink/IAggregatorV3.sol";
+import {IOptimisticOracleV2} from "../../interfaces/uma/IOptimisticOracleV2.sol";
+import {IdentifierWhitelistInterface} from "../../interfaces/uma/IdentifierWhitelistInterface.sol";
+import {IUMAFinder} from "../../interfaces/uma/IUMAFinder.sol";
+import {IAddressWhitelist} from "../../interfaces/uma/IAddressWhitelist.sol";
+import {UMAOracleInterfaces} from "./UMAOracleInterfaces.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IAggregatorV3} from "../../interfaces/chainlink/IAggregatorV3.sol";
 
 contract UMAOracleHelper {
     /**

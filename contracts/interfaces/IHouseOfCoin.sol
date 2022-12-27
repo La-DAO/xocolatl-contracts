@@ -3,6 +3,16 @@ pragma solidity 0.8.13;
 
 interface IHouseOfCoin {
     /**
+     * @dev Returns the type of House Contract.
+     */
+    function HOUSE_TYPE() external returns (bytes32);
+
+    /**
+     * @dev Returns the backedAsset that is minted by this HouseOfCoin.
+     */
+    function backedAsset() external view returns (address);
+
+    /**
      * @notice  Function to mint ERC20 'backedAsset' of this HouseOfCoin.
      * @dev  Requires user to have reserves for this backed asset at HouseOfReserves.
      * @param reserveAsset ERC20 address of asset to be used to back the minted coins.

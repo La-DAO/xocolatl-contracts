@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IUMAFinder.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IUMAFinder} from "./IUMAFinder.sol";
 
 /**
  * @title Simplified interface for UMA Optimistic V2 oracle interface.

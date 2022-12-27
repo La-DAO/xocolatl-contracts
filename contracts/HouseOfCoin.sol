@@ -9,14 +9,14 @@ pragma solidity 0.8.13;
  * @dev  Contracts are split into state and functionality.
  */
 
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "./interfaces/IERC20Extension.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IAssetsAccountant.sol";
-import "./interfaces/IAssetsAccountantState.Sol";
-import "./interfaces/IHouseOfReserve.sol";
-import "./abstract/OracleHouse.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC20Extension} from "./interfaces/IERC20Extension.sol";
+import {IAssetsAccountant} from "./interfaces/IAssetsAccountant.sol";
+import {IAggregatorV3} from "./interfaces/chainlink/IAggregatorV3.sol";
+import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
+import {OracleHouse} from "./abstract/OracleHouse.sol";
 
 contract HouseOfCoinState {
     // HouseOfCoinMinting Events
@@ -239,9 +239,7 @@ contract HouseOfCoin is
     {
         if (
             hOfReserve_ == address(0) ||
-            !IAssetsAccountantState(assetsAccountant).isARegisteredHouse(
-                hOfReserve_
-            )
+            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(hOfReserve_)
         ) {
             revert HouseOfCoin_invalidInput();
         }
@@ -283,10 +281,10 @@ contract HouseOfCoin is
 
         // Validate reserveAsset and houseOfReserve are active with {AssetsAccountant}.
         if (
-            !IAssetsAccountantState(assetsAccountant).isARegisteredHouse(
+            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(
                 houseOfReserve
             ) ||
-            IAssetsAccountantState(assetsAccountant).houseOfReserves(
+            IAssetsAccountant(assetsAccountant).houseOfReserves(
                 reserveTokenID
             ) ==
             address(0) ||

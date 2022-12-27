@@ -10,10 +10,10 @@ pragma solidity 0.8.13;
  * @dev Users do not interact directly with this contract.
  */
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IHouseOfReserve.sol";
-import "./interfaces/IHouseOfCoinState.sol";
+import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
+import {IHouseOfCoin} from "./interfaces/IHouseOfCoin.sol";
 
 contract AssetsAccountantState {
     // reserveTokenID => houseOfReserve
@@ -111,10 +111,9 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
 
             emit HouseRegistered(houseAddress, hOfReserve.HOUSE_TYPE(), rAsset);
         } else if (
-            IHouseOfCoinState(houseAddress).HOUSE_TYPE() ==
-            keccak256("COIN_HOUSE")
+            IHouseOfCoin(houseAddress).HOUSE_TYPE() == keccak256("COIN_HOUSE")
         ) {
-            IHouseOfCoinState hOfCoin = IHouseOfCoinState(houseAddress);
+            IHouseOfCoin hOfCoin = IHouseOfCoin(houseAddress);
             address bAsset = hOfCoin.backedAsset();
 
             // Check that `bAsset` has NOT already a HouseOfCoin address assigned

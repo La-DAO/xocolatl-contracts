@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 /// Contract taken from redstone-evm-connector package;
 /// Refer to: https://github.com/redstone-finance/redstone-evm-connector
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 abstract contract PriceAware {
     using ECDSA for bytes32;
