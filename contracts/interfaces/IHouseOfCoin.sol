@@ -2,6 +2,13 @@
 pragma solidity 0.8.17;
 
 interface IHouseOfCoin {
+    struct LiquidationParam {
+        uint256 marginCallThreshold;
+        uint256 liquidationThreshold;
+        uint256 liquidationPricePenaltyDiscount;
+        uint256 collateralPenalty;
+    }
+
     /**
      * @dev Returns the type of House Contract.
      */
@@ -44,4 +51,19 @@ interface IHouseOfCoin {
         external
         view
         returns (uint);
+
+    /**
+     * @notice  Function to get the health ratio of user.
+     * @param user address.
+     * @param houseOfReserve address in where user has collateral backing debt.
+     */
+    function computeUserHealthRatio(address user, address houseOfReserve)
+        external
+        view
+        returns (uint256);
+
+    /**
+     * @dev Returns the _liqParams as a struct
+     */
+    function getLiqParams() external view returns (LiquidationParam memory);
 }
