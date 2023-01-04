@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
@@ -52,16 +52,6 @@ interface IAssetsAccountant is IERC1155 {
     ) external;
 
     /**
-     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] variant of {mint}.
-     */
-    function mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) external;
-
-    /**
      * @dev Burns `amount` of tokens from `to`, of token type `id`.
      * See {ERC1155-_burn}.
      * Requirements:
@@ -71,15 +61,5 @@ interface IAssetsAccountant is IERC1155 {
         address account,
         uint256 id,
         uint256 value
-    ) external;
-
-    /**
-     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] variant of {burn}.
-     */
-    function burnBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
     ) external;
 }

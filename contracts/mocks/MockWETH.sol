@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GNU
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 /**
  * @title Mock WETH contract used for testing.
