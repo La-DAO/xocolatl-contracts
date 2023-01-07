@@ -19,8 +19,6 @@ import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {OracleHouse} from "./abstract/OracleHouse.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract HouseOfCoinState {
     struct LiquidationParam {
         uint256 marginCallThreshold;
@@ -38,8 +36,6 @@ contract HouseOfCoinState {
     LiquidationParam internal _liqParam;
 
     bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
-
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 }
 
 contract HouseOfCoin is
@@ -119,7 +115,6 @@ contract HouseOfCoin is
         assetsAccountant = assetsAccountant_;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(UPGRADER_ROLE, msg.sender);
 
         __AccessControl_init();
         __UUPSUpgradeable_init();
@@ -356,7 +351,6 @@ contract HouseOfCoin is
         view
         returns (uint256)
     {
-        console.log("inside@computeUserHealthRatio");
         // Get all the required inputs.
         IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
 
@@ -567,6 +561,6 @@ contract HouseOfCoin is
     function _authorizeUpgrade(address newImplementation)
         internal
         override
-        onlyRole(UPGRADER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {}
 }

@@ -31,7 +31,7 @@ const setDeploymentsPath = async (version) => {
   const netw = await provider.getNetwork();
   publishPath = `${hre.config.paths.root}/deployments/${network}/${netw.chainId}-version-${version}.deploy`;
   if(DEBUG) {
-    console.log("publishPath", deploymentsPath);
+    console.log("publishPath", publishPath);
   }
 };
 

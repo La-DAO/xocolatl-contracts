@@ -37,8 +37,6 @@ contract AssetsAccountantState {
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
     bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
-
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 }
 
 contract AssetsAccountant is
@@ -293,6 +291,6 @@ contract AssetsAccountant is
     function _authorizeUpgrade(address newImplementation)
         internal
         override
-        onlyRole(UPGRADER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {}
 }

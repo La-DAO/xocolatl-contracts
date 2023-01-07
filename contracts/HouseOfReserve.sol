@@ -44,8 +44,6 @@ contract HouseOfReserveState {
     IAssetsAccountant public assetsAccountant;
 
     bytes32 public constant HOUSE_TYPE = keccak256("RESERVE_HOUSE");
-
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 }
 
 contract HouseOfReserve is
@@ -161,7 +159,6 @@ contract HouseOfReserve is
         _setTickers(tickerUsdFiat_, tickerReserveAsset_);
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(UPGRADER_ROLE, msg.sender);
 
         __AccessControl_init();
         __UUPSUpgradeable_init();
@@ -532,6 +529,6 @@ contract HouseOfReserve is
     function _authorizeUpgrade(address newImplementation)
         internal
         override
-        onlyRole(UPGRADER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {}
 }
