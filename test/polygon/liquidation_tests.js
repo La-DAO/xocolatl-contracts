@@ -11,7 +11,7 @@ const {
   setERC20UserBalance
 } = require("../utils.js");
 
-const DEBUG = true;
+const DEBUG = false;
 
 describe("Xoc Liquidation Tests: using chainlink oracle", function () {
 
@@ -232,7 +232,7 @@ describe("Xoc Liquidation Tests: using chainlink oracle", function () {
     expect(computedPrice).to.be.lt(oraclePrice);
   });
 
-  it.only("Should liquidate user", async () => {
+  it("Should liquidate user", async () => {
     // dumbUser Actions
     const depositAmount = ethers.utils.parseUnits("1", 18);
     const mintAmount = ethers.utils.parseUnits("500", 18);

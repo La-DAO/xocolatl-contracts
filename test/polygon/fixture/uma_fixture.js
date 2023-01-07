@@ -59,12 +59,16 @@ const umaFixture = async () => {
     }
   );
 
-  // 2.- Register houses
+  // 2.- Register houses and allow liquidator
   await accountant.registerHouse(
     coinhouse.address
   );
   await accountant.registerHouse(
     reservehouse.address
+  );
+  await accountant.allowLiquidator(
+    liquidator.address, 
+    true
   );
 
   // 3.- Assign proper roles to coinhouse in fiat ERC20
@@ -73,7 +77,8 @@ const umaFixture = async () => {
   const liquidatorRole = await accountant.LIQUIDATOR_ROLE();
   await xoc.grantRole(minter, coinhouse.address);
   await xoc.grantRole(burner, coinhouse.address);
-  await accountant.grantRole(liquidatorRole, coinhouse.address);
+  await xoc.grantRole(burner, liquidator.address);
+  await accountant.grantRole(liquidatorRole, liquidator.address);
 
   // 4.- Assign deposit limit
   const depositLimitAmount = ethers.utils.parseEther("100");
