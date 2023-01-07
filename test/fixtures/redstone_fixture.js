@@ -79,6 +79,7 @@ const redstoneFixture = async () => {
   // 4.- Wrap the contracts in redstone-evm-connector
   const w_reservehouse = WrapperBuilder.wrapLite(reservehouse).usingPriceFeed("redstone-stocks");
   const w_coinhouse = WrapperBuilder.wrapLite(coinhouse).usingPriceFeed("redstone-stocks");
+  const w_liquidator = WrapperBuilder.wrapLite(liquidator).usingPriceFeed("redstone-stocks");
 
   // 5.- Authorize Redstone Provider
   // You can check check evm addresses for providers at: https://api.redstone.finance/providers
@@ -89,6 +90,8 @@ const redstoneFixture = async () => {
   await txrh.wait();
   const txch = await coinhouse.authorizeSigner("0x926E370fD53c23f8B71ad2B3217b227E41A92b12");
   await txch.wait();
+  const txlh = await liquidator.authorizeSigner("0x926E370fD53c23f8B71ad2B3217b227E41A92b12");
+  await txlh.wait();
 
   // 6.- Assign deposit limit
   const depositLimitAmount = ethers.utils.parseEther("100");
@@ -105,6 +108,7 @@ const redstoneFixture = async () => {
     reservehouse,
     w_reservehouse,
     liquidator,
+    w_liquidator,
     xoc,
     weth
   }
