@@ -20,6 +20,7 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
   let accountant;
   let coinhouse;
   let reservehouse;
+  let liquidator;
   let xoc;
   let weth;
 
@@ -35,10 +36,10 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
     await umahelper.requestPrice();
     const proposeStake = ethers.utils.parseEther("10");
     const proposerUser = accounts[19];
-    const priceProposal = ethers.utils.parseUnits("5",16);
+    const priceProposal = ethers.utils.parseUnits("5", 16);
 
     await setERC20UserBalance(proposerUser.address, weth.address, 'polygon', proposeStake);
-    
+
     await weth.connect(proposerUser).approve(umahelper.address, proposeStake);
     await umahelper.connect(proposerUser).proposePriceLastRequest(priceProposal);
     await timeTravel(60 * 60 * 3);
@@ -56,6 +57,7 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
     accountant = loadedContracts.accountant;
     coinhouse = loadedContracts.coinhouse;
     reservehouse = loadedContracts.reservehouse;
+    liquidator = loadedContracts.liquidator;
     xoc = loadedContracts.xoc;
     weth = loadedContracts.weth;
     umahelper = loadedContracts.umahelper;
@@ -77,11 +79,11 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
     await umahelper.requestPrice();
     const proposeStake = ethers.utils.parseEther("10");
     const proposerUser = accounts[19];
-    const priceProposal = ethers.utils.parseUnits("5",16);
+    const priceProposal = ethers.utils.parseUnits("5", 16);
 
     await setERC20UserBalance(proposerUser.address, weth.address, 'polygon', proposeStake);
     expect(await weth.balanceOf(proposerUser.address)).to.eq(proposeStake);
-    
+
     await weth.connect(proposerUser).approve(umahelper.address, proposeStake);
     await umahelper.connect(proposerUser).proposePriceLastRequest(priceProposal);
     await timeTravel(60 * 60 * 24);

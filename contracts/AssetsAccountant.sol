@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 /**
  * @title Assets accountant contract.
@@ -10,10 +10,12 @@ pragma solidity 0.8.13;
  * @dev Users do not interact directly with this contract.
  */
 
-import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {IHouseOfCoin} from "./interfaces/IHouseOfCoin.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract AssetsAccountantState {
     // reserveTokenID => houseOfReserve
@@ -30,16 +32,22 @@ contract AssetsAccountantState {
     // Contract Token name
     string internal constant NAME = "AssetsAccountant";
 
-    bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
-
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
     bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
+
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 }
 
-contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
+contract AssetsAccountant is
+    Initializable,
+    ERC1155Upgradeable,
+    AccessControlUpgradeable,
+    UUPSUpgradeable,
+    AssetsAccountantState
+{
     // AssetsAccountant Events
 
     /**
@@ -53,21 +61,36 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
         bytes32 indexed typeOfHouse,
         address indexed asset
     );
+    /**
+     * @dev Emit when a Liquidator contract is `allow` or not as a liquidator.
+     * @param liquidator Address of house registered.
+     * @param allow boolean
+     */
+    event LiquidatorAllow(address liquidator, bool allow);
 
     // AssetsAccountant custom errors
-
+    error AssetsAccountant_zeroAddress();
+    error AssetsAccountant_NonTransferable();
     error AssetsAccountant_houseAddressAlreadyRegistered();
     error AssetsAccountant_reserveTokenIdAlreadyRegistered();
     error AssetsAccountant_backedAssetAlreadyRegistered();
     error AssetsAccountant_houseAddressTypeNotRecognized();
     error AssetsAccountant_callerAddressNotRecognizedAsValidHouse();
 
-    constructor() ERC1155("https://xocolatl.finance/") {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(URI_SETTER_ROLE, msg.sender);
-        _setupRole(MINTER_ROLE, msg.sender);
-        _setupRole(BURNER_ROLE, msg.sender);
-        _setupRole(LIQUIDATOR_ROLE, msg.sender);
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize() public initializer {
+        __ERC1155_init("https://xocolatl.finance/");
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(BURNER_ROLE, msg.sender);
+        _grantRole(LIQUIDATOR_ROLE, msg.sender);
     }
 
     /**
@@ -135,6 +158,26 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
         }
     }
 
+    function allowLiquidator(address liquidator, bool allow)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (liquidator == address(0)) {
+            revert AssetsAccountant_zeroAddress();
+        }
+
+        isARegisteredHouse[liquidator] = allow;
+
+        if (allow == true) {
+            _grantRole(LIQUIDATOR_ROLE, liquidator);
+            _grantRole(BURNER_ROLE, liquidator);
+        } else {
+            _revokeRole(LIQUIDATOR_ROLE, liquidator);
+            _revokeRole(BURNER_ROLE, liquidator);
+        }
+        emit LiquidatorAllow(liquidator, allow);
+    }
+
     function getReserveIds(address reserveAsset, address backedAsset)
         public
         view
@@ -152,11 +195,11 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
 
     /**
      * @dev Sets the URI for this contract.
-     * @dev Requires caller to have URI_SETTER_ROLE.
+     * @dev Requires caller to have DEFAULT_ADMIN_ROLE.
      * @dev Since URI is not specified per Token Id this function does not emit {URI} event.
      * @param newuri String of the new URI.
      */
-    function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
+    function setURI(string memory newuri) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _setURI(newuri);
     }
 
@@ -180,14 +223,14 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
     /**
      * @dev Batch implementation of {mint} function. Refer to {mint}.
      */
-    function mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) external onlyRole(MINTER_ROLE) {
-        _mintBatch(to, ids, amounts, data);
-    }
+    // function mintBatch(
+    //     address to,
+    //     uint256[] memory ids,
+    //     uint256[] memory amounts,
+    //     bytes memory data
+    // ) external onlyRole(MINTER_ROLE) {
+    //     _mintBatch(to, ids, amounts, data);
+    // }
 
     /**
      * @notice Burns 'amount' of token Id for specified 'account' address.
@@ -205,17 +248,6 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
     }
 
     /**
-     * @dev Batch implementation of {burn} function. Refer to {burn}.
-     */
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) public onlyRole(BURNER_ROLE) {
-        _burnBatch(account, ids, amounts);
-    }
-
-    /**
      * @dev Function override added to restrict transferability of tokens in this contract.
      * @dev Accounting assets are not meant to be transferable.
      */
@@ -224,7 +256,7 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
         address to,
         uint256 id,
         uint256 amount,
-        bytes calldata data
+        bytes memory data
     ) public override onlyRole(LIQUIDATOR_ROLE) {
         // check msg.sender `isARegisteredHouse`.
         if (!isARegisteredHouse[msg.sender]) {
@@ -239,11 +271,11 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
     function safeBatchTransferFrom(
         address,
         address,
-        uint256[] calldata,
-        uint256[] calldata,
-        bytes calldata
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
     ) public pure override {
-        revert("Non-transferable!");
+        revert AssetsAccountant_NonTransferable();
     }
 
     /**
@@ -252,9 +284,15 @@ contract AssetsAccountant is ERC1155, AccessControl, AssetsAccountantState {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC1155, AccessControl)
+        override(ERC1155Upgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }
+
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override
+        onlyRole(UPGRADER_ROLE)
+    {}
 }

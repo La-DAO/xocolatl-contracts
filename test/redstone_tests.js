@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { createFixtureLoader } = require("ethereum-waffle");
-const {redstoneFixture} = require("./fixtures/redstone_fixture");
+const { redstoneFixture } = require("./fixtures/redstone_fixture");
 const { WrapperBuilder } = require("redstone-evm-connector");
 
 const { provider } = ethers;
@@ -19,6 +19,7 @@ describe("Xoc Tests - Redstone Oracle", function () {
   let accountant;
   let coinhouse;
   let reservehouse;
+  let liquidator;
   let xoc;
   let weth;
 
@@ -37,6 +38,7 @@ describe("Xoc Tests - Redstone Oracle", function () {
     accountant = loadedContracts.accountant;
     coinhouse = loadedContracts.w_coinhouse;
     reservehouse = loadedContracts.w_reservehouse;
+    liquidator = loadedContracts.liquidator;
     xoc = loadedContracts.xoc;
     weth = loadedContracts.weth;
 

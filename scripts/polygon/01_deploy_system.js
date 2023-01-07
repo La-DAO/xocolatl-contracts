@@ -12,20 +12,38 @@ const { UMA_CONTRACTS } = require("../const");
 const { deployAssetsAccountant } = require("../tasks/deployAssetsAccountant");
 const { deployHouseOfCoin } = require("../tasks/deployHouseOfCoin");
 const { deployHouseOfReserve } = require("../tasks/deployHouseOfReserve");
+const { deployAccountLiquidator } = require("../tasks/deployAccountLiquidator");
 const { deployUMAOracleHelper } = require("../tasks/deployUMAOracleHelper");
 
+const { systemPermissionGranting } = require("../tasks/setUpXocolatl");
 const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
-const { initialSetUpHouseOfCoin, initialPermissionGranting } = require("../tasks/setUpHouseOfCoin");
+const { setUpHouseOfCoin } = require("../tasks/setUpHouseOfCoin");
 const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
+const { setUpAccountLiquidator } = require("../tasks/setUpAccountLiquidator");
 
 const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
   const xoc = await getContract("Xocolatl");
+  console.log("xoc", xoc.address);
   const accountant = await deployAssetsAccountant();
-  const coinhouse = await deployHouseOfCoin();
-  const reservehouse = await deployHouseOfReserve("HouseOfReserveWETH");
-
+  const coinhouse = await deployHouseOfCoin(
+    xoc.address,
+    accountant.address
+  );
+  const reservehouse = await deployHouseOfReserve(
+    "HouseOfReserveWETH",
+    ASSETS.polygon.weth.address,
+    xoc.address,
+    accountant.address,
+    "MXN",
+    "ETH",
+    WNATIVE
+  );
+  const liquidator = await deployAccountLiquidator(
+    coinhouse.address,
+    accountant.address
+  );
   const sixhours = 6 * 60 * 60;
   const umahelper = await deployUMAOracleHelper(
     ASSETS.polygon.weth.address,
@@ -34,20 +52,12 @@ const deploySystemContracts = async () => {
     sixhours
   );
 
-  await initialSetUpHouseOfCoin(
-    coinhouse,
-    xoc.address,
-    accountant.address
+  await setUpHouseOfCoin(
+    coinhouse
   );
 
   await setUpHouseOfReserve(
     reservehouse,
-    ASSETS.polygon.weth.address,
-    xoc.address,
-    accountant.address,
-    "MXN",
-    "ETH",
-    WNATIVE,
     RESERVE_CAPS.weth.defaultInitialLimit
   );
 
@@ -59,13 +69,16 @@ const deploySystemContracts = async () => {
   await setUpAssetsAccountant(
     accountant,
     coinhouse.address,
-    reservehouse.address
+    reservehouse.address,
+    liquidator.address  
   );
 
-  await initialPermissionGranting(
-    coinhouse,
+  await setUpAccountLiquidator(liquidator);
+
+  await systemPermissionGranting(
     xoc,
-    accountant
+    coinhouse.address,
+    liquidator.address
   );
 }
 

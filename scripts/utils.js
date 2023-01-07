@@ -6,6 +6,8 @@ const { provider, utils } = ethers;
 
 const network = process.env.NETWORK;
 
+const DEBUG = false;
+
 // Default
 let deploymentsPath = "core-version-last.deploy";
 let publishPath = "core-version-last.deploy";
@@ -17,6 +19,9 @@ let publishPath = "core-version-last.deploy";
 const setDeploymentsPath = async (version) => {
   const netw = await provider.getNetwork();
   deploymentsPath = `${hre.config.paths.artifacts}/${netw.chainId}-version-${version}.deploy`;
+  if(DEBUG) {
+    console.log("deploymentsPath", deploymentsPath);
+  }
 };
 
 /**
@@ -25,6 +30,9 @@ const setDeploymentsPath = async (version) => {
  const setPublishPath = async (version) => {
   const netw = await provider.getNetwork();
   publishPath = `${hre.config.paths.root}/deployments/${network}/${netw.chainId}-version-${version}.deploy`;
+  if(DEBUG) {
+    console.log("publishPath", deploymentsPath);
+  }
 };
 
 /**

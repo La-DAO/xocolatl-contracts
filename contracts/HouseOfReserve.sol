@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 /**
  * @title The house of reserves contract.
@@ -10,22 +10,52 @@ pragma solidity 0.8.13;
  * @dev A HouseOfReserve is required to back a specific backedAsset.
  */
 
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {IAssetsAccountant} from "./interfaces/IAssetsAccountant.sol";
 import {OracleHouse} from "./abstract/OracleHouse.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract HouseOfReserveState {
-    struct Factor {
-        uint256 numerator;
-        uint256 denominator;
-    }
+    address public WRAPPED_NATIVE;
 
+    address public reserveAsset;
+
+    address public backedAsset;
+
+    uint256 public reserveTokenID;
+
+    uint256 public backedTokenID;
+
+    // A factor through these contracts refer to a fixed-digit decimal number.
+    // Specifically, a decimal number scaled by 1e18. These numbers should be
+    // treated as real numbers scaled down by 1e18.
+    // For example, the number 50% would be represented as 5*1e17.
+    uint256 public maxLTVFactor;
+
+    uint256 public liquidationFactor;
+
+    uint256 public totalDeposits;
+
+    uint256 public depositLimit;
+
+    IAssetsAccountant public assetsAccountant;
+
+    bytes32 public constant HOUSE_TYPE = keccak256("RESERVE_HOUSE");
+
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+}
+
+contract HouseOfReserve is
+    Initializable,
+    AccessControlUpgradeable,
+    UUPSUpgradeable,
+    OracleHouse,
+    HouseOfReserveState
+{
     // HouseOfReserve Events
-
     /**
      * @dev Emit when user makes an asset deposit in this contract.
      * @param user Address of depositor.
@@ -60,10 +90,17 @@ contract HouseOfReserveState {
     event BackedTokenIdSet(uint256 TokenID_);
 
     /**
-     * @dev Emit when user DEFAULT_ADMIN changes the collateralization factor of this HouseOfReserve
-     * @param newFactor New struct indicating the factor values.
+     * @dev Emit when user DEFAULT_ADMIN changes the max Loan-To-Value factor of this HouseOfReserve.
+     * @param newMaxLTV factor
      */
-    event CollateralRatioChanged(Factor newFactor);
+    event MaxLTVChanged(uint256 newMaxLTV);
+
+    /**
+     * @dev Emit when user DEFAULT_ADMIN changes the liquidation factor of this HouseOfReserve.
+     * @param newLiqudation factor.
+     */
+    event LiquidationFactorChanged(uint256 newLiqudation);
+
     /**
      * @dev Emit when user DEFAULT_ADMIN changes the 'depositLimit' of HouseOfReserve
      * @param newLimit uint256
@@ -83,33 +120,11 @@ contract HouseOfReserveState {
     error HouseOfReserve_wrongReserveAsset();
     error HouseOfReserve_depositFailed();
 
-    address public WRAPPED_NATIVE;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
-    address public reserveAsset;
-
-    address public backedAsset;
-
-    uint256 public reserveTokenID;
-
-    uint256 public backedTokenID;
-
-    Factor public collateralRatio;
-
-    uint256 public totalDeposits;
-
-    uint256 public depositLimit;
-
-    IAssetsAccountant public assetsAccountant;
-
-    bytes32 public constant HOUSE_TYPE = keccak256("RESERVE_HOUSE");
-}
-
-contract HouseOfReserve is
-    Initializable,
-    AccessControl,
-    OracleHouse,
-    HouseOfReserveState
-{
     /**
      * @dev Initializes this contract by setting:
      * @param reserveAsset_ ERC20 address of reserve asset handled in this contract.
@@ -138,13 +153,18 @@ contract HouseOfReserve is
         backedAsset = backedAsset_;
         WRAPPED_NATIVE = wrappedNative; // WETH
 
-        collateralRatio.numerator = 150;
-        collateralRatio.denominator = 100;
+        maxLTVFactor = 0.85e18;
+        liquidationFactor = 0.9e18;
         assetsAccountant = IAssetsAccountant(assetsAccountant_);
 
         _oracleHouse_init();
         _setTickers(tickerUsdFiat_, tickerReserveAsset_);
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(UPGRADER_ROLE, msg.sender);
+
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
 
         reserveTokenID = uint256(
             keccak256(
@@ -270,7 +290,7 @@ contract HouseOfReserve is
 
         // Check ERC20 approval of msg.sender.
         if (
-            amount > IERC20(reserveAsset).allowance(msg.sender, address(this))
+            amount > IERC20Upgradeable(reserveAsset).allowance(msg.sender, address(this))
         ) {
             revert HouseOfReserve_notEnoughERC20Allowance();
         }
@@ -280,7 +300,7 @@ contract HouseOfReserve is
         }
 
         // Transfer reserveAsset amount to this contract.
-        IERC20(reserveAsset).transferFrom(msg.sender, address(this), amount);
+        IERC20Upgradeable(reserveAsset).transferFrom(msg.sender, address(this), amount);
 
         // Continue deposit in internal function
         _deposit(msg.sender, amount);
@@ -298,27 +318,47 @@ contract HouseOfReserve is
     }
 
     /**
-     * @notice Function to set the collateralization ration of this contract.
-     * @dev Numerator and denominator should be > 0, and numerator > denominator
-     * @param numerator of new collateralization factor.
-     * @param denominator of new collateralization factor.
-     * Emits a {CollateralRatioChanged} event.
+     * @notice Function to set the max loan to value factor of this contract.
+     * @dev `maxLTVFactor_` should be less than 1e18.
+     * @param maxLTVFactor_ of new collateralization factor.
+     * Emits a {maxLTVChanged} event.
      */
-    function setCollateralRatio(uint256 numerator, uint256 denominator)
+    function setMaxLTVFactor(uint256 maxLTVFactor_)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         // Check inputs
-        if (numerator == 0 || denominator == 0 || denominator > numerator) {
+        if (maxLTVFactor_ == 0 || maxLTVFactor_ >= 1e18) {
             revert HouseOfReserve_invalidInput();
         }
 
-        // Set new collateralization ratio
-        collateralRatio.numerator = numerator;
-        collateralRatio.denominator = denominator;
+        // Set new max loan to value
+        maxLTVFactor = maxLTVFactor_;
 
         // Emit event
-        emit CollateralRatioChanged(collateralRatio);
+        emit MaxLTVChanged(maxLTVFactor_);
+    }
+
+    /**
+     * @notice Function to set the liquidation factor of this contract.
+     * @dev `liquidationFactor_` should be less than 1e18.
+     * @param liquidationFactor_ of new collateralization factor.
+     * Emits a {maxLTVChanged} event.
+     */
+    function setLiquidationFactor(uint256 liquidationFactor_)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        // Check inputs
+        if (liquidationFactor_ == 0 || liquidationFactor_ > 1e18) {
+            revert HouseOfReserve_invalidInput();
+        }
+
+        // Set new liquidation factor
+        liquidationFactor = liquidationFactor_;
+
+        // Emit event
+        emit LiquidationFactorChanged(liquidationFactor_);
     }
 
     /**
@@ -395,7 +435,7 @@ contract HouseOfReserve is
         assetsAccountant.burn(msg.sender, reserveTokenID, amount);
 
         // Transfer Asset to msg.sender
-        IERC20(reserveAsset).transfer(msg.sender, amount);
+        IERC20Upgradeable(reserveAsset).transfer(msg.sender, amount);
 
         // Emit withdraw event.
         emit UserWithdraw(msg.sender, reserveAsset, amount);
@@ -432,10 +472,8 @@ contract HouseOfReserve is
             ? (mintedCoinBal_ * 1e8) / price
             : 0;
 
-        // Apply Collateralization Factors to MinReqReserveBal
-        minReqReserveBal =
-            (minReqReserveBal * collateralRatio.numerator) /
-            collateralRatio.denominator;
+        // Apply max Loan-To-Value Factors to MinReqReserveBal
+        minReqReserveBal = (minReqReserveBal * 1e18) / maxLTVFactor;
 
         if (minReqReserveBal > reserveBal_) {
             // Return zero if undercollateralized or insolvent
@@ -457,11 +495,11 @@ contract HouseOfReserve is
         uint256 reservesTokenID_,
         uint256 bAssetRTokenID_
     ) internal view returns (uint256 reserveBal, uint256 mintedCoinBal) {
-        reserveBal = IERC1155(address(assetsAccountant)).balanceOf(
+        reserveBal = assetsAccountant.balanceOf(
             user,
             reservesTokenID_
         );
-        mintedCoinBal = IERC1155(address(assetsAccountant)).balanceOf(
+        mintedCoinBal = assetsAccountant.balanceOf(
             user,
             bAssetRTokenID_
         );
@@ -471,7 +509,7 @@ contract HouseOfReserve is
      * @dev  Handle direct sending of native-token.
      */
     receive() external payable {
-        uint256 preBalance = IERC20(WRAPPED_NATIVE).balanceOf(address(this));
+        uint256 preBalance = IERC20Upgradeable(WRAPPED_NATIVE).balanceOf(address(this));
         if (reserveAsset == WRAPPED_NATIVE) {
             // Check that deposit limit for this reserve has not been reached.
             if (msg.value + totalDeposits > depositLimit) {
@@ -480,7 +518,7 @@ contract HouseOfReserve is
             IWETH(WRAPPED_NATIVE).deposit{value: msg.value}();
             // Check WRAPPED_NATIVE amount was received.
             if (
-                IERC20(WRAPPED_NATIVE).balanceOf(address(this)) !=
+                IERC20Upgradeable(WRAPPED_NATIVE).balanceOf(address(this)) !=
                 preBalance + msg.value
             ) {
                 revert HouseOfReserve_depositFailed();
@@ -490,4 +528,10 @@ contract HouseOfReserve is
             revert HouseOfReserve_wrongReserveAsset();
         }
     }
+
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override
+        onlyRole(UPGRADER_ROLE)
+    {}
 }

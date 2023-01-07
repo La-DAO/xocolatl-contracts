@@ -20,6 +20,7 @@ describe("Xoc Tests - Polygon Chainlink Oracle", function () {
   let accountant;
   let coinhouse;
   let reservehouse;
+  let liquidator;
   let xoc;
   let weth;
 
@@ -40,6 +41,7 @@ describe("Xoc Tests - Polygon Chainlink Oracle", function () {
     accountant = loadedContracts.accountant;
     coinhouse = loadedContracts.coinhouse;
     reservehouse = loadedContracts.reservehouse;
+    liquidator = loadedContracts.liquidator;
     xoc = loadedContracts.xoc;
     weth = loadedContracts.weth;
 

@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import {IOracle} from "./IOracle.sol";
 
 interface IHouseOfReserve is IOracle {
-    struct Factor {
-        uint numerator;
-        uint denominator;
-    }
-
     /**
      * @dev Returns the reserveAsset of this HouseOfReserve.
      */
@@ -35,9 +30,14 @@ interface IHouseOfReserve is IOracle {
     function HOUSE_TYPE() external returns (bytes32);
 
     /**
-     * @dev Returns the collateralizationRatio of a HouseOfReserve.
+     * @dev Returns the maximum Loan-To-Value of this HouseOfReserve.
      */
-    function collateralRatio() external view returns (Factor memory);
+    function maxLTVFactor() external view returns (uint256);
+
+    /**
+     * @dev Returns the liquidation factor of this HouseOfReserve.
+     */
+    function liquidationFactor() external view returns (uint256);
 
     /**
      * @dev Returns the latest price according to activeOracle

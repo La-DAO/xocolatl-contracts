@@ -68,7 +68,7 @@ function mnemonic() {
  */
 module.exports = {
   defaultNetwork: dnetwork,
-  solidity: "0.8.13",
+  solidity: "0.8.17",
   networks: {
     localhost: {
       url: "http://localhost:8545/",

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 /**
  * @title Interface for whitelists of supported identifiers that the oracle can provide prices for.
