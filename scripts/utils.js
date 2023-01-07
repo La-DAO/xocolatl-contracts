@@ -6,7 +6,7 @@ const { provider, utils } = ethers;
 
 const network = process.env.NETWORK;
 
-const DEBUG = true;
+const DEBUG = false;
 
 // Default
 let deploymentsPath = "core-version-last.deploy";
