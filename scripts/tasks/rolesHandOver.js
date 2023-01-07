@@ -8,6 +8,8 @@ const rolesHandOverAssetsAccountant = async (contract) => {
   const burner = await contract.BURNER_ROLE();
   const liquidator = await contract.LIQUIDATOR_ROLE();
 
+  console.log(`LADAO_MULTISIGS[${network}]`, LADAO_MULTISIGS[network]);
+
   const rtx1 = await contract.grantRole(admin, LADAO_MULTISIGS[network])
   await rtx1.wait();
   console.log("...multisig granted DEFAULT_ADMIN_ROLE in AssetsAccountant");
