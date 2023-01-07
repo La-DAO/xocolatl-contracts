@@ -19,8 +19,6 @@ import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {OracleHouse} from "./abstract/OracleHouse.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract HouseOfCoinState {
     struct LiquidationParam {
         uint256 marginCallThreshold;
@@ -353,7 +351,6 @@ contract HouseOfCoin is
         view
         returns (uint256)
     {
-        console.log("inside@computeUserHealthRatio");
         // Get all the required inputs.
         IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
 
