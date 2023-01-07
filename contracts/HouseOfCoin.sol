@@ -38,8 +38,6 @@ contract HouseOfCoinState {
     LiquidationParam internal _liqParam;
 
     bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
-
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 }
 
 contract HouseOfCoin is
@@ -119,7 +117,6 @@ contract HouseOfCoin is
         assetsAccountant = assetsAccountant_;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(UPGRADER_ROLE, msg.sender);
 
         __AccessControl_init();
         __UUPSUpgradeable_init();
@@ -567,6 +564,6 @@ contract HouseOfCoin is
     function _authorizeUpgrade(address newImplementation)
         internal
         override
-        onlyRole(UPGRADER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {}
 }

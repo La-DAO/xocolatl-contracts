@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 const { ASSETS } = require("../const");
 
-const VERSION = "0.0";
+const VERSION = "1.0.0";
 
 const RESERVE_CAPS = {
   weth: {

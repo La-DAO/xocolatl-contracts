@@ -21,6 +21,11 @@ const { setUpHouseOfCoin } = require("../tasks/setUpHouseOfCoin");
 const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
 const { setUpAccountLiquidator } = require("../tasks/setUpAccountLiquidator");
 
+const {
+  rolesHandOverAssetsAccountant,
+  handOverDefaultAdmin
+} = require("../tasks/rolesHandOver");
+
 const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
@@ -75,12 +80,19 @@ const deploySystemContracts = async () => {
 
   await setUpAccountLiquidator(liquidator);
 
-  await systemPermissionGranting(
-    xoc,
-    coinhouse.address,
-    liquidator.address
-  );
+  // This permissions are granted via de multisig.
+  // await systemPermissionGranting(
+  //   xoc,
+  //   coinhouse.address,
+  //   liquidator.address
+  // );
+
+  await rolesHandOverAssetsAccountant(accountant);
+  await handOverDefaultAdmin(coinhouse);
+  await handOverDefaultAdmin(reservehouse);
+  await handOverDefaultAdmin(liquidator);
 }
+
 
 const main = async () => {
   if (network !== "polygon") {

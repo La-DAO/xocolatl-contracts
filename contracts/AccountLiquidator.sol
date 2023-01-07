@@ -17,8 +17,6 @@ import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {OracleHouse} from "./abstract/OracleHouse.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract AccountLiquidator is
     Initializable,
     AccessControlUpgradeable,
@@ -60,8 +58,6 @@ contract AccountLiquidator is
     IHouseOfCoin public houseOfCoin;
     IERC20Extension public backedAsset;
 
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
-
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -84,7 +80,6 @@ contract AccountLiquidator is
         _oracleHouse_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(UPGRADER_ROLE, msg.sender);
     }
 
     /** @dev See {OracleHouse-activeOracle}. */
@@ -202,7 +197,6 @@ contract AccountLiquidator is
     function liquidateUser(address userToLiquidate, address houseOfReserve)
         external
     {
-        console.log("inside@liquidateUser");
         // Get all the required inputs.
         IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
         address reserveAsset = hOfReserve.reserveAsset();
@@ -238,7 +232,6 @@ contract AccountLiquidator is
             );
             // User at liquidation level
             if (healthRatio <= liqParam.liquidationThreshold) {
-                console.log("healthRatio <= liqParam.liquidationThreshold");
                 // check liquidator ERC20 approval
                 (
                     uint256 costofLiquidation,
@@ -363,7 +356,6 @@ contract AccountLiquidator is
         uint256 costofLiquidation,
         uint256 collatPenaltyBal
     ) internal {
-        console.log("inside@_executeLiquidation");
         // Transfer of Assets.
 
         // BackedAsset to this contract.
@@ -380,7 +372,6 @@ contract AccountLiquidator is
             collatPenaltyBal,
             ""
         );
-        console.log("transferred");
 
         // Burning tokens and debt.
         // Burn 'costofLiquidation' debt amount from liquidated user in {AssetsAccountant}
@@ -397,6 +388,6 @@ contract AccountLiquidator is
     function _authorizeUpgrade(address newImplementation)
         internal
         override
-        onlyRole(UPGRADER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {}
 }
