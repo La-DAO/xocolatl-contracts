@@ -19,6 +19,8 @@ import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {OracleHouse} from "./abstract/OracleHouse.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
+import "hardhat/console.sol";
+
 contract HouseOfCoinState {
     struct LiquidationParam {
         uint256 marginCallThreshold;
@@ -124,7 +126,7 @@ contract HouseOfCoin is
         _oracleHouse_init();
 
         setLiqParams(
-            1e18, // margin call when health ratio is 1 or below. This means maxMintPower = mintedDebt, accounting the collateralization factors.
+            1e18, // margin call when health ratio is 1 or below.
             .95e18, // liquidation starts when health ratio drops to 0.95 or below.
             .10e18, // 10% price discount for liquidated user collateral.
             .75e18 // 75% collateral of liquidated will be sold to bring user's to good HealthRatio.
@@ -354,6 +356,7 @@ contract HouseOfCoin is
         view
         returns (uint256)
     {
+        console.log("inside@computeUserHealthRatio");
         // Get all the required inputs.
         IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
 

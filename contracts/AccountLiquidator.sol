@@ -17,6 +17,8 @@ import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {OracleHouse} from "./abstract/OracleHouse.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
+import "hardhat/console.sol";
+
 contract AccountLiquidator is
     Initializable,
     AccessControlUpgradeable,
@@ -200,6 +202,7 @@ contract AccountLiquidator is
     function liquidateUser(address userToLiquidate, address houseOfReserve)
         external
     {
+        console.log("inside@liquidateUser");
         // Get all the required inputs.
         IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
         address reserveAsset = hOfReserve.reserveAsset();
@@ -225,7 +228,7 @@ contract AccountLiquidator is
 
         IHouseOfCoin.LiquidationParam memory liqParam = houseOfCoin
             .getLiqParams();
-
+        
         // User on marginCall
         if (healthRatio <= liqParam.marginCallThreshold) {
             emit MarginCall(
@@ -235,6 +238,7 @@ contract AccountLiquidator is
             );
             // User at liquidation level
             if (healthRatio <= liqParam.liquidationThreshold) {
+                console.log("healthRatio <= liqParam.liquidationThreshold");
                 // check liquidator ERC20 approval
                 (
                     uint256 costofLiquidation,
@@ -359,27 +363,28 @@ contract AccountLiquidator is
         uint256 costofLiquidation,
         uint256 collatPenaltyBal
     ) internal {
+        console.log("inside@_executeLiquidation");
         // Transfer of Assets.
 
         // BackedAsset to this contract.
-        IERC20Extension(backedAsset).transferFrom(
+        backedAsset.transferFrom(
             msg.sender,
             address(this),
             costofLiquidation
         );
         // Penalty collateral from liquidated user to liquidator.
-        IAssetsAccountant accountant = IAssetsAccountant(assetsAccountant);
-        accountant.safeTransferFrom(
+        assetsAccountant.safeTransferFrom(
             user,
             msg.sender,
             reserveTokenID,
             collatPenaltyBal,
             ""
         );
+        console.log("transferred");
 
         // Burning tokens and debt.
         // Burn 'costofLiquidation' debt amount from liquidated user in {AssetsAccountant}
-        accountant.burn(user, backedTokenID, costofLiquidation);
+        assetsAccountant.burn(user, backedTokenID, costofLiquidation);
 
         // Burn the received backedAsset tokens.
         IERC20Extension bAsset = IERC20Extension(backedAsset);

@@ -5,7 +5,7 @@ const { WrapperBuilder } = require("redstone-evm-connector");
 
 const { provider } = ethers;
 
-const {redstoneFixture} = require("./fixtures/redstone_fixture");
+const { redstoneFixture } = require("./fixtures/redstone_fixture");
 const {
   evmSnapshot,
   evmRevert,
@@ -19,6 +19,7 @@ describe("Xoc System Tests - Deposit Limit", function () {
   let accountant;
   let coinhouse;
   let reservehouse;
+  let liquidator;
   let xoc;
   let weth;
 
@@ -39,6 +40,7 @@ describe("Xoc System Tests - Deposit Limit", function () {
     accountant = loadedContracts.accountant;
     coinhouse = loadedContracts.coinhouse;
     reservehouse = loadedContracts.reservehouse;
+    liquidator = loadedContracts.liquidator;
     xoc = loadedContracts.xoc;
     weth = loadedContracts.weth;
 

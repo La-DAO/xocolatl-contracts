@@ -61,8 +61,15 @@ contract AssetsAccountant is
         bytes32 indexed typeOfHouse,
         address indexed asset
     );
+    /**
+     * @dev Emit when a Liquidator contract is `allow` or not as a liquidator.
+     * @param liquidator Address of house registered.
+     * @param allow boolean
+     */
+    event LiquidatorAllow(address liquidator, bool allow);
 
     // AssetsAccountant custom errors
+    error AssetsAccountant_zeroAddress();
     error AssetsAccountant_NonTransferable();
     error AssetsAccountant_houseAddressAlreadyRegistered();
     error AssetsAccountant_reserveTokenIdAlreadyRegistered();
@@ -149,6 +156,26 @@ contract AssetsAccountant is
         } else {
             revert AssetsAccountant_houseAddressTypeNotRecognized();
         }
+    }
+
+    function allowLiquidator(address liquidator, bool allow)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (liquidator == address(0)) {
+            revert AssetsAccountant_zeroAddress();
+        }
+
+        isARegisteredHouse[liquidator] = allow;
+
+        if (allow == true) {
+            _grantRole(LIQUIDATOR_ROLE, liquidator);
+            _grantRole(BURNER_ROLE, liquidator);
+        } else {
+            _revokeRole(LIQUIDATOR_ROLE, liquidator);
+            _revokeRole(BURNER_ROLE, liquidator);
+        }
+        emit LiquidatorAllow(liquidator, allow);
     }
 
     function getReserveIds(address reserveAsset, address backedAsset)
