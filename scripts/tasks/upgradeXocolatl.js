@@ -8,7 +8,7 @@ const { ethers, upgrades } = hre;
 const upgradeXocolatl = async () => {
   const detailName = "Xocolatl";
   const contractName = "Xocolatl";
-  const xoc = await getContract(contractName);
+  const xoc = await getContract(detailName, contractName);
   console.log("xoc", xoc.address);
   const contractArtifact = await ethers.getContractFactory(contractName);
   const proxyOpts = {

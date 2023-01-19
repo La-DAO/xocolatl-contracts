@@ -9,7 +9,7 @@ const { VERSION } = require("./utils_polygon");
 
 const { upgradeHouseOfReserve } = require("../tasks/upgradeHouseOfReserve");
 
-const upgradeHouseOfReserve = async () => {
+const upgradeReserveHouse = async () => {
   console.log("\n\n 📡 UpgradingHouseOfReserve...\n");
   const implementationAddr = await upgradeHouseOfReserve(
     'HouseOfReserveWETH'
@@ -23,7 +23,7 @@ const main = async () => {
   }
   await setDeploymentsPath(VERSION);
   await setPublishPath(VERSION);
-  await upgradeHouseOfReserve();
+  await upgradeReserveHouse();
   await publishUpdates();
 };
 

@@ -9,7 +9,7 @@ const upgradeHouseOfReserve = async (
   detailName
 ) => {
   const contractName = "HouseOfReserve";
-  const reservehouse = await getContract(contractName);
+  const reservehouse = await getContract(detailName, contractName);
   console.log(detailName, reservehouse.address);
   const contractArtifact = await ethers.getContractFactory(contractName);
   const proxyOpts = {
