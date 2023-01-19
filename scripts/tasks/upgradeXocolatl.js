@@ -1,10 +1,12 @@
 const {
   getContract,
+  updateDeployments
 } = require("../utils");
 
 const { ethers, upgrades } = hre;
 
 const upgradeXocolatl = async () => {
+  const detailName = "Xocolatl";
   const contractName = "Xocolatl";
   const xoc = await getContract(contractName);
   console.log("xoc", xoc.address);
@@ -14,13 +16,18 @@ const upgradeXocolatl = async () => {
     unsafeAllow: (["delegatecall"]),
     kind: 'uups'
   };
-  const validation = await upgrades.validateUpgrade(
+  await upgrades.validateUpgrade(
     xoc.address,
     contractArtifact,
     proxyOpts
   );
-  // const implementation = (await response.wait()).contractAddress;
-  return validation;
+  const implementation = await upgrades.prepareUpgrade(
+    xoc.address,
+    contractArtifact,
+    proxyOpts,
+  );
+  await updateDeployments(detailName, contractName, xoc.address);
+  return implementation;
 };
 
 module.exports = {

@@ -16,8 +16,8 @@ const upgradeXoc = async () => {
 }
 
 const main = async () => {
-  if (network !== "polygon") {
-    throw new Error("Set 'NETWORK=polygon' in .env file");
+  if (network !== "gnosis") {
+    throw new Error("Set 'NETWORK=gnosis' in .env file");
   }
   await setDeploymentsPath(VERSION);
   await setPublishPath(VERSION);
