@@ -431,6 +431,9 @@ contract HouseOfReserve is
         // Burn at AssetAccountant withdrawal amount.
         assetsAccountant.burn(msg.sender, reserveTokenID, amount);
 
+        // decrease totalDeposits
+        totalDeposits -= amount;
+
         // Transfer Asset to msg.sender
         IERC20Upgradeable(reserveAsset).transfer(msg.sender, amount);
 

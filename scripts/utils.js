@@ -83,11 +83,12 @@ const getContractAddress = (detailName) => {
 /**
  * @note Get ethersJS contract from recorded .deploy file.
  * @param {string} detailName to get in artifacts, as defined in .deploy file.
+ * @param {string} contractName of the compiled contract as defined in the solidity file.
  * @returns {Promise} resolves to Ethersjs contract requested. 
  */
- const getContract = async (detailName) => {
+ const getContract = async (detailName, contractName) => {
   const contractData = getDeployments(detailName);
-  const contract = await ethers.getContractAt(detailName, contractData.address);
+  const contract = await ethers.getContractAt(contractName, contractData.address);
   return contract;
 };
 

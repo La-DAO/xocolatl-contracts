@@ -20,7 +20,7 @@ const { ethers } = require("hardhat");
 const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
-  const xoc = await getContract("Xocolatl");
+  const xoc = await getContract("Xocolatl", "Xocolatl");
   const accountant = await deployAssetsAccountant();
   const coinhouse = await deployHouseOfCoin();
   const reservehouse = await deployHouseOfReserve("HouseOfReserveWETH");

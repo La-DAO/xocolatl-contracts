@@ -15,7 +15,7 @@ const { deployHouseOfReserve } = require("../tasks/deployHouseOfReserve");
 const { deployAccountLiquidator } = require("../tasks/deployAccountLiquidator");
 const { deployUMAOracleHelper } = require("../tasks/deployUMAOracleHelper");
 
-const { systemPermissionGranting } = require("../tasks/setUpXocolatl");
+// const { systemPermissionGranting } = require("../tasks/setUpXocolatl");
 const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
 const { setUpHouseOfCoin } = require("../tasks/setUpHouseOfCoin");
 const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
@@ -29,7 +29,7 @@ const {
 const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
-  const xoc = await getContract("Xocolatl");
+  const xoc = await getContract("Xocolatl", "Xocolatl");
   console.log("xoc", xoc.address);
   const accountant = await deployAssetsAccountant();
   const coinhouse = await deployHouseOfCoin(

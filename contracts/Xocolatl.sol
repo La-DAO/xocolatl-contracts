@@ -94,6 +94,10 @@ contract Xocolatl is
         _burn(to, amount);
     }
 
+    function burnFrom(address, uint256) public pure override {
+        revert("No self burn!");
+    }
+
     function maxFlashLoan(address token)
         public
         view
