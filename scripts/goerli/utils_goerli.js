@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 const { ASSETS } = require("../const");
 
-const VERSION = "0.0";
+const VERSION = "0.0.1";
 
 const RESERVE_CAPS = {
   weth: {
@@ -9,7 +9,7 @@ const RESERVE_CAPS = {
   },
 }
 
-const WNATIVE = ASSETS.rinkeby.weth.address;
+const WNATIVE = ASSETS.goerli.weth.address;
 
 module.exports = {
   VERSION,
