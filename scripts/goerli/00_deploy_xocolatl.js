@@ -5,7 +5,7 @@ const {
   publishUpdates
 } = require("../utils");
 
-const { VERSION } = require("./utils_rinkeby");
+const { VERSION } = require("./utils_goerli");
 
 const { deployXocolatl } = require("../tasks/deployXocolatl");
 
@@ -15,8 +15,8 @@ const deployBackedAsset = async () => {
 }
 
 const main = async () => {
-  if (network !== "rinkeby") {
-    throw new Error("Set 'NETWORK=rinkeby' in .env file");
+  if (network !== "goerli") {
+    throw new Error("Set 'NETWORK=goerli' in .env file");
   }
   await setDeploymentsPath(VERSION);
   await setPublishPath(VERSION);

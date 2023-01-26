@@ -53,9 +53,9 @@ const ASSETS = {
       },
     },
   },
-  rinkeby: {
+  goerli: {
     weth: {
-      address: "0xDf032Bc4B9dC2782Bb09352007D4C57B75160B15",
+      address: "0xCCB14936C2E000ED8393A571D15A2672537838Ad",
       storageSlots: {
         balanceOf: 3,
       },
@@ -79,6 +79,10 @@ const CHAINLINK_CONTRACTS = {
   polygon: {
     ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
     mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
+  },
+  goerli: {
+    ethusd: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
+    mxnusd: "0x480f3c11381824E9EEbEEdbB6398dB86e38bAEA0"
   }
 }
 
