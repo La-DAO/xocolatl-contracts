@@ -62,6 +62,12 @@ const ASSETS = {
         balanceOf: 3,
       },
     },
+    wbtc:{
+      address: "0x45AC379F019E48ca5dAC02E54F406F99F5088099"
+    },
+    storageSlots: {
+      balanceOf: 0,
+    }
   },
 }
 
@@ -80,10 +86,13 @@ const UMA_CONTRACTS = {
 const CHAINLINK_CONTRACTS = {
   polygon: {
     ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
+    wbtcusd: "0xA338e0492B2F944E9F8C0653D3AD1484f2657a37",
+    usdcusd: "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7",
     mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
   },
   goerli: {
     ethusd: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
+    btcusd: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
     mxnusd: "0x480f3c11381824E9EEbEEdbB6398dB86e38bAEA0"
   }
 }

@@ -28,7 +28,8 @@ const setUpHouseOfReserve = async (
 
 const setUpOraclesHouseOfReserve = async (
   contract,
-  umaOracleHelperAddr
+  umaOracleHelperAddr,
+  chainlink_address
 ) => {
 
   if (network == 'polygon') {
@@ -41,7 +42,7 @@ const setUpOraclesHouseOfReserve = async (
 
   const tx2 = await contract.setChainlinkAddrs(
     CHAINLINK_CONTRACTS[network].mxnusd,
-    CHAINLINK_CONTRACTS[network].ethusd
+    chainlink_address
   );
   await tx2.wait();
 }

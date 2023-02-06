@@ -9,24 +9,12 @@ const {
 } = require("../utils");
 
 const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_goerli");
-// const { UMA_CONTRACTS } = require("../const");
 
-const { deployAssetsAccountant } = require("../tasks/deployAssetsAccountant");
-const { deployHouseOfCoin } = require("../tasks/deployHouseOfCoin");
 const { deployHouseOfReserve } = require("../tasks/deployHouseOfReserve");
-const { deployAccountLiquidator } = require("../tasks/deployAccountLiquidator");
-// const { deployUMAOracleHelper } = require("../tasks/deployUMAOracleHelper");
 
 const { systemPermissionGranting } = require("../tasks/setUpXocolatl");
 const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
-const { setUpHouseOfCoin } = require("../tasks/setUpHouseOfCoin");
 const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
-const { setUpAccountLiquidator } = require("../tasks/setUpAccountLiquidator");
-
-const {
-  rolesHandOverAssetsAccountant,
-  handOverDefaultAdmin
-} = require("../tasks/rolesHandOver");
 const { CHAINLINK_CONTRACTS } = require("../const");
 
 const deploySystemContracts = async () => {
@@ -34,34 +22,20 @@ const deploySystemContracts = async () => {
 
   const xoc = await getContract("Xocolatl", "Xocolatl");
   console.log("xoc", xoc.address);
-  const accountant = await deployAssetsAccountant();
-  const coinhouse = await deployHouseOfCoin(
-    xoc.address,
-    accountant.address
-  );
+  const accountant = await getContract("AssetsAccountant", "AssetsAccountant");
+
   const reservehouse = await deployHouseOfReserve(
-    "HouseOfReserveWETH",
-    ASSETS.goerli.weth.address,
+    "HouseOfReserveWBTC",
+    ASSETS.goerli.wbtc.address,
     xoc.address,
     accountant.address,
     "MXN",
-    "ETH",
+    "WBTC",
     WNATIVE
   );
   const liquidator = await deployAccountLiquidator(
     coinhouse.address,
     accountant.address
-  );
-  // const sixhours = 6 * 60 * 60;
-  // const umahelper = await deployUMAOracleHelper(
-  //   ASSETS.goerli.weth.address,
-  //   UMA_CONTRACTS.goerli.finder.address,
-  //   UMA_CONTRACTS.priceIdentifiers.mxnusd,
-  //   sixhours
-  // );
-
-  await setUpHouseOfCoin(
-    coinhouse
   );
 
   await setUpHouseOfReserve(
@@ -72,7 +46,7 @@ const deploySystemContracts = async () => {
   await setUpOraclesHouseOfReserve(
     reservehouse,
     ethers.constants.AddressZero,
-    CHAINLINK_CONTRACTS.goerli.ethusd
+    CHAINLINK_CONTRACTS.goerli.btcusd
   );
 
   await setUpAssetsAccountant(
@@ -81,8 +55,6 @@ const deploySystemContracts = async () => {
     reservehouse.address,
     liquidator.address  
   );
-
-  await setUpAccountLiquidator(liquidator);
 
   await systemPermissionGranting(
     xoc,
