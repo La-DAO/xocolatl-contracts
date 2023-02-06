@@ -7,6 +7,9 @@ const RESERVE_CAPS = {
   weth: {
     defaultInitialLimit: ethers.utils.parseUnits("5", 18)
   },
+  wbtc: {
+    defaultInitialLimit: ethers.utils.parseUnits("5", 18)
+  },
 }
 
 const WNATIVE = ASSETS.goerli.weth.address;

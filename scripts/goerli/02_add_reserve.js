@@ -12,8 +12,6 @@ const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_goerli");
 
 const { deployHouseOfReserve } = require("../tasks/deployHouseOfReserve");
 
-const { systemPermissionGranting } = require("../tasks/setUpXocolatl");
-const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
 const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
 const { CHAINLINK_CONTRACTS } = require("../const");
 
@@ -23,6 +21,7 @@ const deploySystemContracts = async () => {
   const xoc = await getContract("Xocolatl", "Xocolatl");
   console.log("xoc", xoc.address);
   const accountant = await getContract("AssetsAccountant", "AssetsAccountant");
+  console.log("accountant", accountant.address);
 
   const reservehouse = await deployHouseOfReserve(
     "HouseOfReserveWBTC",
@@ -33,14 +32,10 @@ const deploySystemContracts = async () => {
     "WBTC",
     WNATIVE
   );
-  const liquidator = await deployAccountLiquidator(
-    coinhouse.address,
-    accountant.address
-  );
 
   await setUpHouseOfReserve(
     reservehouse,
-    RESERVE_CAPS.weth.defaultInitialLimit
+    RESERVE_CAPS.wbtc.defaultInitialLimit
   );
 
   await setUpOraclesHouseOfReserve(
@@ -49,23 +44,11 @@ const deploySystemContracts = async () => {
     CHAINLINK_CONTRACTS.goerli.btcusd
   );
 
-  await setUpAssetsAccountant(
-    accountant,
-    coinhouse.address,
-    reservehouse.address,
-    liquidator.address  
+  const stx2 = await accountant.registerHouse(
+    reservehouse.address
   );
-
-  await systemPermissionGranting(
-    xoc,
-    coinhouse.address,
-    liquidator.address
-  );
-
-  // await rolesHandOverAssetsAccountant(accountant);
-  // await handOverDefaultAdmin(coinhouse);
-  // await handOverDefaultAdmin(reservehouse);
-  // await handOverDefaultAdmin(liquidator);
+  await stx2.wait();
+  console.log("...House of Reserve registered in AssetsAccountant");
 }
 
 
