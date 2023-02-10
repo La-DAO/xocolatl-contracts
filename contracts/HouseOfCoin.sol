@@ -546,16 +546,18 @@ contract HouseOfCoin is
         uint256 price
     ) internal pure returns (uint256 healthRatio) {
         if (mintedCoinBal == 0 || reserveBal == 0) {
-            revert HouseOfCoin_noBalances();
+            healthRatio = 0;
+        } else {
+            uint256 reserveBalreducedByFactor = (reserveBal *
+                liquidationFactor) / 1e18;
+
+            // Check current maxMintableAmount with current price
+            uint256 maxMintableAmount = (reserveBalreducedByFactor * price) /
+                1e8;
+
+            // Compute health ratio
+            healthRatio = (maxMintableAmount * 1e18) / mintedCoinBal;
         }
-        uint256 reserveBalreducedByFactor = (reserveBal * liquidationFactor) /
-            1e18;
-
-        // Check current maxMintableAmount with current price
-        uint256 maxMintableAmount = (reserveBalreducedByFactor * price) / 1e8;
-
-        // Compute health ratio
-        healthRatio = (maxMintableAmount * 1e18) / mintedCoinBal;
     }
 
     function _authorizeUpgrade(address newImplementation)
