@@ -272,6 +272,8 @@ contract HouseOfCoin is
         if (!bAsset.hasRole(keccak256("MINTER_ROLE"), address(this))) {
             revert HouseOfCoin_notAuthorized();
         }
+        
+        uint256 reserveDecimals = IERC20Extension(hOfReserve.reserveAsset()).decimals();
 
         // Get inputs for checking minting power, max loant to value factor and oracle price
         uint256 maxLTV = hOfReserve.maxLTVFactor();
@@ -281,6 +283,7 @@ contract HouseOfCoin is
         uint256 mintingPower = _checkRemainingMintingPower(
             msg.sender,
             reserveTokenID,
+            reserveDecimals,
             backedTokenID,
             maxLTV,
             price
@@ -440,6 +443,7 @@ contract HouseOfCoin is
     {
         // Get all required inputs
         IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserveAddr);
+        uint256 reserveDecimals = IERC20Extension(hOfReserve.reserveAsset()).decimals();
 
         uint256 reserveTokenID = hOfReserve.reserveTokenID();
         uint256 backedTokenID = hOfReserve.backedTokenID();
@@ -452,6 +456,7 @@ contract HouseOfCoin is
             _checkRemainingMintingPower(
                 user,
                 reserveTokenID,
+                reserveDecimals,
                 backedTokenID,
                 maxLTV,
                 latestPrice
@@ -484,6 +489,7 @@ contract HouseOfCoin is
     function _checkRemainingMintingPower(
         address user,
         uint256 reserveTokenID,
+        uint256 reserveDecimals,
         uint256 backedTokenID,
         uint256 maxLTV,
         uint256 price
@@ -506,6 +512,7 @@ contract HouseOfCoin is
                 uint256 remainingMintingPower
             ) = _checkIfUserCanMintMore(
                     reserveBal,
+                    reserveDecimals,
                     mintedCoinBal,
                     maxLTV,
                     price
@@ -524,13 +531,18 @@ contract HouseOfCoin is
      */
     function _checkIfUserCanMintMore(
         uint256 reserveBal,
+        uint256 reserveDecimals,
         uint256 mintedCoinBal,
         uint256 maxLTV,
         uint256 price
-    ) internal pure returns (bool canMintMore, uint256 remainingMintingPower) {
+    ) internal view returns (bool canMintMore, uint256 remainingMintingPower) {
         uint256 reserveBalreducedByFactor = (reserveBal * maxLTV) / 1e18;
 
-        uint256 maxMintableAmount = (reserveBalreducedByFactor * price) / 1e8;
+        uint256 decimalDiff = backedAssetDecimals >= reserveDecimals ? 
+            backedAssetDecimals - reserveDecimals :
+            reserveDecimals - backedAssetDecimals;
+
+        uint256 maxMintableAmount = (reserveBalreducedByFactor * price * (10 ** decimalDiff)) / 1e8;
 
         canMintMore = mintedCoinBal > maxMintableAmount ? false : true;
 
