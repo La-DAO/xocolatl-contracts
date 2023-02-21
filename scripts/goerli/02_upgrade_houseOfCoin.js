@@ -21,7 +21,7 @@ const main = async () => {
   }
   await setDeploymentsPath(VERSION);
   await setPublishPath(VERSION);
-  await upgradeReserveHouse();
+  await upgradeCoinhouse();
   await publishUpdates();
 };
 
