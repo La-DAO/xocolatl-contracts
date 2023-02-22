@@ -272,8 +272,9 @@ contract HouseOfCoin is
         if (!bAsset.hasRole(keccak256("MINTER_ROLE"), address(this))) {
             revert HouseOfCoin_notAuthorized();
         }
-        
-        uint256 reserveDecimals = IERC20Extension(hOfReserve.reserveAsset()).decimals();
+
+        uint256 reserveDecimals = IERC20Extension(hOfReserve.reserveAsset())
+            .decimals();
 
         // Get inputs for checking minting power, max loant to value factor and oracle price
         uint256 maxLTV = hOfReserve.maxLTVFactor();
@@ -356,6 +357,8 @@ contract HouseOfCoin is
     {
         // Get all the required inputs.
         IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
+        uint256 reserveDecimals = IERC20Extension(hOfReserve.reserveAsset())
+            .decimals();
 
         uint256 reserveTokenID_ = hOfReserve.reserveTokenID();
         uint256 backedTokenID_ = hOfReserve.backedTokenID();
@@ -373,6 +376,7 @@ contract HouseOfCoin is
         return
             _computeUserHealthRatio(
                 reserveBal,
+                reserveDecimals,
                 mintedCoinBal,
                 liqFactor,
                 latestPrice
@@ -443,7 +447,8 @@ contract HouseOfCoin is
     {
         // Get all required inputs
         IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserveAddr);
-        uint256 reserveDecimals = IERC20Extension(hOfReserve.reserveAsset()).decimals();
+        uint256 reserveDecimals = IERC20Extension(hOfReserve.reserveAsset())
+            .decimals();
 
         uint256 reserveTokenID = hOfReserve.reserveTokenID();
         uint256 backedTokenID = hOfReserve.backedTokenID();
@@ -538,11 +543,14 @@ contract HouseOfCoin is
     ) internal view returns (bool canMintMore, uint256 remainingMintingPower) {
         uint256 reserveBalreducedByFactor = (reserveBal * maxLTV) / 1e18;
 
-        uint256 decimalDiff = backedAssetDecimals >= reserveDecimals ? 
-            backedAssetDecimals - reserveDecimals :
-            reserveDecimals - backedAssetDecimals;
+        uint256 decimalDiff = _getDecimalDiff(
+            reserveDecimals,
+            backedAssetDecimals
+        );
 
-        uint256 maxMintableAmount = (reserveBalreducedByFactor * price * (10 ** decimalDiff)) / 1e8;
+        uint256 maxMintableAmount = (reserveBalreducedByFactor *
+            price *
+            (10**decimalDiff)) / 1e8;
 
         canMintMore = mintedCoinBal > maxMintableAmount ? false : true;
 
@@ -551,21 +559,44 @@ contract HouseOfCoin is
             : 0;
     }
 
+    /**
+     * @dev returns difference in decimals
+     * Requirements:
+     *  - reserveDecimals must be =< than backedAssetDecimals_, otherwise return 0.
+     */
+    function _getDecimalDiff(uint256 reserveDecimals, uint backedAssetDecimals_)
+        internal
+        pure
+        returns (uint256)
+    {
+        return
+            backedAssetDecimals_ >= reserveDecimals
+                ? backedAssetDecimals_ - reserveDecimals
+                : 0;
+    }
+
     function _computeUserHealthRatio(
         uint256 reserveBal,
+        uint256 reserveDecimals,
         uint256 mintedCoinBal,
         uint256 liquidationFactor,
         uint256 price
-    ) internal pure returns (uint256 healthRatio) {
+    ) internal view returns (uint256 healthRatio) {
         if (mintedCoinBal == 0 || reserveBal == 0) {
             healthRatio = 0;
         } else {
+            uint256 decimalDiff = _getDecimalDiff(
+                reserveDecimals,
+                backedAssetDecimals
+            );
+
             uint256 reserveBalreducedByFactor = (reserveBal *
                 liquidationFactor) / 1e18;
 
             // Check current maxMintableAmount with current price
-            uint256 maxMintableAmount = (reserveBalreducedByFactor * price) /
-                1e8;
+            uint256 maxMintableAmount = (reserveBalreducedByFactor *
+                price *
+                (10**decimalDiff)) / 1e8;
 
             // Compute health ratio
             healthRatio = (maxMintableAmount * 1e18) / mintedCoinBal;

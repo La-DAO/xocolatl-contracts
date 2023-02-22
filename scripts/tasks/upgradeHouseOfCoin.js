@@ -24,7 +24,7 @@ const upgradeHouseOfCoin = async () => {
     contractArtifact,
     proxyOpts,
   );
-  await updateDeployments(detailName, contractName, coinhouse.address);
+  await updateDeployments(contractName, contractName, coinhouse.address);
   return implementation;
 };
 
