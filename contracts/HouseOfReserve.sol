@@ -11,7 +11,7 @@ pragma solidity 0.8.17;
  */
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20Extension} from "./interfaces/IERC20Extension.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {IAssetsAccountant} from "./interfaces/IAssetsAccountant.sol";
@@ -151,6 +151,10 @@ contract HouseOfReserve is
         backedAsset = backedAsset_;
         WRAPPED_NATIVE = wrappedNative; // WETH
 
+        if(IERC20Extension(reserveAsset_).decimals() > 18) {
+            revert HouseOfReserve_wrongReserveAsset();
+        }
+
         maxLTVFactor = 0.85e18;
         liquidationFactor = 0.9e18;
         assetsAccountant = IAssetsAccountant(assetsAccountant_);
@@ -287,7 +291,7 @@ contract HouseOfReserve is
 
         // Check ERC20 approval of msg.sender.
         if (
-            amount > IERC20Upgradeable(reserveAsset).allowance(msg.sender, address(this))
+            amount > IERC20Extension(reserveAsset).allowance(msg.sender, address(this))
         ) {
             revert HouseOfReserve_notEnoughERC20Allowance();
         }
@@ -297,7 +301,7 @@ contract HouseOfReserve is
         }
 
         // Transfer reserveAsset amount to this contract.
-        IERC20Upgradeable(reserveAsset).transferFrom(msg.sender, address(this), amount);
+        IERC20Extension(reserveAsset).transferFrom(msg.sender, address(this), amount);
 
         // Continue deposit in internal function
         _deposit(msg.sender, amount);
@@ -435,7 +439,7 @@ contract HouseOfReserve is
         totalDeposits -= amount;
 
         // Transfer Asset to msg.sender
-        IERC20Upgradeable(reserveAsset).transfer(msg.sender, amount);
+        IERC20Extension(reserveAsset).transfer(msg.sender, amount);
 
         // Emit withdraw event.
         emit UserWithdraw(msg.sender, reserveAsset, amount);
@@ -468,8 +472,16 @@ contract HouseOfReserve is
         // Check if msg.sender has minted backedAsset, if yes compute:
         // The minimum required balance to back 100% all minted coins of backedAsset.
         // Else, return 0.
+
+        uint256 backedAssetDecimals = IERC20Extension(backedAsset).decimals();
+        uint256 reserveDecimals = IERC20Extension(reserveAsset).decimals();
+
+        uint256 decimalDiff = backedAssetDecimals >= reserveDecimals
+            ? backedAssetDecimals - reserveDecimals
+            : 0;
+
         uint256 minReqReserveBal = mintedCoinBal_ > 0
-            ? (mintedCoinBal_ * 1e8) / price
+            ? (mintedCoinBal_ * 1e8) / (price * 10 ** (decimalDiff))
             : 0;
 
         // Apply max Loan-To-Value Factors to MinReqReserveBal
@@ -509,7 +521,7 @@ contract HouseOfReserve is
      * @dev  Handle direct sending of native-token.
      */
     receive() external payable {
-        uint256 preBalance = IERC20Upgradeable(WRAPPED_NATIVE).balanceOf(address(this));
+        uint256 preBalance = IERC20Extension(WRAPPED_NATIVE).balanceOf(address(this));
         if (reserveAsset == WRAPPED_NATIVE) {
             // Check that deposit limit for this reserve has not been reached.
             if (msg.value + totalDeposits > depositLimit) {
@@ -518,7 +530,7 @@ contract HouseOfReserve is
             IWETH(WRAPPED_NATIVE).deposit{value: msg.value}();
             // Check WRAPPED_NATIVE amount was received.
             if (
-                IERC20Upgradeable(WRAPPED_NATIVE).balanceOf(address(this)) !=
+                IERC20Extension(WRAPPED_NATIVE).balanceOf(address(this)) !=
                 preBalance + msg.value
             ) {
                 revert HouseOfReserve_depositFailed();
