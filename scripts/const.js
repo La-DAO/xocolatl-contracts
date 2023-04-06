@@ -6,6 +6,8 @@ const LADAO_MULTISIGS = {
   gnosis: "0x2CBe215Eae3e926f11291560be0e4cda9556DCBb"
 }
 
+const CONTRACT_DEPLOYER_FACTORY = "0xF8faF9319e5CDDfda173B0a6461f19765AAAbf03";
+
 const ASSETS = {
   mainnet: {
     weth: {
@@ -49,7 +51,13 @@ const ASSETS = {
       storageSlots: {
         balanceOf: 3,
       },
-    }
+    },
+    wbtc:{
+      address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6"
+    },
+    storageSlots: {
+      balanceOf: 0,
+    },
   },
   gnosis: {
     weth: {
@@ -66,6 +74,12 @@ const ASSETS = {
         balanceOf: 3,
       },
     },
+    wbtc:{
+      address: "0x45AC379F019E48ca5dAC02E54F406F99F5088099"
+    },
+    storageSlots: {
+      balanceOf: 0,
+    }
   },
 }
 
@@ -86,10 +100,13 @@ const CHAINLINK_CONTRACTS = {
     wstetheth: "0x10f964234cae09cB6a9854B56FF7D4F38Cda5E6a",
     ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
     wbtcusd: "0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6",
+    maticusd: "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
+    usdcusd: "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7",
     mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
   },
   goerli: {
     ethusd: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
+    btcusd: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
     mxnusd: "0x480f3c11381824E9EEbEEdbB6398dB86e38bAEA0"
   }
 }
@@ -98,5 +115,6 @@ module.exports = {
   LADAO_MULTISIGS,
   ASSETS,
   UMA_CONTRACTS,
-  CHAINLINK_CONTRACTS
+  CHAINLINK_CONTRACTS,
+  CONTRACT_DEPLOYER_FACTORY
 }

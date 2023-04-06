@@ -27,6 +27,7 @@ const {
   rolesHandOverAssetsAccountant,
   handOverDefaultAdmin
 } = require("../tasks/rolesHandOver");
+const { CHAINLINK_CONTRACTS } = require("../const");
 
 const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
@@ -70,7 +71,8 @@ const deploySystemContracts = async () => {
 
   await setUpOraclesHouseOfReserve(
     reservehouse,
-    ethers.constants.AddressZero
+    ethers.constants.AddressZero,
+    CHAINLINK_CONTRACTS.goerli.ethusd
   );
 
   await setUpAssetsAccountant(

@@ -7,7 +7,7 @@ const {
 } = require("../utils");
 
 const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_polygon");
-const { UMA_CONTRACTS } = require("../const");
+const { UMA_CONTRACTS, CHAINLINK_CONTRACTS } = require("../const");
 
 const { deployAssetsAccountant } = require("../tasks/deployAssetsAccountant");
 const { deployHouseOfCoin } = require("../tasks/deployHouseOfCoin");
@@ -68,7 +68,8 @@ const deploySystemContracts = async () => {
 
   await setUpOraclesHouseOfReserve(
     reservehouse,
-    umahelper.address
+    umahelper.address,
+    CHAINLINK_CONTRACTS.polygon.ethusd
   );
 
   await setUpAssetsAccountant(
