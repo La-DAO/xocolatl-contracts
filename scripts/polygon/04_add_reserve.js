@@ -42,7 +42,7 @@ const deploySystemContracts = async () => {
   await setUpOraclesHouseOfReserve(
     reservehouseWBTC,
     ethers.constants.AddressZero,
-    CHAINLINK_CONTRACTS.polygon.btcusd
+    CHAINLINK_CONTRACTS.polygon.wbtcusd
   );
 
   ///@dev this following tx needs to be submitted via the multisig.
