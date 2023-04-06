@@ -45,7 +45,13 @@ const ASSETS = {
       storageSlots: {
         balanceOf: 3,
       },
-    }
+    },
+    wbtc:{
+      address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6"
+    },
+    storageSlots: {
+      balanceOf: 0,
+    },
   },
   gnosis: {
     weth: {
@@ -86,7 +92,8 @@ const UMA_CONTRACTS = {
 const CHAINLINK_CONTRACTS = {
   polygon: {
     ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
-    wbtcusd: "0xA338e0492B2F944E9F8C0653D3AD1484f2657a37",
+    btcusd: "0xA338e0492B2F944E9F8C0653D3AD1484f2657a37",
+    maticusd: "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
     usdcusd: "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7",
     mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
   },

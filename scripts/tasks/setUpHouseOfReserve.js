@@ -32,7 +32,7 @@ const setUpOraclesHouseOfReserve = async (
   chainlink_address
 ) => {
 
-  if (network == 'polygon') {
+  if (network == 'polygon' && umaOracleHelperAddr != ethers.constants.AddressZero) {
     const umatx = await contract.setUMAOracleHelper(umaOracleHelperAddr);
     await umatx.wait();
   }
