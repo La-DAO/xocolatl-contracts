@@ -13,6 +13,9 @@ const RESERVE_CAPS = {
   wmatic: {
     defaultInitialLimit: ethers.utils.parseUnits("50000", 18)
   },
+  wsteth: {
+    defaultInitialLimit: ethers.utils.parseUnits("100", 18)
+  }
 }
 
 const WNATIVE = ASSETS.polygon.wmatic.address;

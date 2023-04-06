@@ -34,6 +34,12 @@ const ASSETS = {
     },
   },
   polygon: {
+    wsteth: {
+      address: "0x03b54A6e9a984069379fae1a4fC4dBAE93B3bCCD",
+      storageSlots: {
+        balanceOf:0,
+      }
+    },
     weth: {
       address: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
       storageSlots: {
@@ -91,6 +97,7 @@ const UMA_CONTRACTS = {
 
 const CHAINLINK_CONTRACTS = {
   polygon: {
+    wstetheth: "0x10f964234cae09cB6a9854B56FF7D4F38Cda5E6a",
     ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
     wbtcusd: "0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6",
     maticusd: "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
