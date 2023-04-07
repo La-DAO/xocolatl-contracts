@@ -12,11 +12,6 @@
       "kind": "uups"
     },
     {
-      "address": "0xd411BE9A105Ea7701FabBe58C2834b7033EBC203",
-      "txHash": "0x5e9bc7e3c7f8197373579150686f8a4c3e4f43c93caa09946ed38dc42c122f56",
-      "kind": "uups"
-    },
-    {
       "address": "0x168D80Ba955033B8f98FCcC94051842d40f294c2",
       "txHash": "0x3d6fe0f3de35c33a2e3b4d8d57160c16963dd9302a6d446903e950937cd034a8",
       "kind": "uups"
@@ -26,13 +21,15 @@
       "kind": "uups"
     },
     {
+      "address": "0xd411BE9A105Ea7701FabBe58C2834b7033EBC203",
+      "kind": "uups"
+    },
+    {
       "address": "0x983A0eC44bf1BB11592a8bD5F91f05adE4F44D81",
-      "txHash": "0xf125d89636134a14588c345727a06201f62028c3b473ceb1c1b2f003b8f11dcf",
       "kind": "uups"
     },
     {
       "address": "0xdB9Dd25660240415d95144C6CE4f21f00Edf8168",
-      "txHash": "0xd2cf5604483e43f74bf9e8e1af2f70d16a2bc56ade314fbd76e112ace129075a",
       "kind": "uups"
     }
   ],
@@ -2553,7 +2550,11 @@
             "numberOfBytes": "1"
           }
         }
-      }
+      },
+      "allAddresses": [
+        "0x727aacecD11FE4Abe39b352b1206A0Cc0ab0c732",
+        "0x1A538514D1C51Bf592E3c930CeA8071a242CE38e"
+      ]
     }
   }
 }
