@@ -33,6 +33,20 @@ const ASSETS = {
       },
     },
   },
+  binance: {
+    weth: {
+      address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+      storageSlots: {
+        balanceOf: 1,
+      },
+    },
+    wbnb: {
+      address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
   polygon: {
     wsteth: {
       address: "0x03b54A6e9a984069379fae1a4fC4dBAE93B3bCCD",
