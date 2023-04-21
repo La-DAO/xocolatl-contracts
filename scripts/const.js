@@ -35,7 +35,7 @@ const ASSETS = {
   },
   binance: {
     weth: {
-      address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+      address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // binance pegged eth
       storageSlots: {
         balanceOf: 1,
       },
@@ -117,6 +117,11 @@ const CHAINLINK_CONTRACTS = {
     maticusd: "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
     usdcusd: "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7",
     mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
+  },
+  binance: {
+    ethusd: "0x2A3796273d47c4eD363b361D3AEFb7F7E2A13782", // binance pegged eth
+    bnbusd: "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
+    mxnusd: "0x16c0C1f971b1780F952572670A9d5ce4123582a1"
   },
   goerli: {
     ethusd: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
