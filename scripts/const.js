@@ -3,7 +3,8 @@ const LADAO_MULTISIGS = {
   polygon: "0x707C5E55277A0C2f598f191b269c9e773516052A",
   arbitrum: "0x80Ea762B09883Bddf09d3F7E4142ca6E1e697490",
   optimism: "0xC6A1425bC0D0c3FcE5055da85032d36893f91D03",
-  gnosis: "0x2CBe215Eae3e926f11291560be0e4cda9556DCBb"
+  gnosis: "0x2CBe215Eae3e926f11291560be0e4cda9556DCBb",
+  binance: "0xD14F02ad072238d5D58671bcfE07FcBf9a17d5f7",
 }
 
 const CONTRACT_DEPLOYER_FACTORY = "0xF8faF9319e5CDDfda173B0a6461f19765AAAbf03";
@@ -28,6 +29,20 @@ const ASSETS = {
   optimism: {
     weth: {
       address: "0x4200000000000000000000000000000000000006",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
+  binance: {
+    weth: {
+      address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // binance pegged eth
+      storageSlots: {
+        balanceOf: 1,
+      },
+    },
+    wbnb: {
+      address: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
       storageSlots: {
         balanceOf: 3,
       },
@@ -103,6 +118,11 @@ const CHAINLINK_CONTRACTS = {
     maticusd: "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
     usdcusd: "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7",
     mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
+  },
+  binance: {
+    ethusd: "0x2A3796273d47c4eD363b361D3AEFb7F7E2A13782", // binance pegged eth
+    bnbusd: "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
+    mxnusd: "0x16c0C1f971b1780F952572670A9d5ce4123582a1"
   },
   goerli: {
     ethusd: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
