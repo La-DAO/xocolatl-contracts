@@ -74,6 +74,14 @@ const ASSETS = {
       balanceOf: 0,
     },
   },
+  polygonzkevm: {
+    weth: {
+      address: "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
   gnosis: {
     weth: {
       address: "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1",
