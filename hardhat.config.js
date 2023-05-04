@@ -97,6 +97,12 @@ module.exports = {
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
+    polygonzkevm: {
+      url: `https://rpc.ankr.com/polygon_zkevm`,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
+    },
     arbitrum: {
       url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: process.env.PRIVATE_KEY ?
