@@ -98,7 +98,7 @@ module.exports = {
         { mnemonic: mnemonic() },
     },
     polygonzkevm: {
-      url: `https://rpc.ankr.com/polygon_zkevm`,
+      url: `https://zkevm-rpc.com`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
