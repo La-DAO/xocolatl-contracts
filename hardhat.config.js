@@ -97,6 +97,12 @@ module.exports = {
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
+    polygonzkevm: {
+      url: `https://zkevm-rpc.com`,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
+    },
     arbitrum: {
       url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: process.env.PRIVATE_KEY ?
@@ -140,5 +146,15 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+    customChains: [
+      {
+        network: "polygonzkevm",
+        chainId: 1101,
+        urls: {
+          apiURL: "https://api-zkevm.polygonscan.com/api",
+          browserURL: "https://zkevm.polygonscan.com/"
+        }
+      }
+    ]
   },
 };
