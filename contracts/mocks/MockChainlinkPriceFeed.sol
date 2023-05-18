@@ -2,80 +2,104 @@
 pragma solidity 0.8.17;
 
 import {IAggregatorV3} from "../interfaces/chainlink/IAggregatorV3.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MockChainlinkPriceFeed is IAggregatorV3 {
-  string simulatedDescription;
-  uint8 simulatedDecimals;
-  int256 fakePrice;
+contract MockChainlinkPriceFeed is IAggregatorV3, Ownable {
+    event RoundAnswered(uint80 roundId, int256 answer, uint256 updatedAt);
+    event PriceRequest(uint80 roundId, uint256 startedAt);
 
-  constructor(string memory description_, uint8 decimals_, int256 fakePrice_) {
-    simulatedDescription = description_;
-    simulatedDecimals = decimals_;
-    fakePrice = fakePrice_;
-  }
+    struct Round {
+        uint80 roundId;
+        int256 answer;
+        uint256 startedAt;
+        uint256 updatedAt;
+        uint80 answeredInRound;
+    }
 
-  function setPriceFeedData(
-    string memory description_,
-    uint8 decimals_,
-    int256 fakePrice_
-  )
-    external
-  {
-    simulatedDescription = description_;
-    simulatedDecimals = decimals_;
-    fakePrice = fakePrice_;
-  }
+    struct Request {
+        uint80 roundId;
+        uint256 startedAt;
+    }
 
-  function decimals() external view override returns (uint8) {
-    return simulatedDecimals;
-  }
+    string private _description;
+    uint8 private _decimals;
 
-  function description() external view override returns (string memory) {
-    return simulatedDescription;
-  }
+    Round private _latestAnswerRound;
+    Request private _latestRequest;
 
-  function version() external pure override returns (uint256) {
-    return 4;
-  }
+    constructor(string memory description_, uint8 decimals_) {
+        _description = description_;
+        _decimals = decimals_;
+    }
 
-  // getRoundData and latestRoundData should both raise "No data present"
-  // if they do not have data to report, instead of returning unset values
-  // which could be misinterpreted as actual reported values.
-  function getRoundData(uint80 _roundId)
-    external
-    view
-    override
-    returns (
-      uint80 roundId,
-      int256 answer,
-      uint256 startedAt,
-      uint256 updatedAt,
-      uint80 answeredInRound
-    )
-  {
-    roundId = _roundId;
-    answer = fakePrice;
-    startedAt = 1577880000;
-    updatedAt = 1577880000;
-    answeredInRound = _roundId;
-  }
+    function setPriceFeedData(int256 newPrice_) external onlyOwner {
+        Round memory recordRound = Round(
+            _latestRequest.roundId,
+            newPrice_,
+            _latestRequest.startedAt,
+            block.timestamp,
+            _latestRequest.roundId
+        );
+        _latestAnswerRound = recordRound;
 
-  function latestRoundData()
-    external
-    view
-    override
-    returns (
-      uint80 roundId,
-      int256 answer,
-      uint256 startedAt,
-      uint256 updatedAt,
-      uint80 answeredInRound
-    )
-  {
-    roundId = 92233720368547793488;
-    answer = fakePrice;
-    startedAt = block.timestamp;
-    updatedAt = block.timestamp;
-    answeredInRound = roundId;
-  }
+        emit RoundAnswered(
+            recordRound.roundId,
+            recordRound.answer,
+            recordRound.updatedAt
+        );
+    }
+
+    function requestPriceFeedData() external {
+        Request memory recordRequest = Request(
+            _latestAnswerRound.roundId + 1,
+            block.timestamp
+        );
+
+        _latestRequest = recordRequest;
+
+        emit PriceRequest(recordRequest.roundId, recordRequest.startedAt);
+    }
+
+    function decimals() external view override returns (uint8) {
+        return _decimals;
+    }
+
+    function description() external view override returns (string memory) {
+        return _description;
+    }
+
+    function version() external pure override returns (uint256) {
+        return 1;
+    }
+
+    function latestAnswer() external view returns (int256) {
+        return _latestAnswerRound.answer;
+    }
+
+    function latestTimestamp() external view returns (uint256) {
+        return _latestAnswerRound.updatedAt;
+    }
+
+    function latestRound() external view returns (uint256) {
+        return _latestAnswerRound.roundId;
+    }
+
+    function latestRoundData()
+        external
+        view
+        override
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        )
+    {
+        roundId = _latestAnswerRound.roundId;
+        answer = _latestAnswerRound.answer;
+        startedAt = _latestAnswerRound.startedAt;
+        updatedAt = _latestAnswerRound.updatedAt;
+        answeredInRound = _latestAnswerRound.answeredInRound;
+    }
 }
