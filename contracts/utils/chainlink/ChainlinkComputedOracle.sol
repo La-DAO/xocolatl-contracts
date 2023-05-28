@@ -164,8 +164,8 @@ contract ChainlinkComputedOracle {
         ) {
             revert ChainlinkComputedOracle_noValidUpdateAt();
         } else if (
-            clFeed.updatedAt - block.timestamp > allowedTimeout ||
-            clInter.updatedAt - block.timestamp > allowedTimeout
+            block.timestamp - clFeed.updatedAt  > allowedTimeout ||
+            block.timestamp - clInter.updatedAt  > allowedTimeout
         ) {
             revert ChainlinkComputedOracle_staleFeed();
         }
