@@ -135,36 +135,21 @@ contract ChainlinkComputedOracle {
         )
     {
         // Call the chainlink feeds with try-catch method
-        try feedAsset.latestRoundData() returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) {
-            clFeed.roundId = roundId;
-            clFeed.answer = answer;
-            clFeed.startedAt = startedAt;
-            clFeed.updatedAt = updatedAt;
-            clFeed.answeredInRound = answeredInRound;
-        } catch {
-            revert ChainlinkComputedOracle_fetchFeedAssetFailed();
-        }
-        try feedInterAsset.latestRoundData() returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) {
-            clInter.roundId = roundId;
-            clInter.answer = answer;
-            clInter.startedAt = startedAt;
-            clInter.updatedAt = updatedAt;
-            clInter.answeredInRound = answeredInRound;
-        } catch {
-            revert ChainlinkComputedOracle_fetchFeedInterFailed();
-        }
+        (
+            clFeed.roundId,
+            clFeed.answer,
+            clFeed.startedAt,
+            clFeed.updatedAt,
+            clFeed.answeredInRound
+        ) = feedAsset.latestRoundData();
+
+        (
+            clInter.roundId,
+            clInter.answer,
+            clInter.startedAt,
+            clInter.updatedAt,
+            clInter.answeredInRound
+        ) = feedInterAsset.latestRoundData();
 
         // Perform checks to the returned chainlink responses
         if (clFeed.answer <= 0 || clInter.answer <= 0) {
