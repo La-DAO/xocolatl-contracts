@@ -76,10 +76,6 @@ contract MockChainlinkPriceFeed is IAggregatorV3, Ownable {
         return _latestAnswerRound.answer;
     }
 
-    function latestTimestamp() external view returns (uint256) {
-        return _latestAnswerRound.updatedAt;
-    }
-
     function latestRound() external view returns (uint256) {
         return _latestAnswerRound.roundId;
     }
