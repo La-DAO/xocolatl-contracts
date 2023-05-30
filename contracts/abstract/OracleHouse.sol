@@ -292,8 +292,8 @@ abstract contract OracleHouse is PriceAware {
         ) {
             revert OracleHouse_notInitialized();
         }
-        int256 usdfiat = addrUsdFiat_.latestAnswer();
-        int256 usdreserve = addrReserveAsset_.latestAnswer();
+        (, int256 usdfiat, , , ) = addrUsdFiat_.latestRoundData();
+        (, int256 usdreserve, , , ) = addrReserveAsset_.latestRoundData();
         if (usdfiat <= 0 || usdreserve <= 0) {
             revert OracleHouse_noValue();
         }
