@@ -75,6 +75,50 @@ const deploySystemContracts = async () => {
     CHAINLINK_CONTRACTS.polygon.maticusd
   );
 
+  // wstETH
+  const reservehouseWSTETH = await deployHouseOfReserve(
+    "HouseOfReserveWSTETH",
+    ASSETS.polygon.wsteth.address,
+    xoc.address,
+    accountant.address,
+    "MXN",
+    "WSTETH",
+    WNATIVE
+  );
+
+  await setUpHouseOfReserve(
+    reservehouseWSTETH,
+    RESERVE_CAPS.wsteth.defaultInitialLimit
+  );
+
+  await setUpOraclesHouseOfReserve(
+    reservehouseWSTETH,
+    ethers.constants.AddressZero,
+    CHAINLINK_CONTRACTS.polygon.wstethusd
+  );
+
+  // MATICX
+  const reservehouseMATICX = await deployHouseOfReserve(
+    "HouseOfReserveMATICX",
+    ASSETS.polygon.maticx.address,
+    xoc.address,
+    accountant.address,
+    "MXN",
+    "MATICX",
+    WNATIVE
+  );
+
+  await setUpHouseOfReserve(
+    reservehouseMATICX,
+    RESERVE_CAPS.maticx.defaultInitialLimit
+  );
+
+  await setUpOraclesHouseOfReserve(
+    reservehouseMATICX,
+    ethers.constants.AddressZero,
+    CHAINLINK_CONTRACTS.polygon.maticxusd
+  );
+
   ///@dev this following tx needs to be submitted via the multisig.
 
   // const stx = await accountant.registerHouse(
