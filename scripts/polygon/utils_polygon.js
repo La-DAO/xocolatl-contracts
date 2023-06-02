@@ -13,8 +13,11 @@ const RESERVE_CAPS = {
   wmatic: {
     defaultInitialLimit: ethers.utils.parseUnits("50000", 18)
   },
+  maticx: {
+    defaultInitialLimit: ethers.utils.parseUnits("50000", 18)
+  },
   wsteth: {
-    defaultInitialLimit: ethers.utils.parseUnits("100", 18)
+    defaultInitialLimit: ethers.utils.parseUnits("1000", 18)
   }
 }
 

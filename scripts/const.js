@@ -67,6 +67,12 @@ const ASSETS = {
         balanceOf: 3,
       },
     },
+    maticx: {
+      address: "0xfa68FB4628DFF1028CFEc22b4162FCcd0d45efb6",
+      storageSlots: {
+        balanceOf: 0,
+      },
+    },
     wbtc:{
       address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6"
     },
@@ -121,11 +127,13 @@ const UMA_CONTRACTS = {
 const CHAINLINK_CONTRACTS = {
   polygon: {
     wstetheth: "0x10f964234cae09cB6a9854B56FF7D4F38Cda5E6a",
+    wstethusd: "0xe5cfb421281169305F8B162d292FcA211C13CfeC",
     ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
     wbtcusd: "0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6",
     maticusd: "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
+    maticxusd: "0x5d37E4b374E6907de8Fc7fb33EE3b0af403C7403",
     usdcusd: "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7",
-    mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545"
+    mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545",
   },
   binance: {
     ethusd: "0x2A3796273d47c4eD363b361D3AEFb7F7E2A13782", // binance pegged eth
