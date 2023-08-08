@@ -88,6 +88,14 @@ const ASSETS = {
       },
     },
   },
+  linea: {
+    weth: {
+      address: "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
   gnosis: {
     weth: {
       address: "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1",
