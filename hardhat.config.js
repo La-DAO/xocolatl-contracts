@@ -127,8 +127,8 @@ module.exports = {
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${process.env.INFURA_ID}`,
+    linea: {
+      url: `https://linea-mainnet.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
@@ -153,6 +153,14 @@ module.exports = {
         urls: {
           apiURL: "https://api-zkevm.polygonscan.com/api",
           browserURL: "https://zkevm.polygonscan.com/"
+        }
+      },
+      {
+        network: "linea",
+        chainId: 59144,
+        urls: {
+          apiURL: "https://api.lineascan.build/api",
+          browserURL: "https://lineascan.build/"
         }
       }
     ]
