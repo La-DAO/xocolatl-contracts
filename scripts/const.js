@@ -96,6 +96,14 @@ const ASSETS = {
       },
     },
   },
+  base: {
+    weth: {
+      address: "0x4200000000000000000000000000000000000006",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
   gnosis: {
     weth: {
       address: "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1",
