@@ -127,14 +127,32 @@ module.exports = {
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${process.env.INFURA_ID}`,
+    linea: {
+      url: `https://linea-mainnet.infura.io/v3/${process.env.INFURA_ID}`,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
+    },
+    base: {
+      url: `https://base.meowrpc.com`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
     goerli: {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_ID}`,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
+    },
+    sepolia: {
+      url: `https://sepolia.infura.io/v3/${process.env.INFURA_ID}`,
+      accounts: process.env.PRIVATE_KEY ?
+        [process.env.PRIVATE_KEY] :
+        { mnemonic: mnemonic() },
+    },
+    mumbai: {
+      url: `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
@@ -153,6 +171,22 @@ module.exports = {
         urls: {
           apiURL: "https://api-zkevm.polygonscan.com/api",
           browserURL: "https://zkevm.polygonscan.com/"
+        }
+      },
+      {
+        network: "linea",
+        chainId: 59144,
+        urls: {
+          apiURL: "https://api.lineascan.build/api",
+          browserURL: "https://lineascan.build/"
+        }
+      },
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org/"
         }
       }
     ]

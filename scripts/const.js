@@ -88,6 +88,22 @@ const ASSETS = {
       },
     },
   },
+  linea: {
+    weth: {
+      address: "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
+  base: {
+    weth: {
+      address: "0x4200000000000000000000000000000000000006",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+  },
   gnosis: {
     weth: {
       address: "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1",
@@ -105,6 +121,40 @@ const ASSETS = {
     },
     wbtc:{
       address: "0x45AC379F019E48ca5dAC02E54F406F99F5088099"
+    },
+    storageSlots: {
+      balanceOf: 0,
+    }
+  },
+  sepolia: {
+    weth: {
+      address: "0xD0dF82dE051244f04BfF3A8bB1f62E1cD39eED92",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+    wbtc:{
+      address: "0xf864F011C5A97fD8Da79baEd78ba77b47112935a"
+    },
+    storageSlots: {
+      balanceOf: 0,
+    }
+  },
+  mumbai: {
+    wmatic: {
+      address: "0xf237dE5664D3c2D2545684E76fef02A3A58A364c",
+      storageSlots: {
+        balanceOf: 3,
+      },
+    },
+    weth: {
+      address: "0xD087ff96281dcf722AEa82aCA57E8545EA9e6C96",
+      storageSlots: {
+        balanceOf: 0,
+      },
+    },
+    wbtc:{
+      address: "0x97e8dE167322a3bCA28E8A49BC46F6Ce128FEC68"
     },
     storageSlots: {
       balanceOf: 0,
