@@ -73,43 +73,6 @@ abstract contract OracleHouse is PriceAware {
         }
     }
 
-    //////////////////////////
-    /// UMA oracle methods ///
-    //////////////////////////
-
-    /**
-     * @dev emitted after the address for UMAHelper changes
-     * @param newAddress of UMAHelper
-     **/
-    event UMAHelperAddressChanged(address newAddress);
-
-    /**
-     * Returns price in 8 decimal places.
-     */
-    function _getLatestPriceUMA() internal view returns (uint256 price) {
-        price = _umaOracleHelper.getLastRequest(address(_addrReserveAsset));
-    }
-
-    /**
-     * @dev See '_setUMAOracleHelper()'.
-     * Must be implemented in House of Reserve with admin restriction.
-     */
-    function setUMAOracleHelper(address newAddress) external virtual;
-
-    /**
-     * @notice Sets a new address for the UMAOracleHelper
-     * @dev Restricted to admin only.
-     * @param newAddress for UMAOracleHelper.
-     * Emits a {UMAHelperAddressChanged} event.
-     */
-    function _setUMAOracleHelper(address newAddress) internal {
-        if (newAddress == address(0)) {
-            revert OracleHouse_invalidInput();
-        }
-        _umaOracleHelper = UMAOracleHelper(newAddress);
-        emit UMAHelperAddressChanged(newAddress);
-    }
-
     ////////////////////////////////
     /// Chainlink oracle methods ///
     ////////////////////////////////
