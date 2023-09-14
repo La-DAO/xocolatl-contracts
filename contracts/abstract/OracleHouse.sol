@@ -11,13 +11,10 @@ abstract contract OracleHouse {
     event ComputedPriceFeedAddrChange(address _newComputedPriceFeedAddrChange);
 
     /// Custom errors
-
     /** Wrong or invalid input*/
     error OracleHouse_invalidInput();
-
     /** Not initialized*/
     error OracleHouse_notInitialized();
-
     /** No valid value returned*/
     error OracleHouse_noValue();
 
