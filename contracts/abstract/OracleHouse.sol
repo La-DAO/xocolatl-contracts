@@ -40,74 +40,22 @@ abstract contract OracleHouse {
         _setComputedPriceFeedAddr(computedPriceFeedAddr_);
     }
 
-    /**
-     * @notice Returns the active oracle from House of Reserve.
-     * @dev Must be implemented in House Of Reserve ONLY.
-     */
-    function activeOracle() external view virtual returns (uint256);
-
-    /** @dev Override for House of Coin with called inputs from House Of Reserve. */
-    function _getLatestPrice(address)
-        internal
-        view
-        virtual
-        returns (uint256 price)
-    {
-        if (_activeOracle == 0) {
-            price = _getLatestPriceRedstone(_tickers);
-        } else if (_activeOracle == 1) {
-            price = _getLatestPriceUMA();
-        } else if (_activeOracle == 2) {
-            price = _getLatestPriceChainlink(_addrUsdFiat, _addrReserveAsset);
-        }
-    }
-
-    ////////////////////////////////
-    /// Chainlink oracle methods ///
-    ////////////////////////////////
-
-    /**
-     * @dev emitted after chainlink addresses change.
-     * @param _newAddrUsdFiat from chainlink.
-     * @param _newAddrReserveAsset from chainlink.
-     **/
-    event ChainlinkAddressChange(
-        address _newAddrUsdFiat,
-        address _newAddrReserveAsset
-    );
-
-    /**
-     * Returns price in 8 decimal places.
-     */
-    function _getLatestPriceChainlink(
-        IAggregatorV3 addrUsdFiat_,
-        IAggregatorV3 addrReserveAsset_
-    ) internal view returns (uint256 price) {
-        if (
-            address(addrUsdFiat_) == address(0) ||
-            address(addrReserveAsset_) == address(0)
-        ) {
-            revert OracleHouse_notInitialized();
-        }
-        (, int256 usdfiat, , , ) = addrUsdFiat_.latestRoundData();
-        (, int256 usdreserve, , , ) = addrReserveAsset_.latestRoundData();
-        if (usdfiat <= 0 || usdreserve <= 0) {
+    /** @dev Returns price in 8 decimals from `_computedPriceFeedAddr`
+     * Override for House of Coin with called inputs from House Of Reserve. */
+    function _getLatestPrice() internal view virtual returns (uint256 price) {
+        // NOTE: All other oracle checks are done at {ComputedPriceFeedAddr.sol}
+        (, int256 price_, , , ) = _computedPriceFeedAddr.latestRoundData();
+        if (price_ <= 0) {
             revert OracleHouse_noValue();
         }
-        price = (uint256(usdreserve) * 1e8) / uint256(usdfiat);
+        return uint256(price);
     }
 
     /**
      * @notice Returns the state data of Chainlink oracle.
      */
-    function getChainlinkData()
-        external
-        view
-        virtual
-        returns (address addrUsdFiat_, address addrReserveAsset_)
-    {
-        addrUsdFiat_ = address(_addrUsdFiat);
-        addrReserveAsset_ = address(_addrReserveAsset);
+    function getComputedPriceFeedAddr() public view virtual returns (address) {
+        return address(_computedPriceFeedAddr);
     }
 
     /**
