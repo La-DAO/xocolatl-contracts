@@ -36,22 +36,8 @@ abstract contract OracleHouse {
     /// @dev PriceBulletin Address, previously as `_addrReserveAsset`.
     IPriceBulletin private _computedPriceFeedAddr;
 
-    /// redstone required state variables
-    bytes32 private _tickerUsdFiat;
-    bytes32 private _tickerReserveAsset;
-    bytes32[] private _tickers;
-    address private _trustedSigner;
-
-    /// uma required state variables
-    UMAOracleHelper private _umaOracleHelper;
-
-    /// chainlink required state variables
-    IAggregatorV3 private _addrUsdFiat;
-    IAggregatorV3 private _addrReserveAsset;
-
-    // solhint-disable-next-line func-name-mixedcase
-    function _oracleHouse_init() internal {
-        _oracle_redstone_init();
+    function __OracleHouse_init(address computedPriceFeedAddr_) internal {
+        _setComputedPriceFeedAddr(computedPriceFeedAddr_);
     }
 
     /**
