@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
-import {IAggregatorV3} from "../../interfaces/chainlink/IAggregatorV3.sol";
+import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
 
-contract ChainlinkComputedOracle {
-    struct ChainlinkResponse {
+contract ComputedPriceFeed {
+    struct PriceFeedResponse {
         uint80 roundId;
         int256 answer;
         uint256 startedAt;
@@ -13,13 +13,13 @@ contract ChainlinkComputedOracle {
     }
 
     ///@dev custom errors
-    error ChainlinkComputedOracle_invalidInput();
-    error ChainlinkComputedOracle_fetchFeedAssetFailed();
-    error ChainlinkComputedOracle_fetchFeedInterFailed();
-    error ChainlinkComputedOracle_lessThanOrZeroAnswer();
-    error ChainlinkComputedOracle_noRoundId();
-    error ChainlinkComputedOracle_noValidUpdateAt();
-    error ChainlinkComputedOracle_staleFeed();
+    error ComputedPriceFeed_invalidInput();
+    error ComputedPriceFeed_fetchFeedAssetFailed();
+    error ComputedPriceFeed_fetchFeedInterFailed();
+    error ComputedPriceFeed_lessThanOrZeroAnswer();
+    error ComputedPriceFeed_noRoundId();
+    error ComputedPriceFeed_noValidUpdateAt();
+    error ComputedPriceFeed_staleFeed();
 
     string private _description;
 
@@ -27,8 +27,8 @@ contract ChainlinkComputedOracle {
     uint8 private immutable _feedAssetDecimals;
     uint8 private immutable _feedInterAssetDecimals;
 
-    IAggregatorV3 public immutable feedAsset;
-    IAggregatorV3 public immutable feedInterAsset;
+    IPriceBulletin public immutable feedAsset;
+    IPriceBulletin public immutable feedInterAsset;
 
     uint256 public immutable allowedTimeout;
 
@@ -47,14 +47,14 @@ contract ChainlinkComputedOracle {
             feedInterAsset_ == address(0) ||
             allowedTimeout_ == 0
         ) {
-            revert ChainlinkComputedOracle_invalidInput();
+            revert ComputedPriceFeed_invalidInput();
         }
 
-        feedAsset = IAggregatorV3(feedAsset_);
-        feedInterAsset = IAggregatorV3(feedInterAsset_);
+        feedAsset = IPriceBulletin(feedAsset_);
+        feedInterAsset = IPriceBulletin(feedInterAsset_);
 
-        _feedAssetDecimals = IAggregatorV3(feedAsset_).decimals();
-        _feedInterAssetDecimals = IAggregatorV3(feedInterAsset_).decimals();
+        _feedAssetDecimals = IPriceBulletin(feedAsset_).decimals();
+        _feedInterAssetDecimals = IPriceBulletin(feedInterAsset_).decimals();
 
         allowedTimeout = allowedTimeout_;
     }
@@ -68,7 +68,7 @@ contract ChainlinkComputedOracle {
     }
 
     function latestAnswer() external view returns (int256) {
-        ChainlinkResponse memory clComputed = _computeLatestRoundData();
+        PriceFeedResponse memory clComputed = _computeLatestRoundData();
         return clComputed.answer;
     }
 
@@ -83,7 +83,7 @@ contract ChainlinkComputedOracle {
             uint80 answeredInRound
         )
     {
-        ChainlinkResponse memory clComputed = _computeLatestRoundData();
+        PriceFeedResponse memory clComputed = _computeLatestRoundData();
         roundId = clComputed.roundId;
         answer = clComputed.answer;
         startedAt = clComputed.startedAt;
@@ -94,11 +94,11 @@ contract ChainlinkComputedOracle {
     function _computeLatestRoundData()
         private
         view
-        returns (ChainlinkResponse memory clComputed)
+        returns (PriceFeedResponse memory clComputed)
     {
         (
-            ChainlinkResponse memory clFeed,
-            ChainlinkResponse memory clInter
+            PriceFeedResponse memory clFeed,
+            PriceFeedResponse memory clInter
         ) = _callandCheckFeeds();
 
         clComputed.answer = _computeAnswer(clFeed.answer, clInter.answer);
@@ -130,8 +130,8 @@ contract ChainlinkComputedOracle {
         private
         view
         returns (
-            ChainlinkResponse memory clFeed,
-            ChainlinkResponse memory clInter
+            PriceFeedResponse memory clFeed,
+            PriceFeedResponse memory clInter
         )
     {
         // Call the chainlink feeds with try-catch method
@@ -153,21 +153,21 @@ contract ChainlinkComputedOracle {
 
         // Perform checks to the returned chainlink responses
         if (clFeed.answer <= 0 || clInter.answer <= 0) {
-            revert ChainlinkComputedOracle_lessThanOrZeroAnswer();
+            revert ComputedPriceFeed_lessThanOrZeroAnswer();
         } else if (clFeed.roundId == 0 || clInter.roundId == 0) {
-            revert ChainlinkComputedOracle_noRoundId();
+            revert ComputedPriceFeed_noRoundId();
         } else if (
             clFeed.updatedAt > block.timestamp ||
             clFeed.updatedAt == 0 ||
             clInter.updatedAt > block.timestamp ||
             clInter.updatedAt == 0
         ) {
-            revert ChainlinkComputedOracle_noValidUpdateAt();
+            revert ComputedPriceFeed_noValidUpdateAt();
         } else if (
             block.timestamp - clFeed.updatedAt  > allowedTimeout ||
             block.timestamp - clInter.updatedAt  > allowedTimeout
         ) {
-            revert ChainlinkComputedOracle_staleFeed();
+            revert ComputedPriceFeed_staleFeed();
         }
     }
 }
