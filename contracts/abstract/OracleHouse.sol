@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
-import {PriceAware} from "../utils/redstone/PriceAware.sol";
-import {IAggregatorV3} from "../interfaces/chainlink/IAggregatorV3.sol";
-import {UMAOracleHelper} from "../utils/uma/UMAOracleHelper.sol";
-import {IOptimisticOracleV2} from "../interfaces/uma/IOptimisticOracleV2.sol";
+import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
 
 abstract contract OracleHouse is PriceAware {
     /**
