@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
+/**
+ * @title ComputedPriceFeed
+ * @author Xocolatl.eth
+ * @notice Contract that combines two IPriceBulletin-like price feeds or
+ * chainlink compatible into one resulting feed denominated in another currency asset.
+ * @dev For example: [wsteth/eth]-feed and [eth/usd]-feed to return a [wsteth/usd]-feed.
+ * Note: Ensure units work, this contract multiplies the feeds.
+ */
+
 import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
 
 contract ComputedPriceFeed {
@@ -114,15 +123,14 @@ contract ComputedPriceFeed {
         clComputed.answeredInRound = clComputed.roundId;
     }
 
-    function _computeAnswer(int256 assetAnswer, int256 interAssetAnswer)
-        private
-        view
-        returns (int256)
-    {
+    function _computeAnswer(
+        int256 assetAnswer,
+        int256 interAssetAnswer
+    ) private view returns (int256) {
         uint256 price = (uint256(assetAnswer) *
             uint256(interAssetAnswer) *
-            10**(uint256(_decimals))) /
-            10**(uint256(_feedAssetDecimals + _feedInterAssetDecimals));
+            10 ** (uint256(_decimals))) /
+            10 ** (uint256(_feedAssetDecimals + _feedInterAssetDecimals));
         return int256(price);
     }
 
@@ -134,24 +142,41 @@ contract ComputedPriceFeed {
             PriceFeedResponse memory clInter
         )
     {
-        // Call the chainlink feeds with try-catch method
-        (
-            clFeed.roundId,
-            clFeed.answer,
-            clFeed.startedAt,
-            clFeed.updatedAt,
-            clFeed.answeredInRound
-        ) = feedAsset.latestRoundData();
+        // Call the aggregator feeds with try-catch method to identify failure
+        try feedAsset.latestRoundData() returns (
+            uint80 roundIdFeedAsset,
+            int256 answerFeedAsset,
+            uint256 startedAtFeedAsset,
+            uint256 updatedAtFeedAsset,
+            uint80 answeredInRoundFeedAsset
+        ) {
+            clFeed.roundId = roundIdFeedAsset;
+            clFeed.answer = answerFeedAsset;
+            clFeed.startedAt = startedAtFeedAsset;
+            clFeed.updatedAt = updatedAtFeedAsset;
+            clFeed.answeredInRound = answeredInRoundFeedAsset;
+        } catch {
+            revert ComputedPriceFeed_fetchFeedAssetFailed();
+        }
 
-        (
-            clInter.roundId,
-            clInter.answer,
-            clInter.startedAt,
-            clInter.updatedAt,
-            clInter.answeredInRound
-        ) = feedInterAsset.latestRoundData();
+        try feedInterAsset.latestRoundData() returns (
+            uint80 roundIdFeedInterAsset,
+            int256 answerFeedInterAsset,
+            uint256 startedAtFeedInterAsset,
+            uint256 updatedAtInterFeedInterAsset,
+            uint80 answeredInRoundFeedInterAsset
 
-        // Perform checks to the returned chainlink responses
+        ) {
+            clInter.roundId = roundIdFeedInterAsset;
+            clInter.answer =answerFeedInterAsset;
+            clInter.startedAt =startedAtFeedInterAsset;
+            clInter.updatedAt = updatedAtInterFeedInterAsset;
+            clInter.answeredInRound = answeredInRoundFeedInterAsset;
+        } catch  {
+            revert ComputedPriceFeed_fetchFeedInterFailed();
+        }
+
+        // Perform checks to the returned responses
         if (clFeed.answer <= 0 || clInter.answer <= 0) {
             revert ComputedPriceFeed_lessThanOrZeroAnswer();
         } else if (clFeed.roundId == 0 || clInter.roundId == 0) {
@@ -164,8 +189,8 @@ contract ComputedPriceFeed {
         ) {
             revert ComputedPriceFeed_noValidUpdateAt();
         } else if (
-            block.timestamp - clFeed.updatedAt  > allowedTimeout ||
-            block.timestamp - clInter.updatedAt  > allowedTimeout
+            block.timestamp - clFeed.updatedAt > allowedTimeout ||
+            block.timestamp - clInter.updatedAt > allowedTimeout
         ) {
             revert ComputedPriceFeed_staleFeed();
         }
