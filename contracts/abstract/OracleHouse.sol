@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
 
-abstract contract OracleHouse is PriceAware {
+abstract contract OracleHouse {
     /**
      * @dev emitted after activeOracle is changed.
      * @param newOracleNumber uint256 oracle id.
