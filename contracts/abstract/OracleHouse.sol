@@ -18,14 +18,23 @@ abstract contract OracleHouse {
     /** No valid value returned*/
     error OracleHouse_noValue();
 
-    enum OracleIds {
-        redstone,
-        uma,
-        chainlink
-    }
+    /// @dev Unused state variable; previously as `_activeOracle`.
+    uint256 internal _unused_uint256_1;
+    /// @dev Unused state variable; previously as `_tickerUsdFiat`.
+    bytes32 private _unused_bytes32_1;
+    /// @dev Unused state variable; previously as `_tickerReserveAsset`.
+    bytes32 private _unused_bytes32_2;
+    /// @dev Unused state variable; previously as `_tickers[]`.
+    bytes32[] private _unused_bytes32Array_1;
+    /// @dev Unused state variable; previously as `_trustedSigner`.
+    address private _unused_address_1;
+    /// @dev Unused state variable; previously as `_umaOracleHelper`.
+    address private _unused_address_2;
+    /// @dev Unused state variable; previously as `_addrReserveAsset`.
+    address private _unused_address_3;
 
-    /** @dev OracleIds: 0 = redstone, 1 = uma, 2 = chainlink */
-    uint256 internal _activeOracle;
+    /// @dev PriceBulletin Address, previously as `_addrReserveAsset`.
+    IPriceBulletin private _computedPriceFeedAddr;
 
     /// redstone required state variables
     bytes32 private _tickerUsdFiat;
