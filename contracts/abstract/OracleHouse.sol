@@ -5,10 +5,10 @@ import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
 
 abstract contract OracleHouse {
     /**
-     * @dev emitted after activeOracle is changed.
-     * @param newOracleNumber uint256 oracle id.
+     * @dev emitted after `ComputedPriceFeed` addresses change.
+     * @param _newComputedPriceFeedAddrChange from Tlatlalia-ni
      **/
-    event ActiveOracleChanged(uint256 newOracleNumber);
+    event ComputedPriceFeedAddrChange(address _newComputedPriceFeedAddrChange);
 
     /// Custom errors
 
@@ -119,26 +119,24 @@ abstract contract OracleHouse {
     }
 
     /**
-     * @dev Must be implemented with admin restriction and call _setChainlinkAddrs().
+     * @dev Must be implemented with admin restriction and call `_setComputedPriceFeedAddr()`.
      */
-    function setChainlinkAddrs(address addrUsdFiat_, address addrReserveAsset_)
-        external
-        virtual;
+    function setComputedPriceFeedAddr(
+        address computedPriceFeedAddr_
+    ) external virtual;
 
     /**
-     * @notice  Sets the chainlink addresses required in '_getLatestPriceChainlink()'.
-     * @param addrUsdFiat_ address from chainlink.
-     * @param addrReserveAsset_ address from chainlink.
-     * Emits a {ChainlinkAddressChange} event.
+     * @notice  Sets the `ComputedPriceFeedAddr` required in '_getLatestPrice()'.
+     * @param computedPriceFeedAddr_ deployed
+     * Emits a {ComputedPriceFeedAddrChange} event.
      */
-    function _setChainlinkAddrs(address addrUsdFiat_, address addrReserveAsset_)
-        internal
-    {
-        if (addrUsdFiat_ == address(0) || addrReserveAsset_ == address(0)) {
+    function _setComputedPriceFeedAddr(
+        address computedPriceFeedAddr_
+    ) internal {
+        if (computedPriceFeedAddr_ == address(0)) {
             revert OracleHouse_invalidInput();
         }
-        _addrUsdFiat = IAggregatorV3(addrUsdFiat_);
-        _addrReserveAsset = IAggregatorV3(addrReserveAsset_);
-        emit ChainlinkAddressChange(addrUsdFiat_, addrReserveAsset_);
+        _computedPriceFeedAddr = IPriceBulletin(computedPriceFeedAddr_);
+        emit ComputedPriceFeedAddrChange(computedPriceFeedAddr_);
     }
 }
