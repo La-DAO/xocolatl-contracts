@@ -73,23 +73,6 @@ abstract contract OracleHouse is PriceAware {
         }
     }
 
-    /**
-     * @dev Must be implemented in House of Reserve ONLY with admin restriction and call _setActiveOracle().
-     * Must call _setActiveOracle().
-     */
-    function setActiveOracle(OracleIds id_) external virtual;
-
-    /**
-     * @notice Sets the activeOracle.
-     * @dev  Restricted to admin only.
-     * @param id_ restricted to enum OracleIds
-     * Emits a {ActiveOracleChanged} event.
-     */
-
-    function _setActiveOracle(OracleIds id_) internal {
-        _activeOracle = uint256(id_);
-        emit ActiveOracleChanged(_activeOracle);
-    }
 
     ///////////////////////////////
     /// Redstone oracle methods ///
