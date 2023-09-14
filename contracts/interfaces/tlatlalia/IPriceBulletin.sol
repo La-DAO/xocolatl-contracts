@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
+/**
+ * @title IPriceBulletin
+ * @author xocolatl.eth
+ * @dev Based on Chainlink AggregatorV3 interface for compatibility.
+ */
 interface IPriceBulletin {
     function decimals() external view returns (uint8);
 
