@@ -5,11 +5,11 @@ const VERSION = "1.0.0";
 
 const RESERVE_CAPS = {
   weth: {
-    defaultInitialLimit: ethers.utils.parseUnits("50", 18)
+    defaultInitialLimit: ethers.parseUnits("50", 18)
   },
 }
 
-const WNATIVE = ASSETS.base.weth.address;
+const WNATIVE = ASSETS.base.await weth.getAddress();
 
 module.exports = {
   VERSION,

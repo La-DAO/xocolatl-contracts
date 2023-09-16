@@ -29,26 +29,26 @@ const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
   const xoc = await getContract("Xocolatl", "Xocolatl");
-  console.log("xoc", xoc.address);
+  console.log("xoc", await xoc.getAddress());
   const accountant = await deployAssetsAccountant();
   const coinhouse = await deployHouseOfCoin(
-    xoc.address,
-    accountant.address
+    await xoc.getAddress(),
+    await accountant.getAddress()
   );
 
   const reservehouseWeth = await deployHouseOfReserve(
     "HouseOfReserveBinanceWETH",
-    ASSETS.binance.weth.address,
-    xoc.address,
-    accountant.address,
+    ASSETS.binance.await weth.getAddress(),
+    await xoc.getAddress(),
+    await accountant.getAddress(),
     "MXN",
     "ETH",
     WNATIVE
   );
 
   const liquidator = await deployAccountLiquidator(
-    coinhouse.address,
-    accountant.address
+    await coinhouse.getAddress(),
+    await accountant.getAddress()
   );
 
   await setUpHouseOfCoin(
@@ -58,8 +58,8 @@ const deploySystemContracts = async () => {
   const reservehouseWBNB = await deployHouseOfReserve(
     "HouseOfReserveWBNB",
     ASSETS.binance.wbnb.address,
-    xoc.address,
-    accountant.address,
+    await xoc.getAddress(),
+    await accountant.getAddress(),
     "MXN",
     "BNB",
     WNATIVE
@@ -89,9 +89,9 @@ const deploySystemContracts = async () => {
 
   await setUpAssetsAccountant(
     accountant,
-    coinhouse.address,
-    reservehouseWeth.address,
-    liquidator.address  
+    await coinhouse.getAddress(),
+    reservehouseawait weth.getAddress(),
+    await liquidator.getAddress()  
   );
 
   const stx1 = await accountant.registerHouse(
@@ -104,8 +104,8 @@ const deploySystemContracts = async () => {
 
   // await systemPermissionGranting(
   //   xoc,
-  //   coinhouse.address,
-  //   liquidator.address
+  //   await coinhouse.getAddress(),
+  //   await liquidator.getAddress()
   // );
 
   // await rolesHandOverAssetsAccountant(accountant);

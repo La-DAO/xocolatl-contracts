@@ -30,28 +30,28 @@ const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
   const xoc = await getContract("Xocolatl", "Xocolatl");
-  console.log("xoc", xoc.address);
+  console.log("xoc", await xoc.getAddress());
   const accountant = await deployAssetsAccountant();
   const coinhouse = await deployHouseOfCoin(
-    xoc.address,
-    accountant.address
+    await xoc.getAddress(),
+    await accountant.getAddress()
   );
   const reservehouse = await deployHouseOfReserve(
     "HouseOfReserveWETH",
-    ASSETS.polygon.weth.address,
-    xoc.address,
-    accountant.address,
+    ASSETS.polygon.await weth.getAddress(),
+    await xoc.getAddress(),
+    await accountant.getAddress(),
     "MXN",
     "ETH",
     WNATIVE
   );
   const liquidator = await deployAccountLiquidator(
-    coinhouse.address,
-    accountant.address
+    await coinhouse.getAddress(),
+    await accountant.getAddress()
   );
   const sixhours = 6 * 60 * 60;
   const umahelper = await deployUMAOracleHelper(
-    ASSETS.polygon.weth.address,
+    ASSETS.polygon.await weth.getAddress(),
     UMA_CONTRACTS.polygon.finder.address,
     UMA_CONTRACTS.priceIdentifiers.mxnusd,
     sixhours
@@ -74,9 +74,9 @@ const deploySystemContracts = async () => {
 
   await setUpAssetsAccountant(
     accountant,
-    coinhouse.address,
-    reservehouse.address,
-    liquidator.address  
+    await coinhouse.getAddress(),
+    await reservehouse.getAddress(),
+    await liquidator.getAddress()  
   );
 
   await setUpAccountLiquidator(liquidator);
@@ -84,8 +84,8 @@ const deploySystemContracts = async () => {
   // This permissions are granted via de multisig.
   // await systemPermissionGranting(
   //   xoc,
-  //   coinhouse.address,
-  //   liquidator.address
+  //   await coinhouse.getAddress(),
+  //   await liquidator.getAddress()
   // );
 
   await rolesHandOverAssetsAccountant(accountant);

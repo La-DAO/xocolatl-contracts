@@ -105,7 +105,7 @@ const checkLiquidatable = async function (addressArray, coinhouse, liquidator, r
   const liqParam = await coinhouse.liqParam();
   let liquidatable = [];
   for (let index = 0; index < addressArray.length; index++) {
-    let hr = await wrappedcoinhouse.computeUserHealthRatio(addressArray[index], reserve.address);
+    let hr = await wrappedcoinhouse.computeUserHealthRatio(addressArray[index], await reserve.getAddress());
     if (hr.lte(liqParam.liquidationThreshold)) {
       liquidatable.push(addressArray[index]);
     }
@@ -129,7 +129,7 @@ const computeLiquidationCost = async function(addressArray, coinhouse, liquidato
     [
       costAmount,
       collateralPenalty 
-    ] = await wrappedcoinhouse.computeCostOfLiquidation(addressArray[index], reserve.address);
+    ] = await wrappedcoinhouse.computeCostOfLiquidation(addressArray[index], await reserve.getAddress());
     totalCost = costAmount.add(totalCost);
   }
   return totalCost;
@@ -147,7 +147,7 @@ const liquidateUsers = async function (addressArray, coinhouse, liquidator, weth
     WrapperBuilder.wrapLite(coinhouse.connect(liquidator)).usingPriceFeed("redstone-stocks");
   for (let index = 0; index < addressArray.length; index++) {
     console.log(`...liquidating user ${addressArray[index]}`);
-    let txLiquidate = await wrappedcoinhouse.liquidateUser(addressArray[index], weth.address);
+    let txLiquidate = await wrappedcoinhouse.liquidateUser(addressArray[index], await weth.getAddress());
     let txResponse = await txLiquidate.wait();
     console.log(`...succesfully liquidated user ${addressArray[index]} per txHash: ${txResponse.transactionHash }`);
   }
@@ -173,11 +173,11 @@ async function main() {
 
   if (liquidatableUsers.length > 0) {
     const cost = await computeLiquidationCost(validminters, coinhouse, liquidator, weth);
-    const liquidatorBal = await xoc.balanceOf(liquidator.address);
+    const liquidatorBal = await xoc.balanceOf(await liquidator.getAddress());
     if (liquidatorBal.gte(cost)) {
       try {
         console.log("...approving funds for liquidation");
-        const txApproval = await xoc.connect(liquidator).approve(coinhouse.address, cost);
+        const txApproval = await xoc.connect(liquidator).approve(await coinhouse.getAddress(), cost);
         await txApproval.wait();
         await liquidateUsers(liquidatableUsers, coinhouse, liquidator, weth);
       } catch (error) {
