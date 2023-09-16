@@ -62,7 +62,7 @@ describe("Xoc Tests - Redstone Oracle", function () {
 
   it("Oracle price feed tests, should return a price value", async () => {
     await syncTime();
-    const price = await coinhouse.getLatestPrice(reservehouse.address);
+    const price = await coinhouse.getLatestPrice(reservehouse.getAddress());
     expect(price).to.be.gt(0);
 
     await syncTime();
@@ -71,30 +71,30 @@ describe("Xoc Tests - Redstone Oracle", function () {
   });
 
   it("Deposit in HouseOfReserve", async () => {
-    const depositAmount = ethers.utils.parseUnits("50", 18);
+    const depositAmount = ethers.parseUnits("50", 18);
     await weth.connect(accounts[1]).deposit({ value: depositAmount });
-    await weth.connect(accounts[1]).approve(reservehouse.address, depositAmount);
+    await weth.connect(accounts[1]).approve(reservehouse.getAddress(), depositAmount);
     await syncTime();
     await reservehouse.connect(accounts[1]).deposit(depositAmount);
-    expect(await accountant.balanceOf(accounts[1].address, rid)).to.eq(depositAmount);
+    expect(await accountant.balanceOf(accounts[1].getAddress(), rid)).to.eq(depositAmount);
   });
 
   it("Deposit in HouseOfReserve, sending native-token directly", async () => {
-    const depositAmount = ethers.utils.parseUnits("50", 18);
+    const depositAmount = ethers.parseUnits("50", 18);
     // This method does automatic wrapping to WETH-token-type and deposit.
     const tx = {
-      to: reservehouse.address,
+      to: reservehouse.getAddress(),
       value: depositAmount
     }
     await accounts[1].sendTransaction(tx);
-    expect(await accountant.balanceOf(accounts[1].address, rid)).to.eq(depositAmount);
+    expect(await accountant.balanceOf(accounts[1].getAddress(), rid)).to.eq(depositAmount);
   });
 
   it("Mint in HouseOfCoin", async () => {
-    const depositAmount = ethers.utils.parseUnits("50", 18);
-    const mintAmount = ethers.utils.parseUnits("2500", 18);
+    const depositAmount = ethers.parseUnits("50", 18);
+    const mintAmount = ethers.parseUnits("2500", 18);
     await weth.connect(accounts[1]).deposit({ value: depositAmount });
-    await weth.connect(accounts[1]).approve(reservehouse.address, depositAmount);
+    await weth.connect(accounts[1]).approve(reservehouse.getAddress(), depositAmount);
     await syncTime();
     let localreservehouse = reservehouse.connect(accounts[1]);
     localreservehouse = WrapperBuilder.wrapLite(localreservehouse).usingPriceFeed("redstone-stocks");
@@ -102,15 +102,15 @@ describe("Xoc Tests - Redstone Oracle", function () {
     await syncTime();
     let localcoinhouse = coinhouse.connect(accounts[1]);
     localcoinhouse = WrapperBuilder.wrapLite(localcoinhouse).usingPriceFeed("redstone-stocks");
-    await localcoinhouse.mintCoin(weth.address, reservehouse.address, mintAmount);
-    expect(await xoc.balanceOf(accounts[1].address)).to.eq(mintAmount);
+    await localcoinhouse.mintCoin(weth.getAddress(), reservehouse.getAddress(), mintAmount);
+    expect(await xoc.balanceOf(accounts[1].getAddress())).to.eq(mintAmount);
   });
 
   it("Payback in HouseOfCoin", async () => {
-    const depositAmount = ethers.utils.parseUnits("50", 18);
-    const mintAmount = ethers.utils.parseUnits("2500", 18);
+    const depositAmount = ethers.parseUnits("50", 18);
+    const mintAmount = ethers.parseUnits("2500", 18);
     await weth.connect(accounts[1]).deposit({ value: depositAmount });
-    await weth.connect(accounts[1]).approve(reservehouse.address, depositAmount);
+    await weth.connect(accounts[1]).approve(reservehouse.getAddress(), depositAmount);
     await syncTime();
     let localreservehouse = reservehouse.connect(accounts[1]);
     localreservehouse = WrapperBuilder.wrapLite(localreservehouse).usingPriceFeed("redstone-stocks");
@@ -118,17 +118,17 @@ describe("Xoc Tests - Redstone Oracle", function () {
     await syncTime();
     let localcoinhouse = coinhouse.connect(accounts[1]);
     localcoinhouse = WrapperBuilder.wrapLite(localcoinhouse).usingPriceFeed("redstone-stocks");
-    await localcoinhouse.mintCoin(weth.address, reservehouse.address, mintAmount);
-    expect(await xoc.balanceOf(accounts[1].address)).to.eq(mintAmount);
+    await localcoinhouse.mintCoin(weth.getAddress(), reservehouse.getAddress(), mintAmount);
+    expect(await xoc.balanceOf(accounts[1].getAddress())).to.eq(mintAmount);
     await localcoinhouse.paybackCoin(bid, mintAmount);
-    expect(await xoc.balanceOf(accounts[1].address)).to.eq(0);
+    expect(await xoc.balanceOf(accounts[1].getAddress())).to.eq(0);
   });
 
   it("Withdraw in HouseOfReserve", async () => {
-    const depositAmount = ethers.utils.parseUnits("50", 18);
-    const mintAmount = ethers.utils.parseUnits("2500", 18);
+    const depositAmount = ethers.parseUnits("50", 18);
+    const mintAmount = ethers.parseUnits("2500", 18);
     await weth.connect(accounts[1]).deposit({ value: depositAmount });
-    await weth.connect(accounts[1]).approve(reservehouse.address, depositAmount);
+    await weth.connect(accounts[1]).approve(reservehouse.getAddress(), depositAmount);
     await syncTime();
     let localreservehouse = reservehouse.connect(accounts[1]);
     localreservehouse = WrapperBuilder.wrapLite(localreservehouse).usingPriceFeed("redstone-stocks");
@@ -136,11 +136,11 @@ describe("Xoc Tests - Redstone Oracle", function () {
     await syncTime();
     let localcoinhouse = coinhouse.connect(accounts[1]);
     localcoinhouse = WrapperBuilder.wrapLite(localcoinhouse).usingPriceFeed("redstone-stocks");
-    await localcoinhouse.mintCoin(weth.address, reservehouse.address, mintAmount);
-    expect(await xoc.balanceOf(accounts[1].address)).to.eq(mintAmount);
+    await localcoinhouse.mintCoin(weth.getAddress(), reservehouse.getAddress(), mintAmount);
+    expect(await xoc.balanceOf(accounts[1].getAddress())).to.eq(mintAmount);
     await localcoinhouse.paybackCoin(bid, mintAmount);
-    expect(await xoc.balanceOf(accounts[1].address)).to.eq(0);
+    expect(await xoc.balanceOf(accounts[1].getAddress())).to.eq(0);
     await localreservehouse.withdraw(depositAmount);
-    expect(await weth.balanceOf(accounts[1].address)).to.equal(depositAmount);
+    expect(await weth.balanceOf(accounts[1].getAddress())).to.equal(depositAmount);
   });
 });

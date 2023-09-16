@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const { hre, ethers } = require("hardhat");
 const { ASSETS } = require("../scripts/const");
 
 const syncTime = async function () {
@@ -26,7 +26,7 @@ const setStorageAt = async (address, index, value) => {
 
 const getStorageSlot = (address, chain, method) => {
   const assets = Object.values(ASSETS[chain]);
-  const asset = assets.find((e) => e.address == address);
+  const asset = assets.find((e) => e.getAddress() == address);
   const slot = asset.storageSlots[method];
   if (!Number.isInteger(slot)) {
     throw "Set storage slot in 'ASSETS' object; Refer to https://github.com/kendricktan/slot20 on how get slot number.";

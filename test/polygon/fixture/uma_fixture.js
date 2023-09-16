@@ -14,10 +14,10 @@ const umaFixture = async () => {
   const AccountLiquidator = await ethers.getContractFactory("AccountLiquidator");
 
   // 0.- Set-up wrapped-native
-  const wnative = await ethers.getContractAt("IERC20", ASSETS.polygon.wmatic.address);
+  const wnative = await ethers.getContractAt("IERC20", ASSETS.polygon.wmatic.getAddress());
 
   // 1.- Deploy all contracts
-  const weth = await ethers.getContractAt("IERC20", ASSETS.polygon.weth.address);
+  const weth = await ethers.getContractAt("IERC20", ASSETS.polygon.weth.getAddress());
   let xoc = await upgrades.deployProxy(Xocolatl, [], {
     kind: 'uups',
     unsafeAllow: [
@@ -29,8 +29,8 @@ const umaFixture = async () => {
   });
   let coinhouse = await upgrades.deployProxy(HouseOfCoin,
     [
-      xoc.address,
-      accountant.address
+      xoc.getAddress(),
+      accountant.getAddress()
     ],
     {
       kind: 'uups',
@@ -38,12 +38,12 @@ const umaFixture = async () => {
   );
   let reservehouse = await upgrades.deployProxy(HouseOfReserve,
     [
-      weth.address,
-      xoc.address,
-      accountant.address,
+      weth.getAddress(),
+      xoc.getAddress(),
+      accountant.getAddress(),
       "MXN",
       "ETH",
-      wnative.address
+      wnative.getAddress()
     ],
     {
       kind: 'uups',
@@ -51,8 +51,8 @@ const umaFixture = async () => {
   );
   let liquidator = await upgrades.deployProxy(AccountLiquidator,
     [
-      coinhouse.address,
-      accountant.address
+      coinhouse.getAddress(),
+      accountant.getAddress()
     ],
     {
       kind: 'uups',
@@ -61,13 +61,13 @@ const umaFixture = async () => {
 
   // 2.- Register houses and allow liquidator
   await accountant.registerHouse(
-    coinhouse.address
+    coinhouse.getAddress()
   );
   await accountant.registerHouse(
-    reservehouse.address
+    reservehouse.getAddress()
   );
   await accountant.allowLiquidator(
-    liquidator.address, 
+    liquidator.getAddress(), 
     true
   );
 
@@ -75,25 +75,25 @@ const umaFixture = async () => {
   const minter = await xoc.MINTER_ROLE();
   const burner = await xoc.BURNER_ROLE();
   const liquidatorRole = await accountant.LIQUIDATOR_ROLE();
-  await xoc.grantRole(minter, coinhouse.address);
-  await xoc.grantRole(burner, coinhouse.address);
-  await xoc.grantRole(burner, liquidator.address);
-  await accountant.grantRole(liquidatorRole, liquidator.address);
+  await xoc.grantRole(minter, coinhouse.getAddress());
+  await xoc.grantRole(burner, coinhouse.getAddress());
+  await xoc.grantRole(burner, liquidator.getAddress());
+  await accountant.grantRole(liquidatorRole, liquidator.getAddress());
 
   // 4.- Assign deposit limit
-  const depositLimitAmount = ethers.utils.parseEther("100");
+  const depositLimitAmount = ethers.parseEther("100");
   await reservehouse.setDepositLimit(depositLimitAmount);
 
   //5.- Set-up oracle data
   const sixhours = 60 * 60 * 6;
   const UMAHelper = await ethers.getContractFactory("UMAOracleHelper");
   const umahelper = await UMAHelper.deploy(
-    weth.address,
-    UMA_CONTRACTS.polygon.finder.address,
+    weth.getAddress(),
+    UMA_CONTRACTS.polygon.finder.getAddress(),
     UMA_CONTRACTS.priceIdentifiers.mxnusd,
     sixhours
   );
-  await reservehouse.setUMAOracleHelper(umahelper.address);
+  await reservehouse.setUMAOracleHelper(umahelper.getAddress());
   await reservehouse.setActiveOracle(1);
   await reservehouse.setChainlinkAddrs(
     CHAINLINK_CONTRACTS.polygon.mxnusd,
