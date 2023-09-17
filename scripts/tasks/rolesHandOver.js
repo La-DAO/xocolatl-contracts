@@ -14,7 +14,7 @@ const rolesHandOverAssetsAccountant = async (contract) => {
   await rtx1.wait();
   console.log("...multisig granted DEFAULT_ADMIN_ROLE in AssetsAccountant");
 
-  const signer = await ethers.getSigner();
+  const signer = await ethers.provider.getSigner();
 
   const rtx2 = await contract.renounceRole(minter, signer.address);
   await rtx2.wait();
@@ -40,7 +40,7 @@ const handOverDefaultAdmin = async (contract) => {
   await rtx1.wait();
   console.log(`...multisig granted DEFAULT_ADMIN_ROLE in contract:${contract.address}`);
 
-  const signer = await ethers.getSigner();
+  const signer = await ethers.provider.getSigner();
 
   const rtx2 = await contract.renounceRole(admin, signer.address);
   await rtx2.wait();

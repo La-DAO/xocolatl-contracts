@@ -34,13 +34,13 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
 
   const priceRequestProcessUMA = async () => {
     await umahelper.requestPrice();
-    const proposeStake = ethers.utils.parseEther("10");
+    const proposeStake = ethers.parseEther("10");
     const proposerUser = accounts[19];
-    const priceProposal = ethers.utils.parseUnits("5", 16);
+    const priceProposal = ethers.parseUnits("5", 16);
 
-    await setERC20UserBalance(proposerUser.address, weth.address, 'polygon', proposeStake);
+    await setERC20UserBalance(proposerUser.getAddress(), weth.getAddress(), 'polygon', proposeStake);
 
-    await weth.connect(proposerUser).approve(umahelper.address, proposeStake);
+    await weth.connect(proposerUser).approve(umahelper.getAddress(), proposeStake);
     await umahelper.connect(proposerUser).proposePriceLastRequest(priceProposal);
     await timeTravel(60 * 60 * 3);
     await umahelper.settleLastRequestAndGetPrice();
@@ -77,14 +77,14 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
 
   it("succesfully complete UMAOracleHelper request processs", async () => {
     await umahelper.requestPrice();
-    const proposeStake = ethers.utils.parseEther("10");
+    const proposeStake = ethers.parseEther("10");
     const proposerUser = accounts[19];
-    const priceProposal = ethers.utils.parseUnits("5", 16);
+    const priceProposal = ethers.parseUnits("5", 16);
 
-    await setERC20UserBalance(proposerUser.address, weth.address, 'polygon', proposeStake);
-    expect(await weth.balanceOf(proposerUser.address)).to.eq(proposeStake);
+    await setERC20UserBalance(proposerUser.getAddress(), weth.getAddress(), 'polygon', proposeStake);
+    expect(await weth.balanceOf(proposerUser.getAddress())).to.eq(proposeStake);
 
-    await weth.connect(proposerUser).approve(umahelper.address, proposeStake);
+    await weth.connect(proposerUser).approve(umahelper.getAddress(), proposeStake);
     await umahelper.connect(proposerUser).proposePriceLastRequest(priceProposal);
     await timeTravel(60 * 60 * 24);
     const returnedPrice = await umahelper.callStatic.settleLastRequestAndGetPrice();
@@ -96,55 +96,55 @@ describe("Xoc Tests - Polygon UMA Oracle", function () {
     await priceRequestProcessUMA();
     const price = await reservehouse.getLatestPrice();
     expect(price).to.be.gt(0);
-    const price2 = await coinhouse.getLatestPrice(reservehouse.address);
+    const price2 = await coinhouse.getLatestPrice(reservehouse.getAddress());
     expect(price2).to.eq(price);
   });
 
   it("Deposit in HouseOfReserve", async () => {
     const user = accounts[1];
-    const depositAmount = ethers.utils.parseUnits("50", 18);
-    await setERC20UserBalance(user.address, weth.address, 'polygon', depositAmount);
-    await weth.connect(user).approve(reservehouse.address, depositAmount);
+    const depositAmount = ethers.parseUnits("50", 18);
+    await setERC20UserBalance(user.getAddress(), weth.getAddress(), 'polygon', depositAmount);
+    await weth.connect(user).approve(reservehouse.getAddress(), depositAmount);
     await reservehouse.connect(user).deposit(depositAmount);
-    expect(await accountant.balanceOf(user.address, rid)).to.eq(depositAmount);
+    expect(await accountant.balanceOf(user.getAddress(), rid)).to.eq(depositAmount);
   });
 
   it("Mint in HouseOfCoin", async () => {
     await priceRequestProcessUMA();
     const user = accounts[1];
-    const depositAmount = ethers.utils.parseUnits("50", 18);
-    const mintAmount = ethers.utils.parseUnits("2500", 18);
-    await setERC20UserBalance(user.address, weth.address, 'polygon', depositAmount);
-    await weth.connect(user).approve(reservehouse.address, depositAmount);
+    const depositAmount = ethers.parseUnits("50", 18);
+    const mintAmount = ethers.parseUnits("2500", 18);
+    await setERC20UserBalance(user.getAddress(), weth.getAddress(), 'polygon', depositAmount);
+    await weth.connect(user).approve(reservehouse.getAddress(), depositAmount);
     await reservehouse.connect(user).deposit(depositAmount);
-    await coinhouse.connect(user).mintCoin(weth.address, reservehouse.address, mintAmount);
-    expect(await xoc.balanceOf(user.address)).to.eq(mintAmount);
+    await coinhouse.connect(user).mintCoin(weth.getAddress(), reservehouse.getAddress(), mintAmount);
+    expect(await xoc.balanceOf(user.getAddress())).to.eq(mintAmount);
   });
 
   it("Payback in HouseOfCoin", async () => {
     await priceRequestProcessUMA();
     const user = accounts[1];
-    const depositAmount = ethers.utils.parseUnits("50", 18);
-    const mintAmount = ethers.utils.parseUnits("2500", 18);
-    await setERC20UserBalance(user.address, weth.address, 'polygon', depositAmount);
-    await weth.connect(user).approve(reservehouse.address, depositAmount);
+    const depositAmount = ethers.parseUnits("50", 18);
+    const mintAmount = ethers.parseUnits("2500", 18);
+    await setERC20UserBalance(user.getAddress(), weth.getAddress(), 'polygon', depositAmount);
+    await weth.connect(user).approve(reservehouse.getAddress(), depositAmount);
     await reservehouse.connect(user).deposit(depositAmount);
-    await coinhouse.connect(user).mintCoin(weth.address, reservehouse.address, mintAmount);
+    await coinhouse.connect(user).mintCoin(weth.getAddress(), reservehouse.getAddress(), mintAmount);
     await coinhouse.connect(user).paybackCoin(bid, mintAmount);
-    expect(await xoc.balanceOf(user.address)).to.eq(0);
+    expect(await xoc.balanceOf(user.getAddress())).to.eq(0);
   });
 
   it("Withdraw in HouseOfReserve", async () => {
     await priceRequestProcessUMA();
     const user = accounts[1];
-    const depositAmount = ethers.utils.parseUnits("50", 18);
-    const mintAmount = ethers.utils.parseUnits("2500", 18);
-    await setERC20UserBalance(user.address, weth.address, 'polygon', depositAmount);
-    await weth.connect(user).approve(reservehouse.address, depositAmount);
+    const depositAmount = ethers.parseUnits("50", 18);
+    const mintAmount = ethers.parseUnits("2500", 18);
+    await setERC20UserBalance(user.getAddress(), weth.getAddress(), 'polygon', depositAmount);
+    await weth.connect(user).approve(reservehouse.getAddress(), depositAmount);
     await reservehouse.connect(user).deposit(depositAmount);
-    await coinhouse.connect(user).mintCoin(weth.address, reservehouse.address, mintAmount);
+    await coinhouse.connect(user).mintCoin(weth.getAddress(), reservehouse.getAddress(), mintAmount);
     await coinhouse.connect(user).paybackCoin(bid, mintAmount);
     await reservehouse.connect(user).withdraw(depositAmount);
-    expect(await weth.balanceOf(user.address)).to.equal(depositAmount);
+    expect(await weth.balanceOf(user.getAddress())).to.equal(depositAmount);
   });
 });

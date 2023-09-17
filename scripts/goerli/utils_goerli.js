@@ -5,14 +5,14 @@ const VERSION = "0.0.1";
 
 const RESERVE_CAPS = {
   weth: {
-    defaultInitialLimit: ethers.utils.parseUnits("5", 18)
+    defaultInitialLimit: ethers.parseUnits("5", 18)
   },
   wbtc: {
-    defaultInitialLimit: ethers.utils.parseUnits("5", 18)
+    defaultInitialLimit: ethers.parseUnits("5", 18)
   },
 }
 
-const WNATIVE = ASSETS.goerli.weth.address;
+const WNATIVE = ASSETS.goerli.await weth.getAddress();
 
 module.exports = {
   VERSION,

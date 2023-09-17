@@ -19,16 +19,16 @@ const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
   const xoc = await getContract("Xocolatl", "Xocolatl");
-  console.log("xoc", xoc.address);
+  console.log("xoc", await xoc.getAddress());
   const accountant = await getContract("AssetsAccountant", "AssetsAccountant");
-  console.log("accountant", accountant.address);
+  console.log("accountant", await accountant.getAddress());
 
   // WBTC
   const reservehouseWBTC = await deployHouseOfReserve(
     "HouseOfReserveWBTC",
     ASSETS.polygon.wbtc.address,
-    xoc.address,
-    accountant.address,
+    await xoc.getAddress(),
+    await accountant.getAddress(),
     "MXN",
     "WBTC",
     WNATIVE
@@ -57,8 +57,8 @@ const deploySystemContracts = async () => {
   const reservehouseWMATIC = await deployHouseOfReserve(
     "HouseOfReserveWMATIC",
     ASSETS.polygon.wmatic.address,
-    xoc.address,
-    accountant.address,
+    await xoc.getAddress(),
+    await accountant.getAddress(),
     "MXN",
     "WMATIC",
     WNATIVE
@@ -79,8 +79,8 @@ const deploySystemContracts = async () => {
   const reservehouseWSTETH = await deployHouseOfReserve(
     "HouseOfReserveWSTETH",
     ASSETS.polygon.wsteth.address,
-    xoc.address,
-    accountant.address,
+    await xoc.getAddress(),
+    await accountant.getAddress(),
     "MXN",
     "WSTETH",
     WNATIVE
@@ -101,8 +101,8 @@ const deploySystemContracts = async () => {
   const reservehouseMATICX = await deployHouseOfReserve(
     "HouseOfReserveMATICX",
     ASSETS.polygon.maticx.address,
-    xoc.address,
-    accountant.address,
+    await xoc.getAddress(),
+    await accountant.getAddress(),
     "MXN",
     "MATICX",
     WNATIVE
