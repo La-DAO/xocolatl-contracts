@@ -196,9 +196,8 @@ contract HouseOfReserve is
     }
 
     /**
-     * @dev Call latest price according to activeOracle
+     * @dev Call latest price according to priceBulletin
      * @dev See _getLatestPrice() in {OracleHouse}.
-     * @dev override _getLatestPrice() as required.
      */
     function getLatestPrice() public view returns (uint256 price) {
         price = _getLatestPrice();
