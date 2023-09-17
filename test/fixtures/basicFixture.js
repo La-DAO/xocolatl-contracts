@@ -1,5 +1,7 @@
 const { ethers, upgrades } = require("hardhat");
 
+const WETH_MXN_PRICE = ethers.parseUnits("30000", 8);
+
 const basicFixture = async () => {
   const AssetsAccountant = await ethers.getContractFactory("AssetsAccountant");
   const HouseOfCoin = await ethers.getContractFactory("HouseOfCoin");
@@ -7,9 +9,18 @@ const basicFixture = async () => {
   const Xocolatl = await ethers.getContractFactory("Xocolatl");
   const AccountLiquidator = await ethers.getContractFactory("AccountLiquidator");
 
-  // 0.- Set-up mockweth
+  // 0.- Set-up mocks
   const MockWETH = await ethers.getContractFactory("MockWETH");
   const weth = await MockWETH.deploy();
+  const MockFeed = await ethers.getContractFactory("MockChainlinkPriceFeed");
+  const priceFeed = await MockFeed.deploy(
+    "mockFeed weth/usd",
+    8
+  );
+  await priceFeed.requestPriceFeedData();
+  await priceFeed.setPriceFeedData(
+    WETH_MXN_PRICE
+  );
 
   // 1.- Deploy all contracts
   let xoc = await upgrades.deployProxy(Xocolatl, [], {
@@ -38,8 +49,7 @@ const basicFixture = async () => {
       await weth.getAddress(),
       await xoc.getAddress(),
       await accountant.getAddress(),
-      "MXN",
-      "ETH",
+      await priceFeed.getAddress(),
       await weth.getAddress()
     ],
     {
@@ -84,10 +94,12 @@ const basicFixture = async () => {
     reservehouse,
     liquidator,
     xoc,
-    weth
+    weth,
+    priceFeed
   }
 }
 
 module.exports = {
-  basicFixture
+  basicFixture,
+  WETH_MXN_PRICE
 };
