@@ -48,7 +48,7 @@ abstract contract OracleHouse {
         if (price_ <= 0) {
             revert OracleHouse_noValue();
         }
-        return uint256(price);
+        return uint256(price_);
     }
 
     /**
