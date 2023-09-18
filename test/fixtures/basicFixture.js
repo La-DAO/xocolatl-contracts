@@ -83,6 +83,7 @@ const basicFixture = async () => {
   await xoc.grantRole(burner, await coinhouse.getAddress());
   await xoc.grantRole(burner, await liquidator.getAddress());
   await accountant.grantRole(liquidatorRole, await liquidator.getAddress());
+  await accountant.grantRole(burner, await liquidator.getAddress());
 
   // 4.- Assign deposit limit
   const depositLimitAmount = ethers.parseEther("100");
