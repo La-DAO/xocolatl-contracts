@@ -6,20 +6,20 @@ pragma solidity 0.8.17;
  */
 
 contract MockWETH {
-    string public name = "Wrapped Ether";
-    string public symbol = "WETH";
-    uint8 public decimals = 18;
-
-    uint256 private constant MAX_UINT =
-        115792089237316195423570985008687907853269984665640564039457584007913129639935;
-
     event Approval(address indexed src, address indexed guy, uint wad);
     event Transfer(address indexed src, address indexed dst, uint wad);
     event Deposit(address indexed dst, uint wad);
     event Withdrawal(address indexed src, uint wad);
 
+    string public name = "Wrapped Ether";
+    string public symbol = "WETH";
+    uint8 public decimals = 18;
+
     mapping(address => uint) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
+
+    uint256 private constant MAX_UINT =
+        115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
     receive() external payable {
         deposit();
@@ -71,7 +71,11 @@ contract MockWETH {
         return true;
     }
 
-    function getFromFaucet() public {
-        balanceOf[msg.sender] += 250000000000000000;
+    function mintFaucet(uint256 amount) public {
+        balanceOf[msg.sender] += amount;
+    }
+
+    function burnFaucet(uint256 amount) public {
+        balanceOf[msg.sender] -= amount;
     }
 }
