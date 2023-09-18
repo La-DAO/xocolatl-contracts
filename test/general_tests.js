@@ -7,7 +7,6 @@ const {
   basicFixture,
   WETH_MXN_PRICE
  } = require("./fixtures/basicFixture");
-const { provider } = ethers;
 
 const {
   evmSnapshot,
