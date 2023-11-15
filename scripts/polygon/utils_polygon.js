@@ -5,19 +5,19 @@ const VERSION = "1.0.0";
 
 const RESERVE_CAPS = {
   weth: {
-    defaultInitialLimit: ethers.utils.parseUnits("50", 18)
+    defaultInitialLimit: ethers.parseUnits("50", 18)
   },
   wbtc: {
-    defaultInitialLimit: ethers.utils.parseUnits("10", 8)
+    defaultInitialLimit: ethers.parseUnits("10", 8)
   },
   wmatic: {
-    defaultInitialLimit: ethers.utils.parseUnits("50000", 18)
+    defaultInitialLimit: ethers.parseUnits("50000", 18)
   },
   maticx: {
-    defaultInitialLimit: ethers.utils.parseUnits("50000", 18)
+    defaultInitialLimit: ethers.parseUnits("50000", 18)
   },
   wsteth: {
-    defaultInitialLimit: ethers.utils.parseUnits("1000", 18)
+    defaultInitialLimit: ethers.parseUnits("1000", 18)
   }
 }
 

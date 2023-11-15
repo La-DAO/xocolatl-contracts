@@ -8,23 +8,23 @@ const { ethers, upgrades } = hre;
 const upgradeHouseOfCoin = async () => {
   const contractName = "HouseOfCoin";
   const coinhouse = await getContract(contractName, contractName);
-  console.log(contractName, coinhouse.address);
+  console.log(contractName, (await coinhouse.getAddress()));
   const contractArtifact = await ethers.getContractFactory(contractName);
   const proxyOpts = {
     timeout: 600000,
     kind: 'uups'
   };
   await upgrades.validateUpgrade(
-    coinhouse.address,
+    (await coinhouse.getAddress()),
     contractArtifact,
     proxyOpts
   );
   const implementation = await upgrades.prepareUpgrade(
-    coinhouse.address,
+    (await coinhouse.getAddress()),
     contractArtifact,
     proxyOpts,
   );
-  await updateDeployments(contractName, contractName, coinhouse.address);
+  await updateDeployments(contractName, contractName, (await coinhouse.getAddress()));
   return implementation;
 };
 

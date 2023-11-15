@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require('@openzeppelin/hardhat-upgrades');
 require('hardhat-contract-sizer');
+require('dotenv').config()
 const fs = require("fs");
 
 const DEBUG = false;
@@ -47,11 +48,11 @@ module.exports = {
   solidity: "0.8.17",
   networks: {
     localhost: {
-      url: "http://localhost:8545/",
+      url: "http://127.0.0.1:8545/",
       timeout: 2000000,
     },
     localhostWithPKey: {
-      url: "http://localhost:8545/",
+      url: "http://127.0.0.1:8545/",
       timeout: 2000000,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
