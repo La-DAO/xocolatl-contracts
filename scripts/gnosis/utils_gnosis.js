@@ -5,7 +5,7 @@ const VERSION = "1.0.0";
 
 const RESERVE_CAPS = {
   weth: {
-    defaultInitialLimit: ethers.utils.parseUnits("5", 18)
+    defaultInitialLimit: ethers.parseUnits("5", 18)
   },
 }
 

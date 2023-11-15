@@ -6,6 +6,8 @@ const fs = require("fs");
 const { getDeployedContracts } = require("./utils.js");
 const { removeDuplicates } = require("./helpers.js");
 
+//TODO this entire script need to be re-done. Redstone-evm-connector not used anymore.
+
 /**
  * @note Returns an array of addresses that have minted coin in a specific 'HouseOfCoin' deployed contract.
  * @param coinhouse etherjs contract object representing 'HouseOfCoin' deployed contract.
@@ -173,11 +175,11 @@ async function main() {
 
   if (liquidatableUsers.length > 0) {
     const cost = await computeLiquidationCost(validminters, coinhouse, liquidator, weth);
-    const liquidatorBal = await xoc.balanceOf(liquidator.address);
+    const liquidatorBal = await xoc.balanceOf((await liquidator.getAddress()));
     if (liquidatorBal.gte(cost)) {
       try {
         console.log("...approving funds for liquidation");
-        const txApproval = await xoc.connect(liquidator).approve(coinhouse.address, cost);
+        const txApproval = await xoc.connect(liquidator).approve((await coinhouse.getAddress()), cost);
         await txApproval.wait();
         await liquidateUsers(liquidatableUsers, coinhouse, liquidator, weth);
       } catch (error) {

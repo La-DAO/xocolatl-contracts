@@ -1,17 +1,10 @@
-require("dotenv").config();
-
-require("@nomiclabs/hardhat-etherscan");
-require("@nomiclabs/hardhat-waffle");
-require("hardhat-gas-reporter");
-require("solidity-coverage");
-require('hardhat-contract-sizer');
+require("@nomicfoundation/hardhat-toolbox");
 require('@openzeppelin/hardhat-upgrades');
-
+require('hardhat-contract-sizer');
+require('dotenv').config()
 const fs = require("fs");
 
 const DEBUG = false;
-
-/// Tasks
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -33,23 +26,7 @@ task("generate", "Create a wallet for builder deploys", async (_, { ethers }) =>
   fs.writeFileSync("./mnemonic.txt", mnemonic.toString());
 });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-/// Configuration
-
-// Identify RPC type in .env file
-if (!process.env.INFURA_ID || !process.env.ALCHEMY_ID) {
-  throw "Please set INFURA_ID and ALCHEMY_ID in .env";
-}
-const mainnetUrl = `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`;
-
-//
-// Identify in .env the netowrk to interact for deployments or scripts:
-//
-
-const dnetwork = !process.env.DEFAULT_NETWORK ? "localhost" : process.env.DEFAULT_NETWORK;
-
+// Function to read mnemonic from file
 function mnemonic() {
   try {
     return fs.readFileSync("./mnemonic.txt").toString().trim();
@@ -63,19 +40,19 @@ function mnemonic() {
   return "";
 }
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
+const dnetwork = !process.env.DEFAULT_NETWORK ? "localhost" : process.env.DEFAULT_NETWORK;
+
+/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   defaultNetwork: dnetwork,
   solidity: "0.8.17",
   networks: {
     localhost: {
-      url: "http://localhost:8545/",
+      url: "http://127.0.0.1:8545/",
       timeout: 2000000,
     },
     localhostWithPKey: {
-      url: "http://localhost:8545/",
+      url: "http://127.0.0.1:8545/",
       timeout: 2000000,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
@@ -86,7 +63,7 @@ module.exports = {
       */
     },
     mainnet: {
-      url: mainnetUrl,
+      url: `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: process.env.PRIVATE_KEY ?
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
@@ -157,38 +134,5 @@ module.exports = {
         [process.env.PRIVATE_KEY] :
         { mnemonic: mnemonic() },
     },
-  },
-  gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
-    currency: "USD",
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-    customChains: [
-      {
-        network: "polygonzkevm",
-        chainId: 1101,
-        urls: {
-          apiURL: "https://api-zkevm.polygonscan.com/api",
-          browserURL: "https://zkevm.polygonscan.com/"
-        }
-      },
-      {
-        network: "linea",
-        chainId: 59144,
-        urls: {
-          apiURL: "https://api.lineascan.build/api",
-          browserURL: "https://lineascan.build/"
-        }
-      },
-      {
-        network: "base",
-        chainId: 8453,
-        urls: {
-          apiURL: "https://api.basescan.org/api",
-          browserURL: "https://basescan.org/"
-        }
-      }
-    ]
   },
 };

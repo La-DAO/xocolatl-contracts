@@ -19,15 +19,15 @@ const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
   const xoc = await getContract("Xocolatl", "Xocolatl");
-  console.log("xoc", xoc.address);
+  console.log("xoc", (await xoc.getAddress()));
   const accountant = await getContract("AssetsAccountant", "AssetsAccountant");
-  console.log("accountant", accountant.address);
+  console.log("accountant", (await accountant.getAddress()));
 
   const reservehouse = await deployHouseOfReserve(
     "HouseOfReserveWBTC",
     ASSETS.goerli.wbtc.address,
-    xoc.address,
-    accountant.address,
+    (await xoc.getAddress()),
+    (await accountant.getAddress()),
     "MXN",
     "WBTC",
     WNATIVE
@@ -40,12 +40,12 @@ const deploySystemContracts = async () => {
 
   await setUpOraclesHouseOfReserve(
     reservehouse,
-    ethers.constants.AddressZero,
+    ethers.ZeroAddress,
     CHAINLINK_CONTRACTS.goerli.btcusd
   );
 
   const stx2 = await accountant.registerHouse(
-    reservehouse.address
+    (await reservehouse.getAddress())
   );
   await stx2.wait();
   console.log("...House of Reserve registered in AssetsAccountant");
