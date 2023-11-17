@@ -12,7 +12,7 @@ const RESERVE_CAPS = {
   },
 }
 
-const WNATIVE = ASSETS.sepolia.await weth.getAddress();
+const WNATIVE = ASSETS.sepolia.weth.address;
 
 module.exports = {
   VERSION,

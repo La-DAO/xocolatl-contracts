@@ -9,7 +9,7 @@ const RESERVE_CAPS = {
   },
 }
 
-const WNATIVE = ASSETS.arbitrum.await weth.getAddress();
+const WNATIVE = ASSETS.arbitrum.weth.address;
 
 module.exports = {
   VERSION,

@@ -10,23 +10,23 @@ const upgradeHouseOfReserve = async (
 ) => {
   const contractName = "HouseOfReserve";
   const reservehouse = await getContract(detailName, contractName);
-  console.log(detailName, await reservehouse.getAddress());
+  console.log(detailName, (await reservehouse.getAddress()));
   const contractArtifact = await ethers.getContractFactory(contractName);
   const proxyOpts = {
     timeout: 600000,
     kind: 'uups'
   };
   await upgrades.validateUpgrade(
-    await reservehouse.getAddress(),
+    (await reservehouse.getAddress()),
     contractArtifact,
     proxyOpts
   );
   const implementation = await upgrades.prepareUpgrade(
-    await reservehouse.getAddress(),
+    (await reservehouse.getAddress()),
     contractArtifact,
     proxyOpts,
   );
-  await updateDeployments(detailName, contractName, await reservehouse.getAddress());
+  await updateDeployments(detailName, contractName, (await reservehouse.getAddress()));
   return implementation;
 };
 

@@ -12,7 +12,7 @@ const RESERVE_CAPS = {
   },
 }
 
-const WNATIVE = ASSETS.goerli.await weth.getAddress();
+const WNATIVE = ASSETS.goerli.weth.address;
 
 module.exports = {
   VERSION,

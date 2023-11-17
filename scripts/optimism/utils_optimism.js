@@ -9,7 +9,7 @@ const RESERVE_CAPS = {
   },
 }
 
-const WNATIVE = ASSETS.optimism.await weth.getAddress();
+const WNATIVE = ASSETS.optimism.weth.address;
 
 module.exports = {
   VERSION,
