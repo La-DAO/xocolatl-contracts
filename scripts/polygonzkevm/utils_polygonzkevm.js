@@ -9,7 +9,7 @@ const RESERVE_CAPS = {
   },
 }
 
-const WNATIVE = ASSETS.polygonzkevm.await weth.getAddress();
+const WNATIVE = ASSETS.polygonzkevm.weth.address;
 
 module.exports = {
   VERSION,

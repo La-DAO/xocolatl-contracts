@@ -16,9 +16,7 @@ const { deployAccountLiquidator } = require("../tasks/deployAccountLiquidator");
 
 const { systemPermissionGranting } = require("../tasks/setUpXocolatl");
 const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
-const { setUpHouseOfCoin } = require("../tasks/setUpHouseOfCoin");
 const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
-const { setUpAccountLiquidator } = require("../tasks/setUpAccountLiquidator");
 
 const {
   rolesHandOverAssetsAccountant,
@@ -29,37 +27,33 @@ const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
   const xoc = await getContract("Xocolatl", "Xocolatl");
-  console.log("xoc", await xoc.getAddress());
+  console.log("xoc", (await xoc.getAddress()));
   const accountant = await deployAssetsAccountant();
   const coinhouse = await deployHouseOfCoin(
-    await xoc.getAddress(),
-    await accountant.getAddress()
+    (await xoc.getAddress()),
+    (await accountant.getAddress())
   );
 
   const reservehouseWeth = await deployHouseOfReserve(
     "HouseOfReserveBinanceWETH",
-    ASSETS.binance.await weth.getAddress(),
-    await xoc.getAddress(),
-    await accountant.getAddress(),
+    ASSETS.binance.weth.address,
+    (await xoc.getAddress()),
+    (await accountant.getAddress()),
     "MXN",
     "ETH",
     WNATIVE
   );
 
   const liquidator = await deployAccountLiquidator(
-    await coinhouse.getAddress(),
-    await accountant.getAddress()
-  );
-
-  await setUpHouseOfCoin(
-    coinhouse
+    (await coinhouse.getAddress()),
+    (await accountant.getAddress())
   );
 
   const reservehouseWBNB = await deployHouseOfReserve(
     "HouseOfReserveWBNB",
     ASSETS.binance.wbnb.address,
-    await xoc.getAddress(),
-    await accountant.getAddress(),
+    (await xoc.getAddress()),
+    (await accountant.getAddress()),
     "MXN",
     "BNB",
     WNATIVE
@@ -77,21 +71,21 @@ const deploySystemContracts = async () => {
 
   await setUpOraclesHouseOfReserve(
     reservehouseWeth,
-    ethers.constants.AddressZero,
+    ethers.ZeroAddress,
     CHAINLINK_CONTRACTS.binance.ethusd
   );
 
   await setUpOraclesHouseOfReserve(
     reservehouseWBNB,
-    ethers.constants.AddressZero,
+    ethers.ZeroAddress,
     CHAINLINK_CONTRACTS.binance.bnbusd
   );
 
   await setUpAssetsAccountant(
     accountant,
-    await coinhouse.getAddress(),
-    reservehouseawait weth.getAddress(),
-    await liquidator.getAddress()  
+    (await coinhouse.getAddress()),
+    reservehouseWeth.address,
+    (await liquidator.getAddress())  
   );
 
   const stx1 = await accountant.registerHouse(
@@ -100,12 +94,10 @@ const deploySystemContracts = async () => {
   await stx1.wait();
   console.log("...House of Reserve registered in AssetsAccountant");
 
-  await setUpAccountLiquidator(liquidator);
-
   // await systemPermissionGranting(
   //   xoc,
-  //   await coinhouse.getAddress(),
-  //   await liquidator.getAddress()
+  //   (await coinhouse.getAddress()),
+  //   (await liquidator.getAddress())
   // );
 
   // await rolesHandOverAssetsAccountant(accountant);

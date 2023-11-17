@@ -9,7 +9,7 @@ const upgradeXocolatl = async () => {
   const detailName = "Xocolatl";
   const contractName = "Xocolatl";
   const xoc = await getContract(detailName, contractName);
-  console.log("xoc", await xoc.getAddress());
+  console.log("xoc", (await xoc.getAddress()));
   const contractArtifact = await ethers.getContractFactory(contractName);
   const proxyOpts = {
     timeout: 600000,
@@ -17,16 +17,16 @@ const upgradeXocolatl = async () => {
     kind: 'uups'
   };
   await upgrades.validateUpgrade(
-    await xoc.getAddress(),
+    (await xoc.getAddress()),
     contractArtifact,
     proxyOpts
   );
   const implementation = await upgrades.prepareUpgrade(
-    await xoc.getAddress(),
+    (await xoc.getAddress()),
     contractArtifact,
     proxyOpts,
   );
-  await updateDeployments(detailName, contractName, await xoc.getAddress());
+  await updateDeployments(detailName, contractName, (await xoc.getAddress()));
   return implementation;
 };
 

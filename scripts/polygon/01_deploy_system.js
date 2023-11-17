@@ -17,9 +17,7 @@ const { deployUMAOracleHelper } = require("../tasks/deployUMAOracleHelper");
 
 // const { systemPermissionGranting } = require("../tasks/setUpXocolatl");
 const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
-const { setUpHouseOfCoin } = require("../tasks/setUpHouseOfCoin");
 const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
-const { setUpAccountLiquidator } = require("../tasks/setUpAccountLiquidator");
 
 const {
   rolesHandOverAssetsAccountant,
@@ -30,35 +28,31 @@ const deploySystemContracts = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
   const xoc = await getContract("Xocolatl", "Xocolatl");
-  console.log("xoc", await xoc.getAddress());
+  console.log("xoc", (await xoc.getAddress()));
   const accountant = await deployAssetsAccountant();
   const coinhouse = await deployHouseOfCoin(
-    await xoc.getAddress(),
-    await accountant.getAddress()
+    (await xoc.getAddress()),
+    (await accountant.getAddress())
   );
   const reservehouse = await deployHouseOfReserve(
     "HouseOfReserveWETH",
-    ASSETS.polygon.await weth.getAddress(),
-    await xoc.getAddress(),
-    await accountant.getAddress(),
+    ASSETS.polygon.weth.address,
+    (await xoc.getAddress()),
+    (await accountant.getAddress()),
     "MXN",
     "ETH",
     WNATIVE
   );
   const liquidator = await deployAccountLiquidator(
-    await coinhouse.getAddress(),
-    await accountant.getAddress()
+    (await coinhouse.getAddress()),
+    (await accountant.getAddress())
   );
   const sixhours = 6 * 60 * 60;
   const umahelper = await deployUMAOracleHelper(
-    ASSETS.polygon.await weth.getAddress(),
+    ASSETS.polygon.weth.address,
     UMA_CONTRACTS.polygon.finder.address,
     UMA_CONTRACTS.priceIdentifiers.mxnusd,
     sixhours
-  );
-
-  await setUpHouseOfCoin(
-    coinhouse
   );
 
   await setUpHouseOfReserve(
@@ -68,24 +62,22 @@ const deploySystemContracts = async () => {
 
   await setUpOraclesHouseOfReserve(
     reservehouse,
-    umahelper.address,
+    (await umahelper.getAddress()),
     CHAINLINK_CONTRACTS.polygon.ethusd
   );
 
   await setUpAssetsAccountant(
     accountant,
-    await coinhouse.getAddress(),
-    await reservehouse.getAddress(),
-    await liquidator.getAddress()  
+    (await coinhouse.getAddress()),
+    (await reservehouse.getAddress()),
+    (await liquidator.getAddress())  
   );
-
-  await setUpAccountLiquidator(liquidator);
 
   // This permissions are granted via de multisig.
   // await systemPermissionGranting(
   //   xoc,
-  //   await coinhouse.getAddress(),
-  //   await liquidator.getAddress()
+  //   (await coinhouse.getAddress()),
+  //   (await liquidator.getAddress())
   // );
 
   await rolesHandOverAssetsAccountant(accountant);
