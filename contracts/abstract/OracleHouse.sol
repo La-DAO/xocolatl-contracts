@@ -40,8 +40,9 @@ abstract contract OracleHouse {
         _setComputedPriceFeedAddr(computedPriceFeedAddr_);
     }
 
-    /** @dev Returns price in 8 decimals from `_computedPriceFeedAddr`
-     * Override for House of Coin with called inputs from House Of Reserve. */
+    /**
+     *  @dev Returns price in 8 decimals from `_computedPriceFeedAddr`
+     */
     function _getLatestPrice() internal view virtual returns (uint256 price) {
         // NOTE: All other oracle checks are done at {ComputedPriceFeedAddr.sol}
         (, int256 price_, , , ) = _computedPriceFeedAddr.latestRoundData();
@@ -52,7 +53,7 @@ abstract contract OracleHouse {
     }
 
     /**
-     * @notice Returns the state data of Chainlink oracle.
+     * @notice Returns the address of the computed price feed oracle.
      */
     function getComputedPriceFeedAddr() public view virtual returns (address) {
         return address(_computedPriceFeedAddr);
