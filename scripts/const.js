@@ -197,10 +197,29 @@ const CHAINLINK_CONTRACTS = {
   }
 }
 
+const TLATLALIANI_CONTRACTS = {
+  polygon: {
+    mxnusd: "0x996d7b03d1537524bb20273713385c23944ff2ec",
+  },
+  gnosis: {
+    mxnusd: "0xada8c0eaba7ad722f4b5555b216f8f11a81593d8",
+  },
+  binance: {
+    mxnusd: "0xada8c0eaba7ad722f4b5555b216f8f11a81593d8",
+  },
+  goerli: {
+    mxnusd: "0xada8c0eaba7ad722f4b5555b216f8f11a81593d8",
+  },
+  sepolia: {
+    mxnusd: "0xada8c0eaba7ad722f4b5555b216f8f11a81593d8",
+  }
+}
+
 module.exports = {
   LADAO_MULTISIGS,
   ASSETS,
   UMA_CONTRACTS,
   CHAINLINK_CONTRACTS,
-  CONTRACT_DEPLOYER_FACTORY
+  CONTRACT_DEPLOYER_FACTORY,
+  TLATLALIANI_CONTRACTS
 }

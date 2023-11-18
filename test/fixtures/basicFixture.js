@@ -74,14 +74,20 @@ const basicFixture = async () => {
   await accountant.registerHouse(
     await reservehouse.getAddress()
   );
+  await accountant.allowLiquidator(
+    await liquidator.getAddress(), 
+    true
+  );
 
-  // 3.- Assign proper roles to coinhouse in fiat ERC20
+  // 3.- Assign proper roles
   const minter = await xoc.MINTER_ROLE();
   const burner = await xoc.BURNER_ROLE();
   const liquidatorRole = await accountant.LIQUIDATOR_ROLE();
+
   await xoc.grantRole(minter, await coinhouse.getAddress());
   await xoc.grantRole(burner, await coinhouse.getAddress());
   await xoc.grantRole(burner, await liquidator.getAddress());
+  
   await accountant.grantRole(liquidatorRole, await liquidator.getAddress());
   await accountant.grantRole(burner, await liquidator.getAddress());
 

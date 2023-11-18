@@ -16,7 +16,7 @@ const timeTravel = async (seconds) => {
 };
 
 const toBytes32 = (bn) => {
-  return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
+  return ethers.hexlify(ethers.zeroPadValue(('0x').concat(bn.toString(16)), 32));
 };
 
 const setStorageAt = async (address, index, value) => {
@@ -44,7 +44,7 @@ const getStorageSlot = (address, chain, method) => {
 const setERC20UserBalance = async (userAddr, erc20address, chain, BNbalance) => {
   // Get storage slot index
   const slot = getStorageSlot(erc20address, chain, "balanceOf");
-  const solidityIndex = ethers.utils.solidityKeccak256(
+  const solidityIndex = ethers.solidityPackedKeccak256(
     ["uint256", "uint256"],
     [userAddr, slot] // key, slot
   );
