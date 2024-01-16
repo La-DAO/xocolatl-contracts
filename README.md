@@ -17,7 +17,7 @@ Read more in the white paper [here](https://github.com/La-DAO/xocolatl-contracts
 
 In a directory, clone the repository locally:
 
-> git clone https://github.com/PipilaDAO/xocolatl  
+> git clone https://github.com/La-DAO/xocolatl-contracts/
 
 Install all dependencies:  
 
