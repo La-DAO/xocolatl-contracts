@@ -33,27 +33,15 @@ contract MockChainlinkPriceFeed is IPriceBulletin, Ownable {
     }
 
     function setPriceFeedData(int256 newPrice_) external onlyOwner {
-        Round memory recordRound = Round(
-            _latestRequest.roundId,
-            newPrice_,
-            _latestRequest.startedAt,
-            block.timestamp,
-            _latestRequest.roundId
-        );
+        Round memory recordRound =
+            Round(_latestRequest.roundId, newPrice_, _latestRequest.startedAt, block.timestamp, _latestRequest.roundId);
         _latestAnswerRound = recordRound;
 
-        emit RoundAnswered(
-            recordRound.roundId,
-            recordRound.answer,
-            recordRound.updatedAt
-        );
+        emit RoundAnswered(recordRound.roundId, recordRound.answer, recordRound.updatedAt);
     }
 
     function requestPriceFeedData() external {
-        Request memory recordRequest = Request(
-            _latestAnswerRound.roundId + 1,
-            block.timestamp
-        );
+        Request memory recordRequest = Request(_latestAnswerRound.roundId + 1, block.timestamp);
 
         _latestRequest = recordRequest;
 
@@ -84,13 +72,7 @@ contract MockChainlinkPriceFeed is IPriceBulletin, Ownable {
         external
         view
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         roundId = _latestAnswerRound.roundId;
         answer = _latestAnswerRound.answer;
