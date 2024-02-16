@@ -1,0 +1,75 @@
+* {
+  font-family: "Computer Modern", "Latin Modern", sans-serif;
+  color: black;
+  font-size: 16pt;
+}
+
+h1 {
+  font-size: 32pt;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 20px;
+}
+
+h2 {
+  font-size: 24pt;
+  font-weight: bold;
+  text-align: left;
+}
+
+h3 {
+  font-size: 20pt;
+  font-weight: bold;
+  text-align: left;
+  text-indent: 80px;
+}
+
+h4 {
+  font-size: 20pt;
+  font-weight: bold;
+  text-align: left;
+  text-indent: 160px;
+}
+
+p {
+  line-height: 1.5;
+  text-align: justify;
+  padding-top: 5 px;
+  padding-bottom: 5 px;
+}
+
+.p-h3 {
+  line-height: 1.5;
+  text-align: justify;
+  padding-top: 5 px;
+  padding-bottom: 5 px;
+  padding-left: 80px;
+}
+
+table {
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table,
+th,
+td {
+  border: 1px solid black;
+  text-align: center;
+  vertical-align: middle;
+}
+
+th {
+  font-weight: bold;
+  padding: 12px;
+}
+
+td {
+  font-size: 12pt;
+  padding: 8px;
+}
+
+td a {
+  font-size: 12pt;
+}
