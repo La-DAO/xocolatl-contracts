@@ -5,7 +5,7 @@ import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20
 import {IAccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/IAccessControlUpgradeable.sol";
 
 interface IERC20Extension is IERC20Upgradeable, IAccessControlUpgradeable {
-    function decimals() external view returns (uint);
+    function decimals() external view returns (uint256);
 
     function mint(address to, uint256 amount) external;
 

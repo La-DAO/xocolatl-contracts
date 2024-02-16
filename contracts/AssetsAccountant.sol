@@ -9,7 +9,6 @@ pragma solidity 0.8.17;
  * @dev At time of deployment, deployer is DEFAULT_ADMIN, however, this role should be transferred to a governance system.
  * @dev Users do not interact directly with this contract.
  */
-
 import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
@@ -19,7 +18,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 
 contract AssetsAccountantState {
     // reserveTokenID => houseOfReserve
-    mapping(uint => address) public houseOfReserves;
+    mapping(uint256 => address) public houseOfReserves;
 
     // reserveAsset => backAsset => array of reserveTokenID
     mapping(address => mapping(address => uint256[])) internal _reservesIds;
@@ -54,11 +53,7 @@ contract AssetsAccountant is
      * @param typeOfHouse Either HouseOfReserve or HouseOfCoin.
      * @param asset ERC20 address of either reserve asset or backed asset.
      */
-    event HouseRegistered(
-        address house,
-        bytes32 indexed typeOfHouse,
-        address indexed asset
-    );
+    event HouseRegistered(address house, bytes32 indexed typeOfHouse, address indexed asset);
     /**
      * @dev Emit when a Liquidator contract is `allow` or not as a liquidator.
      * @param liquidator Address of house registered.
@@ -96,10 +91,7 @@ contract AssetsAccountant is
      * @dev Requires caller to have DEFAULT_ADMIN_ROLE.
      * @param houseAddress Address of house registered.
      */
-    function registerHouse(address houseAddress)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function registerHouse(address houseAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         // Check if `houseAddress` has been previously registered.
         if (isARegisteredHouse[houseAddress]) {
             revert AssetsAccountant_houseAddressAlreadyRegistered();
@@ -107,12 +99,9 @@ contract AssetsAccountant is
 
         // Check type of House being registered and proceed accordingly
 
-        if (
-            IHouseOfReserve(houseAddress).HOUSE_TYPE() ==
-            keccak256("RESERVE_HOUSE")
-        ) {
+        if (IHouseOfReserve(houseAddress).HOUSE_TYPE() == keccak256("RESERVE_HOUSE")) {
             IHouseOfReserve hOfReserve = IHouseOfReserve(houseAddress);
-            uint reserveTokenID = hOfReserve.reserveTokenID();
+            uint256 reserveTokenID = hOfReserve.reserveTokenID();
             address bAsset = hOfReserve.backedAsset();
             address rAsset = hOfReserve.reserveAsset();
 
@@ -131,9 +120,7 @@ contract AssetsAccountant is
             _grantRole(BURNER_ROLE, houseAddress);
 
             emit HouseRegistered(houseAddress, hOfReserve.HOUSE_TYPE(), rAsset);
-        } else if (
-            IHouseOfCoin(houseAddress).HOUSE_TYPE() == keccak256("COIN_HOUSE")
-        ) {
+        } else if (IHouseOfCoin(houseAddress).HOUSE_TYPE() == keccak256("COIN_HOUSE")) {
             IHouseOfCoin hOfCoin = IHouseOfCoin(houseAddress);
             address bAsset = hOfCoin.backedAsset();
 
@@ -156,10 +143,7 @@ contract AssetsAccountant is
         }
     }
 
-    function allowLiquidator(address liquidator, bool allow)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function allowLiquidator(address liquidator, bool allow) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (liquidator == address(0)) {
             revert AssetsAccountant_zeroAddress();
         }
@@ -176,11 +160,7 @@ contract AssetsAccountant is
         emit LiquidatorAllow(liquidator, allow);
     }
 
-    function getReserveIds(address reserveAsset, address backedAsset)
-        public
-        view
-        returns (uint256[] memory)
-    {
+    function getReserveIds(address reserveAsset, address backedAsset) public view returns (uint256[] memory) {
         return _reservesIds[reserveAsset][backedAsset];
     }
 
@@ -209,12 +189,7 @@ contract AssetsAccountant is
      * @param amount to mint
      * @param data Not use in this implementation, pass empty string "".
      */
-    function mint(
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) external onlyRole(MINTER_ROLE) {
+    function mint(address account, uint256 id, uint256 amount, bytes memory data) external onlyRole(MINTER_ROLE) {
         _mint(account, id, amount, data);
     }
 
@@ -237,11 +212,7 @@ contract AssetsAccountant is
      * @param id Token Id
      * @param amount to burn
      */
-    function burn(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) public onlyRole(BURNER_ROLE) {
+    function burn(address account, uint256 id, uint256 amount) public onlyRole(BURNER_ROLE) {
         _burn(account, id, amount);
     }
 
@@ -249,26 +220,22 @@ contract AssetsAccountant is
      * @dev Function override added to restrict transferability of tokens in this contract.
      * @dev Accounting assets are not meant to be transferable.
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public override onlyRole(LIQUIDATOR_ROLE) {
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
+        public
+        override
+        onlyRole(LIQUIDATOR_ROLE)
+    {
         _safeTransferFrom(from, to, id, amount, data);
     }
 
     /**
      * @dev See {safeTransferFrom}.
      */
-    function safeBatchTransferFrom(
-        address,
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) public pure override {
+    function safeBatchTransferFrom(address, address, uint256[] memory, uint256[] memory, bytes memory)
+        public
+        pure
+        override
+    {
         revert AssetsAccountant_NonTransferable();
     }
 
@@ -284,9 +251,5 @@ contract AssetsAccountant is
         return super.supportsInterface(interfaceId);
     }
 
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        override
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }

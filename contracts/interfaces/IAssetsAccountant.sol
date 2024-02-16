@@ -7,10 +7,7 @@ interface IAssetsAccountant is IERC1155Upgradeable {
     /**
      * @dev Returns the address of the HouseOfReserve corresponding to reserveAsset.
      */
-    function houseOfReserves(uint reserveAssetTokenID)
-        external
-        view
-        returns (address);
+    function houseOfReserves(uint256 reserveAssetTokenID) external view returns (address);
 
     /**
      * @dev Returns the address of the HouseOfCoin corresponding to backedAsset.
@@ -25,10 +22,7 @@ interface IAssetsAccountant is IERC1155Upgradeable {
     /**
      * @dev Returns the reserve Token Ids that correspond to reserveAsset and backedAsset
      */
-    function getReserveIds(address reserveAsset, address backedAsset)
-        external
-        view
-        returns (uint[] memory);
+    function getReserveIds(address reserveAsset, address backedAsset) external view returns (uint256[] memory);
 
     /**
      * @dev Registers a HouseOfReserve or HouseOfCoinMinting contract address in AssetsAccountant.
@@ -44,12 +38,7 @@ interface IAssetsAccountant is IERC1155Upgradeable {
      * Requirements:
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) external;
+    function mint(address account, uint256 id, uint256 amount, bytes memory data) external;
 
     /**
      * @dev Burns `amount` of tokens from `to`, of token type `id`.
@@ -57,9 +46,5 @@ interface IAssetsAccountant is IERC1155Upgradeable {
      * Requirements:
      * - the caller must have the `BURNER_ROLE`.
      */
-    function burn(
-        address account,
-        uint256 id,
-        uint256 value
-    ) external;
+    function burn(address account, uint256 id, uint256 value) external;
 }

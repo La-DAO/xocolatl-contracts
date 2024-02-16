@@ -15,12 +15,12 @@ interface IHouseOfReserve {
     /**
      * @dev Returns the reserveTokenID (used in {AssetsAccountant}) for this HouseOfReserve.
      */
-    function reserveTokenID() external view returns (uint);
+    function reserveTokenID() external view returns (uint256);
 
     /**
      * @dev Returns the backedTokenID (used in {AssetsAccountant}) for this HouseOfReserve.
      */
-    function backedTokenID() external view returns (uint);
+    function backedTokenID() external view returns (uint256);
 
     /**
      * @dev Returns the type of House Contract.

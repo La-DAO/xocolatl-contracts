@@ -7,15 +7,22 @@ abstract contract OracleHouse {
     /**
      * @dev emitted after `ComputedPriceFeed` addresses change.
      * @param _newComputedPriceFeedAddrChange from Tlatlalia-ni
-     **/
+     *
+     */
     event ComputedPriceFeedAddrChange(address _newComputedPriceFeedAddrChange);
 
     /// Custom errors
-    /** Wrong or invalid input*/
+    /**
+     * Wrong or invalid input
+     */
     error OracleHouse_invalidInput();
-    /** Not initialized*/
+    /**
+     * Not initialized
+     */
     error OracleHouse_notInitialized();
-    /** No valid value returned*/
+    /**
+     * No valid value returned
+     */
     error OracleHouse_noValue();
 
     /// @dev Unused state variable; previously as `_activeOracle`.
@@ -45,7 +52,7 @@ abstract contract OracleHouse {
      */
     function _getLatestPrice() internal view virtual returns (uint256 price) {
         // NOTE: All other oracle checks are done at {ComputedPriceFeedAddr.sol}
-        (, int256 price_, , , ) = _computedPriceFeedAddr.latestRoundData();
+        (, int256 price_,,,) = _computedPriceFeedAddr.latestRoundData();
         if (price_ <= 0) {
             revert OracleHouse_noValue();
         }
@@ -62,18 +69,14 @@ abstract contract OracleHouse {
     /**
      * @dev Must be implemented with admin restriction and call `_setComputedPriceFeedAddr()`.
      */
-    function setComputedPriceFeedAddr(
-        address computedPriceFeedAddr_
-    ) external virtual;
+    function setComputedPriceFeedAddr(address computedPriceFeedAddr_) external virtual;
 
     /**
      * @notice  Sets the `ComputedPriceFeedAddr` required in '_getLatestPrice()'.
      * @param computedPriceFeedAddr_ deployed
      * Emits a {ComputedPriceFeedAddrChange} event.
      */
-    function _setComputedPriceFeedAddr(
-        address computedPriceFeedAddr_
-    ) internal {
+    function _setComputedPriceFeedAddr(address computedPriceFeedAddr_) internal {
         if (computedPriceFeedAddr_ == address(0)) {
             revert OracleHouse_invalidInput();
         }
