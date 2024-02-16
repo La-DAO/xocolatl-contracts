@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
-import {IAggregatorV3} from "../interfaces/chainlink/IAggregatorV3.sol";
+import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MockChainlinkPriceFeed is IAggregatorV3, Ownable {
+contract MockChainlinkPriceFeed is IPriceBulletin, Ownable {
     event RoundAnswered(uint80 roundId, int256 answer, uint256 updatedAt);
     event PriceRequest(uint80 roundId, uint256 startedAt);
 

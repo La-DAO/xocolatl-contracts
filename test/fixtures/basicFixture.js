@@ -1,58 +1,66 @@
 const { ethers, upgrades } = require("hardhat");
-const { ASSETS, UMA_CONTRACTS, CHAINLINK_CONTRACTS } = require("../../../scripts/const");
 
-const {
-  syncTime
-} = require("../../utils.js");
+const WETH_MXN_PRICE = ethers.parseUnits("30000", 8);
 
-const chainlinkFixture = async () => {
-
+const basicFixture = async () => {
   const AssetsAccountant = await ethers.getContractFactory("AssetsAccountant");
   const HouseOfCoin = await ethers.getContractFactory("HouseOfCoin");
   const HouseOfReserve = await ethers.getContractFactory("HouseOfReserve");
   const Xocolatl = await ethers.getContractFactory("Xocolatl");
   const AccountLiquidator = await ethers.getContractFactory("AccountLiquidator");
 
-  // 0.- Set-up wrapped-native
-  const wnative = await ethers.getContractAt("IERC20", ASSETS.polygon.wmatic.address);
+  // 0.- Set-up mocks
+  const MockWETH = await ethers.getContractFactory("MockWETH");
+  const weth = await MockWETH.deploy();
+  const MockFeed = await ethers.getContractFactory("MockChainlinkPriceFeed");
+  const priceFeed = await MockFeed.deploy(
+    "mockFeed weth/usd",
+    8
+  );
+  await priceFeed.requestPriceFeedData();
+  await priceFeed.setPriceFeedData(
+    WETH_MXN_PRICE
+  );
 
   // 1.- Deploy all contracts
-  const weth = await ethers.getContractAt("IERC20", ASSETS.polygon.weth.address);
   let xoc = await upgrades.deployProxy(Xocolatl, [], {
     kind: 'uups',
     unsafeAllow: [
       'delegatecall'
     ]
   });
+
   let accountant = await upgrades.deployProxy(AssetsAccountant, [], {
     kind: 'uups',
   });
+
   let coinhouse = await upgrades.deployProxy(HouseOfCoin,
     [
-      xoc.address,
-      accountant.address
+      await xoc.getAddress(),
+      await accountant.getAddress()
     ],
     {
       kind: 'uups',
     }
   );
+
   let reservehouse = await upgrades.deployProxy(HouseOfReserve,
     [
-      weth.address,
-      xoc.address,
-      accountant.address,
-      "MXN",
-      "ETH",
-      wnative.address
+      await weth.getAddress(),
+      await xoc.getAddress(),
+      await accountant.getAddress(),
+      await priceFeed.getAddress(),
+      await weth.getAddress()
     ],
     {
       kind: 'uups',
     }
   );
+
   let liquidator = await upgrades.deployProxy(AccountLiquidator,
     [
-      coinhouse.address,
-      accountant.address
+      await coinhouse.getAddress(),
+      await accountant.getAddress()
     ],
     {
       kind: 'uups',
@@ -61,38 +69,31 @@ const chainlinkFixture = async () => {
 
   // 2.- Register houses and allow liquidator
   await accountant.registerHouse(
-    coinhouse.address
+    await coinhouse.getAddress()
   );
   await accountant.registerHouse(
-    reservehouse.address
+    await reservehouse.getAddress()
   );
   await accountant.allowLiquidator(
-    liquidator.address, 
+    await liquidator.getAddress(), 
     true
   );
 
-  // 3.- Assign proper roles to coinhouse in fiat ERC20
-  const liquidatorRole = await accountant.LIQUIDATOR_ROLE();
-  await accountant.grantRole(liquidatorRole, liquidator.address);
-  // 3.1 These calls are needed from the multisig in production
+  // 3.- Assign proper roles
   const minter = await xoc.MINTER_ROLE();
   const burner = await xoc.BURNER_ROLE();
-  await xoc.grantRole(minter, coinhouse.address);
-  await xoc.grantRole(burner, coinhouse.address);
-  await xoc.grantRole(burner, liquidator.address);
+  const liquidatorRole = await accountant.LIQUIDATOR_ROLE();
+
+  await xoc.grantRole(minter, await coinhouse.getAddress());
+  await xoc.grantRole(burner, await coinhouse.getAddress());
+  await xoc.grantRole(burner, await liquidator.getAddress());
+  
+  await accountant.grantRole(liquidatorRole, await liquidator.getAddress());
+  await accountant.grantRole(burner, await liquidator.getAddress());
 
   // 4.- Assign deposit limit
-  const depositLimitAmount = ethers.utils.parseEther("100");
+  const depositLimitAmount = ethers.parseEther("100");
   await reservehouse.setDepositLimit(depositLimitAmount);
-
-  //5.- Set-up oracle data
-  await reservehouse.setActiveOracle(2);
-  await reservehouse.setChainlinkAddrs(
-    CHAINLINK_CONTRACTS.polygon.mxnusd,
-    CHAINLINK_CONTRACTS.polygon.ethusd
-  );
-
-  console.log("\tCompleted fixture routine!");
 
   return {
     accountant,
@@ -100,10 +101,12 @@ const chainlinkFixture = async () => {
     reservehouse,
     liquidator,
     xoc,
-    weth
+    weth,
+    priceFeed
   }
 }
 
 module.exports = {
-  chainlinkFixture
+  basicFixture,
+  WETH_MXN_PRICE
 };

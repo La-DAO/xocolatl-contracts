@@ -4,7 +4,7 @@ const { ASSETS } = require("../scripts/const");
 const syncTime = async function () {
   const now = Math.ceil(new Date().getTime() / 1000);
   try {
-    await ethers.provider.send('evm_setNextBlockTimestamp', [now]);
+    await ethers.provider.send("evm_setNextBlockTimestamp", [now]);
   } catch (error) {
     //Skipping time sync - block is ahead of current time
   }
@@ -16,7 +16,11 @@ const timeTravel = async (seconds) => {
 };
 
 const toBytes32 = (bn) => {
-  return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
+  // Convert bn to even length hex string
+  const hex = bn.toString(16);
+  const pad = hex.length % 2 == 0 ? "0x" : "0x0";
+  const paddedHex = pad.concat(hex);
+  return ethers.hexlify(ethers.zeroPadValue(paddedHex, 32));
 };
 
 const setStorageAt = async (address, index, value) => {
@@ -39,17 +43,26 @@ const getStorageSlot = (address, chain, method) => {
  * @param {string} userAddr
  * @param {string} erc20address
  * @param {string} chain name
- * @param {Object} BNbalance in ethers.BigNumber format
+ * @param {bigint} BNbalance
  */
-const setERC20UserBalance = async (userAddr, erc20address, chain, BNbalance) => {
+const setERC20UserBalance = async (
+  userAddr,
+  erc20address,
+  chain,
+  BNbalance
+) => {
   // Get storage slot index
   const slot = getStorageSlot(erc20address, chain, "balanceOf");
-  const solidityIndex = ethers.utils.solidityKeccak256(
+  const solidityIndex = ethers.solidityPackedKeccak256(
     ["uint256", "uint256"],
     [userAddr, slot] // key, slot
   );
   // Manipulate local balance (needs to be bytes32 string)
-  await setStorageAt(erc20address, solidityIndex.toString(), toBytes32(BNbalance).toString());
+  await setStorageAt(
+    erc20address,
+    solidityIndex.toString(),
+    toBytes32(BNbalance).toString()
+  );
 };
 
 const evmSnapshot = async () => ethers.provider.send("evm_snapshot", []);
@@ -61,5 +74,5 @@ module.exports = {
   evmRevert,
   syncTime,
   timeTravel,
-  setERC20UserBalance
+  setERC20UserBalance,
 };

@@ -12,16 +12,13 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {IERC20Extension} from "./interfaces/IERC20Extension.sol";
 import {IAssetsAccountant} from "./interfaces/IAssetsAccountant.sol";
 import {IHouseOfCoin} from "./interfaces/IHouseOfCoin.sol";
-import {IAggregatorV3} from "./interfaces/chainlink/IAggregatorV3.sol";
 import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
-import {OracleHouse} from "./abstract/OracleHouse.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract AccountLiquidator is
     Initializable,
     AccessControlUpgradeable,
-    UUPSUpgradeable,
-    OracleHouse
+    UUPSUpgradeable
 {
     /**
      * @dev Log when a user is in the danger zone of being liquidated.
@@ -77,116 +74,20 @@ contract AccountLiquidator is
 
         __AccessControl_init();
         __UUPSUpgradeable_init();
-        _oracleHouse_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    /** @dev See {OracleHouse-activeOracle}. */
-    function activeOracle() external pure override returns (uint256) {
-        revert AccountLiquidator_notApplicable();
-    }
-
-    /** @dev See {OracleHouse-setActiveOracle} */
-    function setActiveOracle(OracleIds) external pure override {
-        revert AccountLiquidator_notApplicable();
-    }
-
-    /** @dev See {OracleHouse-setTickers} */
-    function setTickers(string memory, string memory) external pure override {
-        revert AccountLiquidator_notApplicable();
-    }
-
-    /** @dev See {OracleHouse-getRedstoneData} */
-    function getRedstoneData()
-        external
-        pure
-        override
-        returns (
-            bytes32,
-            bytes32,
-            bytes32[] memory,
-            address
-        )
-    {
-        revert AccountLiquidator_notApplicable();
-    }
-
     /**
-     * @notice  See '_authorizeSigner()' in {OracleHouse}
-     * @dev  Restricted to admin only.
-     */
-    function authorizeSigner(address newtrustedSigner)
-        external
-        override
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        _authorizeSigner(newtrustedSigner);
-    }
-
-    /**
-     * @notice  See '_setUMAOracleHelper()' in {OracleHouse}
-     * @dev  Should revert.
-     */
-    function setUMAOracleHelper(address) external pure override {
-        revert AccountLiquidator_notApplicable();
-    }
-
-    /** @dev See {OracleHouse-getChainlinkData} */
-    function getChainlinkData()
-        external
-        pure
-        override
-        returns (address, address)
-    {
-        revert AccountLiquidator_notApplicable();
-    }
-
-    /** @dev See {OracleHouse-setChainlinkAddrs} */
-    function setChainlinkAddrs(address, address) external pure override {
-        revert AccountLiquidator_notApplicable();
-    }
-
-    /**
-     * @dev Call latest price according to activeOracle
-     * @param hOfReserve_ address to get data for price feed.
+     * @dev Call latest price from applicable HouseOfReserve
+     * @param hOfReserve_ address to get applicable price feed
      */
     function getLatestPrice(address hOfReserve_)
         public
         view
         returns (uint256 price)
     {
-        price = _getLatestPrice(hOfReserve_);
-    }
-
-    /** @dev  Overriden See '_getLatestPrice()' in {OracleHouse} */
-    function _getLatestPrice(address hOfReserve_)
-        internal
-        view
-        override
-        returns (uint256 price)
-    {
-        if (
-            hOfReserve_ == address(0) ||
-            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(hOfReserve_)
-        ) {
-            revert AccountLiquidator_invalidInput();
-        }
-        IHouseOfReserve hOfReserve = IHouseOfReserve(hOfReserve_);
-        uint256 activeOracle_ = hOfReserve.activeOracle();
-        if (activeOracle_ == 0) {
-            (, , bytes32[] memory tickers_, ) = hOfReserve.getRedstoneData();
-            price = _getLatestPriceRedstone(tickers_);
-        } else if (activeOracle_ == 1) {
-            price = hOfReserve.getLatestPrice();
-        } else if (activeOracle_ == 2) {
-            (address addrUsdFiat_, address addrReserveAsset_) = hOfReserve
-                .getChainlinkData();
-            price = _getLatestPriceChainlink(
-                IAggregatorV3(addrUsdFiat_),
-                IAggregatorV3(addrReserveAsset_)
-            );
-        }
+        price = IHouseOfReserve(hOfReserve_).getLatestPrice();
     }
 
     /**

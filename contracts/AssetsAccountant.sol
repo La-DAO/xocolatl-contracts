@@ -256,10 +256,6 @@ contract AssetsAccountant is
         uint256 amount,
         bytes memory data
     ) public override onlyRole(LIQUIDATOR_ROLE) {
-        // check msg.sender `isARegisteredHouse`.
-        if (!isARegisteredHouse[msg.sender]) {
-            revert AssetsAccountant_callerAddressNotRecognizedAsValidHouse();
-        }
         _safeTransferFrom(from, to, id, amount, data);
     }
 

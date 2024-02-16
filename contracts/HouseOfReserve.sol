@@ -128,16 +128,13 @@ contract HouseOfReserve is
      * @param reserveAsset_ ERC20 address of reserve asset handled in this contract.
      * @param backedAsset_ ERC20 address of the asset type of coin that can be backed with this reserves.
      * @param assetsAccountant_ Address of the {AssetsAccountant} contract.
-     * @param tickerUsdFiat_ used in Redstone oracle
-     * @param tickerReserveAsset_ used in Redstone oracle
      * @param wrappedNative address (WETH equivalent)
      */
     function initialize(
         address reserveAsset_,
         address backedAsset_,
         address assetsAccountant_,
-        string memory tickerUsdFiat_,
-        string memory tickerReserveAsset_,
+        address computedPriceFeedAddr_,
         address wrappedNative
     ) public initializer {
         if (
@@ -159,8 +156,7 @@ contract HouseOfReserve is
         liquidationFactor = 0.9e18;
         assetsAccountant = IAssetsAccountant(assetsAccountant_);
 
-        _oracleHouse_init();
-        _setTickers(tickerUsdFiat_, tickerReserveAsset_);
+        __OracleHouse_init(computedPriceFeedAddr_);
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
@@ -187,93 +183,24 @@ contract HouseOfReserve is
         emit BackedTokenIdSet(backedTokenID);
     }
 
-    /** see {OracleHouse-activeOracle}*/
-    function activeOracle() external view override returns (uint256) {
-        return _activeOracle;
-    }
-
     /**
-     * @notice Sets the `assetsAccountant` for this HouseOfReserve.
-     * @dev restricted to admin only.
-     * Emits a
-     */
-    function setAssetsAccountant(address accountant)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        if (accountant == address(0)) {
-            revert HouseOfReserve_invalidInput();
-        }
-        assetsAccountant = IAssetsAccountant(accountant);
-        emit AssetsAccountantChanged(accountant);
-    }
-
-    /**
-     * @notice  See '_setActiveOracle()' in {OracleHouse}.
-     * @dev restricted to admin only.
-     */
-    function setActiveOracle(OracleIds id_)
-        external
-        override
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        _setActiveOracle(id_);
-    }
-
-    /**
-     * @notice  See '_setTickers()' in {OracleHouse}.
-     * @dev restricted to admin only.
-     */
-    function setTickers(
-        string memory tickerUsdFiat_,
-        string memory tickerReserveAsset_
-    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        _setTickers(tickerUsdFiat_, tickerReserveAsset_);
-    }
-
-    /**
-     * @notice  See '_authorizeSigner()' in {OracleHouse}
+     * @notice  See '_setComputedPriceFeedAddr()' in {OracleHouse}
      * @dev  Restricted to admin only.
      */
-    function authorizeSigner(address newtrustedSigner)
+    function setComputedPriceFeedAddr(address computedPriceFeedAddr_)
         external
         override
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        _authorizeSigner(newtrustedSigner);
+        _setComputedPriceFeedAddr(computedPriceFeedAddr_);
     }
 
     /**
-     * @notice  See '_setUMAOracleHelper()' in {OracleHouse}
-     * @dev  Restricted to admin only.
-     */
-    function setUMAOracleHelper(address newAddress)
-        external
-        override
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        _setUMAOracleHelper(newAddress);
-    }
-
-    /**
-     * @notice  See '_setChainlinkAddrs()' in {OracleHouse}
-     * @dev  Restricted to admin only.
-     */
-    function setChainlinkAddrs(address addrUsdFiat_, address addrReserveAsset_)
-        external
-        override
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        _setChainlinkAddrs(addrUsdFiat_, addrReserveAsset_);
-    }
-
-    /**
-     * @dev Call latest price according to activeOracle
+     * @dev Call latest price according to priceBulletin
      * @dev See _getLatestPrice() in {OracleHouse}.
-     * @dev override _getLatestPrice() as required.
      */
     function getLatestPrice() public view returns (uint256 price) {
-        price = _getLatestPrice(address(0));
+        price = _getLatestPrice();
     }
 
     /**
