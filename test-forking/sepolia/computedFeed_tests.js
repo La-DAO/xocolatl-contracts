@@ -2,13 +2,9 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { provider } = ethers;
 
-const {
-  evmSnapshot,
-  evmRevert
-} = require("../utils.js");
+const { evmSnapshot, evmRevert } = require("../../test/utils.js");
 
 describe("Xoc Tests - Computed Price Feed Oracle", function () {
-
   // Global Test variables
   const description = "btc/usd computed";
   const decimals = 8;
@@ -26,9 +22,15 @@ describe("Xoc Tests - Computed Price Feed Oracle", function () {
 
     accounts = await ethers.getSigners();
 
-    const ComputedPriceFeed = await ethers.getContractFactory("ComputedPriceFeed");
+    const ComputedPriceFeed = await ethers.getContractFactory(
+      "ComputedPriceFeed"
+    );
     computedPriceFeed = await ComputedPriceFeed.deploy(
-      description, decimals, btceth, ethusd, allowedTimeout
+      description,
+      decimals,
+      btceth,
+      ethusd,
+      allowedTimeout
     );
   });
 
@@ -40,7 +42,6 @@ describe("Xoc Tests - Computed Price Feed Oracle", function () {
   after(async () => {
     await evmRevert(evmSnapshot0);
   });
-
 
   it("ComputedPriceFeed constructor properties should match", async () => {
     const desc = await computedPriceFeed.description();
@@ -59,15 +60,23 @@ describe("Xoc Tests - Computed Price Feed Oracle", function () {
   it("Oracle price feed tests, should return a expected price value", async () => {
     const price = await computedPriceFeed.latestAnswer();
 
-    const feed1 = await ethers.getContractAt("IPriceBulletin", await computedPriceFeed.feedAsset());
+    const feed1 = await ethers.getContractAt(
+      "IPriceBulletin",
+      await computedPriceFeed.feedAsset()
+    );
     const f1Price = await feed1.latestAnswer();
     const f1decimals = parseInt((await feed1.decimals()).toString());
 
-    const feed2 = await ethers.getContractAt("IPriceBulletin",await computedPriceFeed.feedInterAsset());
+    const feed2 = await ethers.getContractAt(
+      "IPriceBulletin",
+      await computedPriceFeed.feedInterAsset()
+    );
     const f2Price = await feed2.latestAnswer();
     const f2decimals = parseInt((await feed2.decimals()).toString());
 
-    const refPrice = f1Price * f2Price * BigInt(10 ** (decimals)) / BigInt(10 ** (f1decimals + f2decimals));
+    const refPrice =
+      (f1Price * f2Price * BigInt(10 ** decimals)) /
+      BigInt(10 ** (f1decimals + f2decimals));
     expect(price).to.be.eq(refPrice);
   });
 });

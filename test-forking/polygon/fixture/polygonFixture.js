@@ -1,8 +1,8 @@
 const { ethers, upgrades } = require("hardhat");
-const { 
+const {
   ASSETS,
   CHAINLINK_CONTRACTS,
-  TLATLALIANI_CONTRACTS 
+  TLATLALIANI_CONTRACTS,
 } = require("../../../scripts/const");
 
 const polygonFixture = async () => {
@@ -10,25 +10,35 @@ const polygonFixture = async () => {
   const HouseOfCoin = await ethers.getContractFactory("HouseOfCoin");
   const HouseOfReserve = await ethers.getContractFactory("HouseOfReserve");
   const Xocolatl = await ethers.getContractFactory("Xocolatl");
-  const AccountLiquidator = await ethers.getContractFactory("AccountLiquidator");
-  const ComputedPriceFeed = await ethers.getContractFactory("ComputedPriceFeed");
+  const AccountLiquidator = await ethers.getContractFactory(
+    "AccountLiquidator"
+  );
+  const ComputedPriceFeed = await ethers.getContractFactory(
+    "ComputedPriceFeed"
+  );
   const InversePriceFeed = await ethers.getContractFactory("InversePriceFeed");
 
   // 0.- Set-up wrapped-native
-  const wnative = await ethers.getContractAt("IERC20", ASSETS.polygon.wmatic.address);
+  const wnative = await ethers.getContractAt(
+    "IERC20",
+    ASSETS.polygon.wmatic.address
+  );
 
   // 1.- Deploy all contracts
-  const weth = await ethers.getContractAt("IERC20", ASSETS.polygon.weth.address);
+  const weth = await ethers.getContractAt(
+    "IERC20",
+    ASSETS.polygon.weth.address
+  );
 
   const inverseFeed = await InversePriceFeed.deploy(
-    'inverse mxn/usd',
+    "inverse mxn/usd",
     8,
-    TLATLALIANI_CONTRACTS.polygon.mxnusd,
+    CHAINLINK_CONTRACTS.polygon.mxnusd,
     86400
   );
 
   const priceFeed = await ComputedPriceFeed.deploy(
-    'eth/mxn computed',
+    "eth/mxn computed",
     8,
     CHAINLINK_CONTRACTS.polygon.ethusd,
     await inverseFeed.getAddress(), // usd/mxn
@@ -36,56 +46,44 @@ const polygonFixture = async () => {
   );
 
   let xoc = await upgrades.deployProxy(Xocolatl, [], {
-    kind: 'uups',
-    unsafeAllow: [
-      'delegatecall'
-    ]
+    kind: "uups",
+    unsafeAllow: ["delegatecall"],
   });
   let accountant = await upgrades.deployProxy(AssetsAccountant, [], {
-    kind: 'uups',
+    kind: "uups",
   });
-  let coinhouse = await upgrades.deployProxy(HouseOfCoin,
-    [
-      await xoc.getAddress(),
-      await accountant.getAddress()
-    ],
+  let coinhouse = await upgrades.deployProxy(
+    HouseOfCoin,
+    [await xoc.getAddress(), await accountant.getAddress()],
     {
-      kind: 'uups',
+      kind: "uups",
     }
   );
-  let reservehouse = await upgrades.deployProxy(HouseOfReserve,
+  let reservehouse = await upgrades.deployProxy(
+    HouseOfReserve,
     [
       await weth.getAddress(),
       await xoc.getAddress(),
       await accountant.getAddress(),
       await priceFeed.getAddress(),
-      await wnative.getAddress()
+      await wnative.getAddress(),
     ],
     {
-      kind: 'uups',
+      kind: "uups",
     }
   );
-  let liquidator = await upgrades.deployProxy(AccountLiquidator,
-    [
-      await coinhouse.getAddress(),
-      await accountant.getAddress()
-    ],
+  let liquidator = await upgrades.deployProxy(
+    AccountLiquidator,
+    [await coinhouse.getAddress(), await accountant.getAddress()],
     {
-      kind: 'uups',
+      kind: "uups",
     }
   );
 
   // 2.- Register houses and allow liquidator
-  await accountant.registerHouse(
-    await coinhouse.getAddress()
-  );
-  await accountant.registerHouse(
-    await reservehouse.getAddress()
-  );
-  await accountant.allowLiquidator(
-    await liquidator.getAddress(), 
-    true
-  );
+  await accountant.registerHouse(await coinhouse.getAddress());
+  await accountant.registerHouse(await reservehouse.getAddress());
+  await accountant.allowLiquidator(await liquidator.getAddress(), true);
 
   // 3.- These calls are needed from the multisig in production
   const minter = await xoc.MINTER_ROLE();
@@ -113,10 +111,10 @@ const polygonFixture = async () => {
     xoc,
     weth,
     inverseFeed,
-    priceFeed
-  }
-}
+    priceFeed,
+  };
+};
 
 module.exports = {
-  polygonFixture
+  polygonFixture,
 };
