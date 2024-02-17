@@ -12,6 +12,7 @@ pragma solidity 0.8.17;
  * PythId: 0xe13b1c1ffb32f34e1be9545583f01ef385fde7f42ee66049d30570dc866b77ca
  */
 import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 interface IPyth {
     struct Price {
@@ -29,7 +30,7 @@ interface IPyth {
     function priceFeedExists(bytes32 id) external view returns (bool);
 }
 
-contract PriceFeedPythWrapper {
+contract PriceFeedPythWrapper is Initializable {
     struct PriceFeedResponse {
         uint80 roundId;
         int256 answer;
@@ -49,21 +50,27 @@ contract PriceFeedPythWrapper {
     error PriceFeedPythWrapper_invalidPriceFeedId();
     error PriceFeedPythWrapper_safeCast_overflow();
 
+    string public constant VERSION = "v1.0.0";
+
     string private _description;
-    uint8 private immutable _decimals;
-    uint8 private immutable _pythPriceDecimals;
+    uint8 private _decimals;
+    uint8 private _pythPriceDecimals;
 
-    uint256 public immutable allowedTimeout;
-    bytes32 public immutable pythPriceFeedId;
-    IPyth public immutable pyth;
+    uint256 public allowedTimeout;
+    bytes32 public pythPriceFeedId;
+    IPyth public pyth;
 
-    constructor(
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         string memory description_,
         uint8 decimals_,
         address pyth_,
         bytes32 pythPriceFeedId_,
         uint256 allowedTimeout_
-    ) {
+    ) external initializer {
         _description = description_;
         _decimals = decimals_;
 
