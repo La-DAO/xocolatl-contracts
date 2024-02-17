@@ -43,6 +43,12 @@ contract HouseOfReserveState {
     IAssetsAccountant public assetsAccountant;
 
     bytes32 public constant HOUSE_TYPE = keccak256("RESERVE_HOUSE");
+
+    /**
+     * @notice Fee for minting backedAsset of this HouseOfReserve in BPS x 10**2.
+     * Examples: 100 = 1 bps (0.01%): 10000 = 100 bps (1%)
+     */
+    uint256 public reserveMintFee;
 }
 
 contract HouseOfReserve is
@@ -77,19 +83,16 @@ contract HouseOfReserve is
      * @param TokenID_ number of `backedTokenID` used in `assetsAccountant`.
      */
     event BackedTokenIdSet(uint256 TokenID_);
-
     /**
      * @dev Emit when user DEFAULT_ADMIN changes the max Loan-To-Value factor of this HouseOfReserve.
      * @param newMaxLTV factor
      */
     event MaxLTVChanged(uint256 newMaxLTV);
-
     /**
      * @dev Emit when user DEFAULT_ADMIN changes the liquidation factor of this HouseOfReserve.
      * @param newLiqudation factor.
      */
     event LiquidationFactorChanged(uint256 newLiqudation);
-
     /**
      * @dev Emit when user DEFAULT_ADMIN changes the 'depositLimit' of HouseOfReserve
      * @param newLimit uint256
@@ -100,6 +103,11 @@ contract HouseOfReserve is
      * @param newAccountant address.
      */
     event AssetsAccountantChanged(address newAccountant);
+    /**
+     * @dev Emit when `reserveMintFee` changes.
+     * @param newFee uint256
+     */
+    event ReserveMintFeeChanged(uint256 newFee);
 
     /// Custom errors
     error HouseOfReserve_invalidInput();
@@ -163,6 +171,13 @@ contract HouseOfReserve is
      */
     function setComputedPriceFeedAddr(address computedPriceFeedAddr_) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         _setComputedPriceFeedAddr(computedPriceFeedAddr_);
+    }
+
+    function setReserveMintFee(uint256 newFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 maxFee = 999_999;
+        if (newFee > maxFee) revert HouseOfReserve_invalidInput();
+        reserveMintFee = newFee;
+        emit ReserveMintFeeChanged(newFee);
     }
 
     /**
