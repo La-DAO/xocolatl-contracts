@@ -20,6 +20,11 @@ interface IHouseOfCoin {
     function backedAsset() external view returns (address);
 
     /**
+     * @dev Returns the treasury address of this HouseOfCoin.
+     */
+    function treasury() external view returns (address);
+
+    /**
      * @notice  Function to mint ERC20 'backedAsset' of this HouseOfCoin.
      * @dev  Requires user to have reserves for this backed asset at HouseOfReserves.
      * @param reserveAsset ERC20 address of asset to be used to back the minted coins.

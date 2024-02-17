@@ -33,6 +33,10 @@ contract HouseOfCoinState {
     LiquidationParam internal _liqParam;
 
     bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
+
+    uint256 internal constant _ALL_BPS = 1e6;
+
+    address public treasury;
 }
 
 contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable, HouseOfCoinState {
@@ -55,6 +59,13 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
     event CoinPayback(address indexed user, uint256 indexed reservetokenID, uint256 amount);
 
     /**
+     * @dev Log when fee is collected.
+     * @param treasury address.
+     * @param amount of fee collected.
+     */
+    event FeeCollected(address indexed treasury, uint256 amount);
+
+    /**
      * @dev Log when liquidation params change
      * @param marginCallThreshold value.
      * @param liquidationThreshold value.
@@ -67,6 +78,12 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         uint256 liquidationPricePenaltyDiscount,
         uint256 collateralPenalty
     );
+
+    /**
+     * @dev Log when treasury address is changed.
+     * @param newTreasury  address.
+     */
+    event TreasuryChanged(address indexed newTreasury);
 
     /// Custom errors
     error HouseOfCoin_notApplicable();
@@ -84,8 +101,8 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
      * @param backedAsset_ ERC20 address of the asset type of coin to be minted in this contract.
      * @param assetsAccountant_ Address of the {AssetsAccountant} contract.
      */
-    function initialize(address backedAsset_, address assetsAccountant_) public initializer {
-        if (backedAsset_ == address(0) || assetsAccountant_ == address(0)) {
+    function initialize(address backedAsset_, address assetsAccountant_, address treasury_) public initializer {
+        if (backedAsset_ == address(0) || assetsAccountant_ == address(0) || treasury_ == address(0)) {
             revert HouseOfCoin_invalidInput();
         }
         backedAsset = backedAsset_;
@@ -93,6 +110,7 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         // and avoid multiple external calls during execution of some functions.
         backedAssetDecimals = IERC20Extension(backedAsset).decimals();
         assetsAccountant = assetsAccountant_;
+        treasury = treasury_;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
@@ -145,6 +163,7 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         }
 
         uint256 reserveDecimals = IERC20Extension(hOfReserve.reserveAsset()).decimals();
+        uint256 fee = (amount * hOfReserve.reserveMintFee()) / _ALL_BPS;
 
         // Get inputs for checking minting power, max loant to value factor and oracle price
         uint256 maxLTV = hOfReserve.maxLTVFactor();
@@ -153,18 +172,23 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         // Checks minting power of msg.sender.
         uint256 mintingPower =
             _checkRemainingMintingPower(msg.sender, reserveTokenID, reserveDecimals, backedTokenID, maxLTV, price);
-        if (mintingPower == 0 || amount > mintingPower) {
+        if (mintingPower == 0 || amount + fee > mintingPower) {
             revert HouseOfCoin_noBalances();
         }
 
         // Update state in AssetAccountant
-        IAssetsAccountant(assetsAccountant).mint(msg.sender, backedTokenID, amount, "");
+        IAssetsAccountant(assetsAccountant).mint(msg.sender, backedTokenID, amount + fee, "");
 
         // Mint backedAsset Coins
         bAsset.mint(msg.sender, amount);
+        if (fee > 0) {
+            // Mint fee to treasury
+            bAsset.mint(treasury, fee);
+        }
 
         // Emit Event
         emit CoinMinted(msg.sender, backedTokenID, amount);
+        emit FeeCollected(treasury, fee);
         success = true;
     }
 
@@ -224,6 +248,18 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
      */
     function getLiqParams() public view returns (LiquidationParam memory) {
         return _liqParam;
+    }
+
+    /**
+     * @dev Sets the treasury address.
+     * @param newTreasury address.
+     * Requirements:
+     * - function should be admin restricted.
+     */
+    function setTreasury(address newTreasury) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (newTreasury == address(0)) revert HouseOfCoin_invalidInput();
+        treasury = newTreasury;
+        emit TreasuryChanged(newTreasury);
     }
 
     /**
