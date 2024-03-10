@@ -10,6 +10,8 @@ pragma solidity 0.8.17;
  * @dev Users do not interact directly with this contract.
  */
 import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {ERC1155SupplyUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {IHouseOfCoin} from "./interfaces/IHouseOfCoin.sol";
@@ -40,10 +42,11 @@ contract AssetsAccountantState {
 
 contract AssetsAccountant is
     Initializable,
-    ERC1155Upgradeable,
     AccessControlUpgradeable,
-    UUPSUpgradeable,
-    AssetsAccountantState
+    AssetsAccountantState,
+    ERC1155Upgradeable,
+    ERC1155SupplyUpgradeable,
+    UUPSUpgradeable
 {
     // AssetsAccountant Events
 
@@ -252,4 +255,15 @@ contract AssetsAccountant is
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
+
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal virtual override(ERC1155Upgradeable, ERC1155SupplyUpgradeable) {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
 }

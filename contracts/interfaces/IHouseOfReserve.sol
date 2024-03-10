@@ -43,6 +43,11 @@ interface IHouseOfReserve {
     function getLatestPrice() external view returns (uint256 price);
 
     /**
+     * @dev Returns the reserve mint fee of this HouseOfReserve in BPS x 10**2.
+     */
+    function reserveMintFee() external view returns (uint256);
+
+    /**
      * @dev Deposit reserves in this contract on behalf caller.
      */
     function deposit(uint256 amount) external;

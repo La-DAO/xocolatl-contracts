@@ -13,6 +13,8 @@ const polygonFixture = async () => {
   const AccountLiquidator = await ethers.getContractFactory(
     "AccountLiquidator"
   );
+  const treasury = "0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf";
+
   const ComputedPriceFeed = await ethers.getContractFactory(
     "ComputedPriceFeed"
   );
@@ -54,7 +56,7 @@ const polygonFixture = async () => {
   });
   let coinhouse = await upgrades.deployProxy(
     HouseOfCoin,
-    [await xoc.getAddress(), await accountant.getAddress()],
+    [await xoc.getAddress(), await accountant.getAddress(), treasury],
     {
       kind: "uups",
     }
