@@ -9,10 +9,10 @@ pragma solidity 0.8.17;
  * @dev For example: [wsteth/eth]-feed and [eth/usd]-feed to return a [wsteth/usd]-feed.
  * Note: Ensure units work, this contract multiplies the feeds.
  */
-
 import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract ComputedPriceFeed {
+contract ComputedPriceFeed is Initializable {
     struct PriceFeedResponse {
         uint80 roundId;
         int256 answer;
@@ -30,32 +30,32 @@ contract ComputedPriceFeed {
     error ComputedPriceFeed_noValidUpdateAt();
     error ComputedPriceFeed_staleFeed();
 
+    string public constant VERSION = "v1.0.0";
+
     string private _description;
+    uint8 private _decimals;
+    uint8 private _feedAssetDecimals;
+    uint8 private _feedInterAssetDecimals;
 
-    uint8 private immutable _decimals;
-    uint8 private immutable _feedAssetDecimals;
-    uint8 private immutable _feedInterAssetDecimals;
+    IPriceBulletin public feedAsset;
+    IPriceBulletin public feedInterAsset;
+    uint256 public allowedTimeout;
 
-    IPriceBulletin public immutable feedAsset;
-    IPriceBulletin public immutable feedInterAsset;
+    constructor() {
+        _disableInitializers();
+    }
 
-    uint256 public immutable allowedTimeout;
-
-    constructor(
+    function initialize(
         string memory description_,
         uint8 decimals_,
         address feedAsset_,
         address feedInterAsset_,
         uint256 allowedTimeout_
-    ) {
+    ) external initializer {
         _description = description_;
         _decimals = decimals_;
 
-        if (
-            feedAsset_ == address(0) ||
-            feedInterAsset_ == address(0) ||
-            allowedTimeout_ == 0
-        ) {
+        if (feedAsset_ == address(0) || feedInterAsset_ == address(0) || allowedTimeout_ == 0) {
             revert ComputedPriceFeed_invalidInput();
         }
 
@@ -84,13 +84,7 @@ contract ComputedPriceFeed {
     function latestRoundData()
         external
         view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         PriceFeedResponse memory clComputed = _computeLatestRoundData();
         roundId = clComputed.roundId;
@@ -100,47 +94,26 @@ contract ComputedPriceFeed {
         answeredInRound = roundId;
     }
 
-    function _computeLatestRoundData()
-        private
-        view
-        returns (PriceFeedResponse memory clComputed)
-    {
-        (
-            PriceFeedResponse memory clFeed,
-            PriceFeedResponse memory clInter
-        ) = _callandCheckFeeds();
+    function _computeLatestRoundData() private view returns (PriceFeedResponse memory clComputed) {
+        (PriceFeedResponse memory clFeed, PriceFeedResponse memory clInter) = _callandCheckFeeds();
 
         clComputed.answer = _computeAnswer(clFeed.answer, clInter.answer);
-        clComputed.roundId = clFeed.roundId > clInter.roundId
-            ? clFeed.roundId
-            : clInter.roundId;
-        clComputed.startedAt = clFeed.startedAt < clInter.startedAt
-            ? clFeed.startedAt
-            : clInter.startedAt;
-        clComputed.updatedAt = clFeed.updatedAt > clInter.updatedAt
-            ? clFeed.updatedAt
-            : clInter.updatedAt;
+        clComputed.roundId = clFeed.roundId > clInter.roundId ? clFeed.roundId : clInter.roundId;
+        clComputed.startedAt = clFeed.startedAt < clInter.startedAt ? clFeed.startedAt : clInter.startedAt;
+        clComputed.updatedAt = clFeed.updatedAt > clInter.updatedAt ? clFeed.updatedAt : clInter.updatedAt;
         clComputed.answeredInRound = clComputed.roundId;
     }
 
-    function _computeAnswer(
-        int256 assetAnswer,
-        int256 interAssetAnswer
-    ) private view returns (int256) {
-        uint256 price = (uint256(assetAnswer) *
-            uint256(interAssetAnswer) *
-            10 ** (uint256(_decimals))) /
-            10 ** (uint256(_feedAssetDecimals + _feedInterAssetDecimals));
+    function _computeAnswer(int256 assetAnswer, int256 interAssetAnswer) private view returns (int256) {
+        uint256 price = (uint256(assetAnswer) * uint256(interAssetAnswer) * 10 ** (uint256(_decimals)))
+            / 10 ** (uint256(_feedAssetDecimals + _feedInterAssetDecimals));
         return int256(price);
     }
 
     function _callandCheckFeeds()
         private
         view
-        returns (
-            PriceFeedResponse memory clFeed,
-            PriceFeedResponse memory clInter
-        )
+        returns (PriceFeedResponse memory clFeed, PriceFeedResponse memory clInter)
     {
         // Call the aggregator feeds with try-catch method to identify failure
         try feedAsset.latestRoundData() returns (
@@ -165,14 +138,13 @@ contract ComputedPriceFeed {
             uint256 startedAtFeedInterAsset,
             uint256 updatedAtInterFeedInterAsset,
             uint80 answeredInRoundFeedInterAsset
-
         ) {
             clInter.roundId = roundIdFeedInterAsset;
-            clInter.answer =answerFeedInterAsset;
-            clInter.startedAt =startedAtFeedInterAsset;
+            clInter.answer = answerFeedInterAsset;
+            clInter.startedAt = startedAtFeedInterAsset;
             clInter.updatedAt = updatedAtInterFeedInterAsset;
             clInter.answeredInRound = answeredInRoundFeedInterAsset;
-        } catch  {
+        } catch {
             revert ComputedPriceFeed_fetchFeedInterFailed();
         }
 
@@ -182,15 +154,12 @@ contract ComputedPriceFeed {
         } else if (clFeed.roundId == 0 || clInter.roundId == 0) {
             revert ComputedPriceFeed_noRoundId();
         } else if (
-            clFeed.updatedAt > block.timestamp ||
-            clFeed.updatedAt == 0 ||
-            clInter.updatedAt > block.timestamp ||
-            clInter.updatedAt == 0
+            clFeed.updatedAt > block.timestamp || clFeed.updatedAt == 0 || clInter.updatedAt > block.timestamp
+                || clInter.updatedAt == 0
         ) {
             revert ComputedPriceFeed_noValidUpdateAt();
         } else if (
-            block.timestamp - clFeed.updatedAt > allowedTimeout ||
-            block.timestamp - clInter.updatedAt > allowedTimeout
+            block.timestamp - clFeed.updatedAt > allowedTimeout || block.timestamp - clInter.updatedAt > allowedTimeout
         ) {
             revert ComputedPriceFeed_staleFeed();
         }
