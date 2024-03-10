@@ -168,6 +168,9 @@ module.exports = {
         : { mnemonic: mnemonic() },
     },
   },
+  sourcify: {
+    enabled: true,
+  },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
     customChains: [

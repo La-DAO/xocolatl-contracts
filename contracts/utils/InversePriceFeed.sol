@@ -10,10 +10,10 @@ pragma solidity 0.8.17;
  * [eth/usd]-feed (dollars per one unit of eth) will be flipped to a
  * [usd/eth]-feed (eth per one unit of dollar).
  */
-
 import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract InversePriceFeed {
+contract InversePriceFeed is Initializable {
     struct PriceFeedResponse {
         uint80 roundId;
         int256 answer;
@@ -31,20 +31,23 @@ contract InversePriceFeed {
     error InversePriceFeed_noValidUpdateAt();
     error InversePriceFeed_staleFeed();
 
+    string public constant VERSION = "v1.0.0";
+
     string private _description;
+    uint8 private _decimals;
+    uint8 private _feedAssetDecimals;
 
-    uint8 private immutable _decimals;
-    uint8 private immutable _feedAssetDecimals;
+    IPriceBulletin public feedAsset;
+    uint256 public allowedTimeout;
 
-    IPriceBulletin public immutable feedAsset;
-    uint256 public immutable allowedTimeout;
+    constructor() {
+        _disableInitializers();
+    }
 
-    constructor(
-        string memory description_,
-        uint8 decimals_,
-        address feedAsset_,
-        uint256 allowedTimeout_
-    ) {
+    function initialize(string memory description_, uint8 decimals_, address feedAsset_, uint256 allowedTimeout_)
+        external
+        initializer
+    {
         _description = description_;
         _decimals = decimals_;
 
@@ -73,13 +76,7 @@ contract InversePriceFeed {
     function latestRoundData()
         external
         view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         PriceFeedResponse memory feedLatestRound = _callandCheckFeed();
         int256 invPrice = _computeInverseAnswer(feedLatestRound.answer);
@@ -91,18 +88,12 @@ contract InversePriceFeed {
         answeredInRound = feedLatestRound.roundId;
     }
 
-    function _computeInverseAnswer(
-        int256 assetAnswer
-    ) private view returns (int256) {
+    function _computeInverseAnswer(int256 assetAnswer) private view returns (int256) {
         uint256 inverse = 10 ** (uint256(2 * _decimals)) / uint256(assetAnswer);
         return int256(inverse);
     }
 
-    function _callandCheckFeed()
-        private
-        view
-        returns (PriceFeedResponse memory clFeed)
-    {
+    function _callandCheckFeed() private view returns (PriceFeedResponse memory clFeed) {
         // Call the aggregator feed with try-catch method to identify failure
         try feedAsset.latestRoundData() returns (
             uint80 roundIdFeedAsset,
@@ -125,9 +116,7 @@ contract InversePriceFeed {
             revert InversePriceFeed_lessThanOrZeroAnswer();
         } else if (clFeed.roundId == 0) {
             revert InversePriceFeed_noRoundId();
-        } else if (
-            clFeed.updatedAt > block.timestamp || clFeed.updatedAt == 0
-        ) {
+        } else if (clFeed.updatedAt > block.timestamp || clFeed.updatedAt == 0) {
             revert InversePriceFeed_noValidUpdateAt();
         } else if (block.timestamp - clFeed.updatedAt > allowedTimeout) {
             revert InversePriceFeed_staleFeed();
