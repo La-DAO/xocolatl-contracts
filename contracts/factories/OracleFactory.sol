@@ -24,7 +24,11 @@ contract OracleFactory is Ownable {
     );
 
     event InversePriceFeedCreated(
-        address indexed inversePriceFeed, string description, uint8 decimals, address feedAsset, uint256 allowedTimeout
+        address indexed inversePriceFeed,
+        string description,
+        uint8 decimals,
+        address feedAsset,
+        uint256 allowedTimeout
     );
 
     event PriceFeedPythWrapperCreated(
@@ -76,7 +80,12 @@ contract OracleFactory is Ownable {
         ComputedPriceFeed(feed).initialize(description, decimals, feedAsset, feedInterAsset, allowedTimeout);
         _computedFeeds.push(feed);
         emit ComputedPriceFeedCreated(
-            computedPriceFeed, description, decimals, feedAsset, feedInterAsset, allowedTimeout
+            computedPriceFeed,
+            description,
+            decimals,
+            feedAsset,
+            feedInterAsset,
+            allowedTimeout
         );
     }
 
@@ -105,7 +114,12 @@ contract OracleFactory is Ownable {
         PriceFeedPythWrapper(feed).initialize(description, decimals, pyth, pythPriceFeedId, allowedTimeout);
         _pythFeeds.push(feed);
         emit PriceFeedPythWrapperCreated(
-            priceFeedPythWrapper, description, decimals, pyth, pythPriceFeedId, allowedTimeout
+            priceFeedPythWrapper,
+            description,
+            decimals,
+            pyth,
+            pythPriceFeedId,
+            allowedTimeout
         );
     }
 

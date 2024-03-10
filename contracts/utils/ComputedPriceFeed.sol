@@ -105,8 +105,8 @@ contract ComputedPriceFeed is Initializable {
     }
 
     function _computeAnswer(int256 assetAnswer, int256 interAssetAnswer) private view returns (int256) {
-        uint256 price = (uint256(assetAnswer) * uint256(interAssetAnswer) * 10 ** (uint256(_decimals)))
-            / 10 ** (uint256(_feedAssetDecimals + _feedInterAssetDecimals));
+        uint256 price = (uint256(assetAnswer) * uint256(interAssetAnswer) * 10 ** (uint256(_decimals))) /
+            10 ** (uint256(_feedAssetDecimals + _feedInterAssetDecimals));
         return int256(price);
     }
 
@@ -154,8 +154,10 @@ contract ComputedPriceFeed is Initializable {
         } else if (clFeed.roundId == 0 || clInter.roundId == 0) {
             revert ComputedPriceFeed_noRoundId();
         } else if (
-            clFeed.updatedAt > block.timestamp || clFeed.updatedAt == 0 || clInter.updatedAt > block.timestamp
-                || clInter.updatedAt == 0
+            clFeed.updatedAt > block.timestamp ||
+            clFeed.updatedAt == 0 ||
+            clInter.updatedAt > block.timestamp ||
+            clInter.updatedAt == 0
         ) {
             revert ComputedPriceFeed_noValidUpdateAt();
         } else if (

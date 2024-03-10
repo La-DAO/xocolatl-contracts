@@ -10,8 +10,7 @@ pragma solidity 0.8.17;
  * @dev Users do not interact directly with this contract.
  */
 import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import {ERC1155SupplyUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
+import {ERC1155SupplyUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {IHouseOfCoin} from "./interfaces/IHouseOfCoin.sol";
@@ -223,34 +222,35 @@ contract AssetsAccountant is
      * @dev Function override added to restrict transferability of tokens in this contract.
      * @dev Accounting assets are not meant to be transferable.
      */
-    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
-        public
-        override
-        onlyRole(LIQUIDATOR_ROLE)
-    {
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override onlyRole(LIQUIDATOR_ROLE) {
         _safeTransferFrom(from, to, id, amount, data);
     }
 
     /**
      * @dev See {safeTransferFrom}.
      */
-    function safeBatchTransferFrom(address, address, uint256[] memory, uint256[] memory, bytes memory)
-        public
-        pure
-        override
-    {
+    function safeBatchTransferFrom(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public pure override {
         revert AssetsAccountant_NonTransferable();
     }
 
     /**
      * @dev Function override required by Solidity.
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155Upgradeable, AccessControlUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC1155Upgradeable, AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

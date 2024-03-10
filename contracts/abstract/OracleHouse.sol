@@ -52,7 +52,7 @@ abstract contract OracleHouse {
      */
     function _getLatestPrice() internal view virtual returns (uint256 price) {
         // NOTE: All other oracle checks are done at {ComputedPriceFeedAddr.sol}
-        (, int256 price_,,,) = _computedPriceFeedAddr.latestRoundData();
+        (, int256 price_, , , ) = _computedPriceFeedAddr.latestRoundData();
         if (price_ <= 0) {
             revert OracleHouse_noValue();
         }
