@@ -18,6 +18,8 @@ import {OracleHouse} from "./abstract/OracleHouse.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract HouseOfReserveState {
+    uint256 public constant MAX_RESERVE_FEE = 1_000_000;
+
     address public WRAPPED_NATIVE;
 
     address public reserveAsset;
@@ -51,13 +53,7 @@ contract HouseOfReserveState {
     uint256 public reserveMintFee;
 }
 
-contract HouseOfReserve is
-    Initializable,
-    AccessControlUpgradeable,
-    UUPSUpgradeable,
-    OracleHouse,
-    HouseOfReserveState
-{
+contract HouseOfReserve is Initializable, AccessControlUpgradeable, UUPSUpgradeable, OracleHouse, HouseOfReserveState {
     // HouseOfReserve Events
     /**
      * @dev Emit when user makes an asset deposit in this contract.
@@ -347,11 +343,11 @@ contract HouseOfReserve is
     /**
      * @dev  Internal function to check max withdrawal amount.
      */
-    function _checkMaxWithdrawal(uint256 reserveBal_, uint256 mintedCoinBal_, uint256 price)
-        internal
-        view
-        returns (uint256)
-    {
+    function _checkMaxWithdrawal(
+        uint256 reserveBal_,
+        uint256 mintedCoinBal_,
+        uint256 price
+    ) internal view returns (uint256) {
         // Check if msg.sender has minted backedAsset, if yes compute:
         // The minimum required balance to back 100% all minted coins of backedAsset.
         // Else, return 0.
@@ -381,11 +377,11 @@ contract HouseOfReserve is
     /**
      * @dev  Internal function to query balances in {AssetsAccountant}
      */
-    function _checkBalances(address user, uint256 reservesTokenID_, uint256 bAssetRTokenID_)
-        internal
-        view
-        returns (uint256 reserveBal, uint256 mintedCoinBal)
-    {
+    function _checkBalances(
+        address user,
+        uint256 reservesTokenID_,
+        uint256 bAssetRTokenID_
+    ) internal view returns (uint256 reserveBal, uint256 mintedCoinBal) {
         reserveBal = assetsAccountant.balanceOf(user, reservesTokenID_);
         mintedCoinBal = assetsAccountant.balanceOf(user, bAssetRTokenID_);
     }

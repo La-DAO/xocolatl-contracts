@@ -33,8 +33,13 @@ contract MockChainlinkPriceFeed is IPriceBulletin, Ownable {
     }
 
     function setPriceFeedData(int256 newPrice_) external onlyOwner {
-        Round memory recordRound =
-            Round(_latestRequest.roundId, newPrice_, _latestRequest.startedAt, block.timestamp, _latestRequest.roundId);
+        Round memory recordRound = Round(
+            _latestRequest.roundId,
+            newPrice_,
+            _latestRequest.startedAt,
+            block.timestamp,
+            _latestRequest.roundId
+        );
         _latestAnswerRound = recordRound;
 
         emit RoundAnswered(recordRound.roundId, recordRound.answer, recordRound.updatedAt);
