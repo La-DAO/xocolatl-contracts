@@ -24,6 +24,8 @@ contract HouseOfCoinState {
         uint256 collateralPenalty;
     }
 
+    bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
+
     address public backedAsset;
 
     uint256 internal backedAssetDecimals;
@@ -31,8 +33,6 @@ contract HouseOfCoinState {
     address public assetsAccountant;
 
     LiquidationParam internal _liqParam;
-
-    bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
 
     uint256 internal constant _ALL_BPS = 1e6;
 
@@ -150,9 +150,9 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
         // Validate reserveAsset and houseOfReserve are active with {AssetsAccountant}.
         if (
-            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(houseOfReserve) ||
-            IAssetsAccountant(assetsAccountant).houseOfReserves(reserveTokenID) == address(0) ||
-            hOfReserve.reserveAsset() != reserveAsset
+            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(houseOfReserve)
+                || IAssetsAccountant(assetsAccountant).houseOfReserves(reserveTokenID) == address(0)
+                || hOfReserve.reserveAsset() != reserveAsset
         ) {
             revert HouseOfCoin_invalidInput();
         }
@@ -170,14 +170,8 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         uint256 price = getLatestPrice(houseOfReserve);
 
         // Checks minting power of msg.sender.
-        uint256 mintingPower = _checkRemainingMintingPower(
-            msg.sender,
-            reserveTokenID,
-            reserveDecimals,
-            backedTokenID,
-            maxLTV,
-            price
-        );
+        uint256 mintingPower =
+            _checkRemainingMintingPower(msg.sender, reserveTokenID, reserveDecimals, backedTokenID, maxLTV, price);
         if (mintingPower == 0 || amount + fee > mintingPower) {
             revert HouseOfCoin_noBalances();
         }
@@ -289,14 +283,9 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         uint256 collateralPenalty_
     ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (
-            marginCallThreshold_ == 0 ||
-            liquidationThreshold_ == 0 ||
-            liquidationPricePenaltyDiscount_ == 0 ||
-            collateralPenalty_ == 0 ||
-            liquidationThreshold_ >= marginCallThreshold_ ||
-            liquidationThreshold_ >= 1e18 ||
-            liquidationPricePenaltyDiscount_ >= 1e18 ||
-            collateralPenalty_ >= 1e18
+            marginCallThreshold_ == 0 || liquidationThreshold_ == 0 || liquidationPricePenaltyDiscount_ == 0
+                || collateralPenalty_ == 0 || liquidationThreshold_ >= marginCallThreshold_ || liquidationThreshold_ >= 1e18
+                || liquidationPricePenaltyDiscount_ >= 1e18 || collateralPenalty_ >= 1e18
         ) {
             revert HouseOfCoin_invalidInput();
         }
@@ -337,11 +326,11 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
     /**
      * @dev  Internal function to query balances in {AssetsAccountant}
      */
-    function _checkBalances(
-        address user,
-        uint256 reservesTokenID_,
-        uint256 bAssetRTokenID_
-    ) internal view returns (uint256 reserveBal, uint256 mintedCoinBal) {
+    function _checkBalances(address user, uint256 reservesTokenID_, uint256 bAssetRTokenID_)
+        internal
+        view
+        returns (uint256 reserveBal, uint256 mintedCoinBal)
+    {
         reserveBal = IERC1155Upgradeable(assetsAccountant).balanceOf(user, reservesTokenID_);
         mintedCoinBal = IERC1155Upgradeable(assetsAccountant).balanceOf(user, bAssetRTokenID_);
     }
@@ -366,13 +355,8 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
             return 0;
         } else {
             // Check if user can mint more
-            (bool canMintMore, uint256 remainingMintingPower) = _checkIfUserCanMintMore(
-                reserveBal,
-                reserveDecimals,
-                mintedCoinBal,
-                maxLTV,
-                price
-            );
+            (bool canMintMore, uint256 remainingMintingPower) =
+                _checkIfUserCanMintMore(reserveBal, reserveDecimals, mintedCoinBal, maxLTV, price);
             if (canMintMore) {
                 // If msg.sender canMintMore, how much
                 return remainingMintingPower;
