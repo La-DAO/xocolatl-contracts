@@ -5,7 +5,7 @@ const {basicFixture, WETH_MXN_PRICE} = require("./fixtures/basicFixture");
 
 describe("Xoc Tests - General Systems tests", function () {
     // Global Test variables
-
+    let accounts;
     let rid;
     let bid;
 
