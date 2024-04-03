@@ -44,10 +44,12 @@ contract InversePriceFeed is IPriceBulletin, Initializable {
         _disableInitializers();
     }
 
-    function initialize(string memory description_, uint8 decimals_, address feedAsset_, uint256 allowedTimeout_)
-        external
-        initializer
-    {
+    function initialize(
+        string memory description_,
+        uint8 decimals_,
+        address feedAsset_,
+        uint256 allowedTimeout_
+    ) external initializer {
         _description = description_;
         _decimals = decimals_;
 
