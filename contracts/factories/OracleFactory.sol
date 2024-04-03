@@ -76,9 +76,15 @@ contract OracleFactory is Ownable {
         uint256 allowedTimeout
     ) external onlyOwner returns (address computedPriceFeed) {
         if (computedPriceFeedImpl == address(0)) revert OracleFactory_noImplementation();
-        address feed = Clones.clone(computedPriceFeedImpl);
-        ComputedPriceFeed(feed).initialize(description, decimals, feedAsset, feedInterAsset, allowedTimeout);
-        _computedFeeds.push(feed);
+        computedPriceFeed = Clones.clone(computedPriceFeedImpl);
+        ComputedPriceFeed(computedPriceFeed).initialize(
+            description,
+            decimals,
+            feedAsset,
+            feedInterAsset,
+            allowedTimeout
+        );
+        _computedFeeds.push(computedPriceFeed);
         emit ComputedPriceFeedCreated(
             computedPriceFeed,
             description,
@@ -96,9 +102,9 @@ contract OracleFactory is Ownable {
         uint256 allowedTimeout
     ) external onlyOwner returns (address inversePriceFeed) {
         if (inversePriceFeedImpl == address(0)) revert OracleFactory_noImplementation();
-        address feed = Clones.clone(inversePriceFeedImpl);
-        InversePriceFeed(feed).initialize(description, decimals, feedAsset, allowedTimeout);
-        _inverseFeeds.push(feed);
+        inversePriceFeed = Clones.clone(inversePriceFeedImpl);
+        InversePriceFeed(inversePriceFeed).initialize(description, decimals, feedAsset, allowedTimeout);
+        _inverseFeeds.push(inversePriceFeed);
         emit InversePriceFeedCreated(inversePriceFeed, description, decimals, feedAsset, allowedTimeout);
     }
 
@@ -110,9 +116,15 @@ contract OracleFactory is Ownable {
         uint256 allowedTimeout
     ) external onlyOwner returns (address priceFeedPythWrapper) {
         if (priceFeedPythWrapperImpl == address(0)) revert OracleFactory_noImplementation();
-        address feed = Clones.clone(priceFeedPythWrapperImpl);
-        PriceFeedPythWrapper(feed).initialize(description, decimals, pyth, pythPriceFeedId, allowedTimeout);
-        _pythFeeds.push(feed);
+        priceFeedPythWrapper = Clones.clone(priceFeedPythWrapperImpl);
+        PriceFeedPythWrapper(priceFeedPythWrapper).initialize(
+            description,
+            decimals,
+            pyth,
+            pythPriceFeedId,
+            allowedTimeout
+        );
+        _pythFeeds.push(priceFeedPythWrapper);
         emit PriceFeedPythWrapperCreated(
             priceFeedPythWrapper,
             description,
@@ -124,19 +136,19 @@ contract OracleFactory is Ownable {
     }
 
     function setComputedPriceFeedImpl(address computedPriceFeedImpl_) external onlyOwner {
-        if (computedPriceFeedImpl_ != address(0)) revert OracleFactory_invalidInput();
+        if (computedPriceFeedImpl_ == address(0)) revert OracleFactory_invalidInput();
         computedPriceFeedImpl = computedPriceFeedImpl_;
         emit ComputedPriceFeedImplSet(computedPriceFeedImpl);
     }
 
     function setInversePriceFeedImpl(address inversePriceFeedImpl_) external onlyOwner {
-        if (inversePriceFeedImpl_ != address(0)) revert OracleFactory_invalidInput();
+        if (inversePriceFeedImpl_ == address(0)) revert OracleFactory_invalidInput();
         inversePriceFeedImpl = inversePriceFeedImpl_;
         emit InversePriceFeedImplSet(inversePriceFeedImpl);
     }
 
     function setPriceFeedPythWrapperImpl(address priceFeedPythWrapperImpl_) external onlyOwner {
-        if (priceFeedPythWrapperImpl_ != address(0)) revert OracleFactory_invalidInput();
+        if (priceFeedPythWrapperImpl_ == address(0)) revert OracleFactory_invalidInput();
         priceFeedPythWrapperImpl = priceFeedPythWrapperImpl_;
         emit PriceFeedPythWrapperImplSet(priceFeedPythWrapperImpl);
     }
