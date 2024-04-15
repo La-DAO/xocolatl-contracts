@@ -75,7 +75,7 @@ describe("Xoc Liquidation Tests", function () {
             console.log("oracleLastPrice", price.toString());
             console.log(
                 "liqParam",
-                liqParam.map((each) => each.toString())
+                liqParam.map((each) => each.toString()),
             );
             console.log("healthRatio", healthRatio.toString());
         }
@@ -115,7 +115,7 @@ describe("Xoc Liquidation Tests", function () {
             console.log("oracleLastPrice", price.toString());
             console.log(
                 "liqParam",
-                liqParam.map((each) => each.toString())
+                liqParam.map((each) => each.toString()),
             );
             console.log("healthRatio", healthRatio.toString());
         }
@@ -125,9 +125,8 @@ describe("Xoc Liquidation Tests", function () {
     });
 
     it("Should log a Margincall event", async () => {
-        const {xoc, weth, reservehouse, liquidator, priceFeed, dumbUser, liquidatorUser} = await loadFixture(
-            setupFixture
-        );
+        const {xoc, weth, reservehouse, liquidator, priceFeed, dumbUser, liquidatorUser} =
+            await loadFixture(setupFixture);
         // dumbUser Actions
         const depositAmount = ethers.parseUnits("1", 18);
         const mintAmount = ethers.parseUnits("7400", 18);
@@ -181,7 +180,7 @@ describe("Xoc Liquidation Tests", function () {
 
         const [costAmount, collateralPenalty] = await liquidatorL.computeCostOfLiquidation(
             dumbUser.address,
-            await reservehouse.getAddress()
+            await reservehouse.getAddress(),
         );
 
         let computedPrice = (costAmount * ethers.parseUnits("1", 8)) / collateralPenalty;
@@ -196,9 +195,8 @@ describe("Xoc Liquidation Tests", function () {
     });
 
     it("Should liquidate user", async () => {
-        const {xoc, accountant, reservehouse, liquidator, priceFeed, dumbUser, liquidatorUser} = await loadFixture(
-            setupFixture
-        );
+        const {xoc, accountant, reservehouse, liquidator, priceFeed, dumbUser, liquidatorUser} =
+            await loadFixture(setupFixture);
         // dumbUser Actions
         const depositAmount = ethers.parseUnits("1", 18);
         const mintAmount = ethers.parseUnits("7400", 18);
@@ -212,7 +210,7 @@ describe("Xoc Liquidation Tests", function () {
 
         [costAmount, collateralPenalty] = await liquidatorL.computeCostOfLiquidation(
             dumbUser.address,
-            await reservehouse.getAddress()
+            await reservehouse.getAddress(),
         );
 
         await xoc.connect(liquidatorUser).approve(await liquidatorL.getAddress(), costAmount);

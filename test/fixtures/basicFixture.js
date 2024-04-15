@@ -66,7 +66,6 @@ async function basicFixture() {
     await xoc.grantRole(burner, await coinhouse.getAddress());
     await xoc.grantRole(burner, await liquidator.getAddress());
 
-
     // 4.- Deploy a reservehouse
     const depositLimit = ethers.parseEther("100");
     const maxLtv = ethers.parseUnits("0.75", 18);
