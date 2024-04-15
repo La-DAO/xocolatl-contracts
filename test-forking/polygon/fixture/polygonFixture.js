@@ -72,20 +72,16 @@ const polygonFixture = async function () {
     // 2.- Register houses and allow liquidator
     await accountant.registerHouse(await coinhouse.getAddress());
     await accountant.allowLiquidator(await liquidator.getAddress(), true);
+    await accountant.allowReserveFactory(await factory.getAddress(), true);
 
     // 3.- These calls are needed from the multisig in production
     const admin = await xoc.DEFAULT_ADMIN_ROLE();
     const minter = await xoc.MINTER_ROLE();
     const burner = await xoc.BURNER_ROLE();
-    const liquidatorRole = await accountant.LIQUIDATOR_ROLE();
 
     await xoc.grantRole(minter, await coinhouse.getAddress());
     await xoc.grantRole(burner, await coinhouse.getAddress());
     await xoc.grantRole(burner, await liquidator.getAddress());
-
-    await accountant.grantRole(admin, await factory.getAddress());
-    await accountant.grantRole(liquidatorRole, await liquidator.getAddress());
-    await accountant.grantRole(burner, await liquidator.getAddress());
 
     // 4.- Deploy a reservehouse
     const depositLimit = ethers.parseEther("100");

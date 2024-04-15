@@ -1,38 +1,18 @@
-const { deployProxy, redeployIf } = require("../utils");
+const { deploy, redeployIf } = require("../utils");
 
-const deployHouseOfReserve = async (
-  name,
-  reserveAsset_,
-  backedAsset_,
-  assetsAccountant_,
-  tickerUsdFiat_,
-  tickerReserveAsset_,
-  wrappedNative
+const deployHouseOfReserveImplementation = async (
 ) => {
-  const detailName = name;
+  const detailName = 'HouseOfReserveImpl';
   const contractName = "HouseOfReserve";
-  const args = [
-    reserveAsset_,
-    backedAsset_,
-    assetsAccountant_,
-    tickerUsdFiat_,
-    tickerReserveAsset_,
-    wrappedNative
-  ];
-  const proxyOpts = {
-    timeout: 600000,
-    kind: 'uups'
-  };
   const deployed = await redeployIf(
     detailName,
     contractName,
-    deployProxy,
-    args,
-    proxyOpts
+    deploy,
+    [] 
   );
   return deployed;
 };
 
 module.exports = {
-  deployHouseOfReserve,
+  deployHouseOfReserveImplementation,
 };

@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 
-const setUpAssetsAccountant = async (contract, houseOfCoinAddr, houseOfReserveAddr, liquidatorAddr) => {
+const setUpAssetsAccountant = async (contract, houseOfCoinAddr, reserveFactoryAddr, liquidatorAddr) => {
 
   const stx1 = await contract.registerHouse(
     houseOfCoinAddr
