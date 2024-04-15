@@ -18,6 +18,14 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract AssetsAccountantState {
+    string internal constant NAME = "AssetsAccountant";
+
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+
+    bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
+
     // reserveTokenID => houseOfReserve
     mapping(uint256 => address) public houseOfReserves;
 
@@ -29,14 +37,7 @@ contract AssetsAccountantState {
 
     mapping(address => bool) public isARegisteredHouse;
 
-    // Contract Token name
-    string internal constant NAME = "AssetsAccountant";
-
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
-
-    bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
+    mapping(address => bool) public isAValidReserveFactory;
 }
 
 contract AssetsAccountant is
@@ -61,7 +62,13 @@ contract AssetsAccountant is
      * @param liquidator Address of house registered.
      * @param allow boolean
      */
-    event LiquidatorAllow(address liquidator, bool allow);
+    event LiquidatorAllow(address indexed liquidator, bool allow);
+    /**
+     * @dev Emit when a ReserveBeaconFactory contract is `allow`.
+     * @param factory Address of house registered.
+     * @param allow boolean
+     */
+    event ReserveFactoryAllow(address indexed factory, bool allow);
 
     // AssetsAccountant custom errors
     error AssetsAccountant_zeroAddress();
@@ -160,6 +167,21 @@ contract AssetsAccountant is
             _revokeRole(BURNER_ROLE, liquidator);
         }
         emit LiquidatorAllow(liquidator, allow);
+    }
+
+    function allowReserveFactory(address factory, bool allow) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (factory == address(0)) {
+            revert AssetsAccountant_zeroAddress();
+        }
+
+        isAValidReserveFactory[factory] = allow;
+
+        if (allow == true) {
+            _grantRole(DEFAULT_ADMIN_ROLE, factory);
+        } else {
+            _revokeRole(DEFAULT_ADMIN_ROLE, factory);
+        }
+        emit ReserveFactoryAllow(factory, allow);
     }
 
     function getReserveIds(address reserveAsset, address backedAsset) public view returns (uint256[] memory) {
