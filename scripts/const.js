@@ -5,9 +5,11 @@ const LADAO_MULTISIGS = {
     optimism: "0xC6A1425bC0D0c3FcE5055da85032d36893f91D03",
     gnosis: "0x2CBe215Eae3e926f11291560be0e4cda9556DCBb",
     binance: "0xD14F02ad072238d5D58671bcfE07FcBf9a17d5f7",
+    sepolia: "0xbd9e84Da78228039867E1687F824a106310c029D",
 };
 
 const CONTRACT_DEPLOYER_FACTORY = "0xF8faF9319e5CDDfda173B0a6461f19765AAAbf03";
+const PYTH_MXN_USD_FEED_ID = "0xe13b1c1ffb32f34e1be9545583f01ef385fde7f42ee66049d30570dc866b77ca";
 
 const ASSETS = {
     mainnet: {
@@ -162,20 +164,9 @@ const ASSETS = {
     },
 };
 
-const UMA_CONTRACTS = {
-    priceIdentifiers: {
-        // ethers.utils.formatBytes32String("MXNUSD")
-        mxnusd: "0x4d584e5553440000000000000000000000000000000000000000000000000000",
-    },
+const ORACLE_CONTRACTS = {
     polygon: {
-        finder: {
-            address: "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
-        },
-    },
-};
-
-const CHAINLINK_CONTRACTS = {
-    polygon: {
+        pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
         wstetheth: "0x10f964234cae09cB6a9854B56FF7D4F38Cda5E6a",
         wstethusd: "0xe5cfb421281169305F8B162d292FcA211C13CfeC",
         ethusd: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
@@ -186,19 +177,28 @@ const CHAINLINK_CONTRACTS = {
         mxnusd: "0x171b16562EA3476F5C61d1b8dad031DbA0768545",
     },
     binance: {
+        pyth: "0x4D7E825f80bDf85e913E0DD2A2D54927e9dE1594",
         ethusd: "0x2A3796273d47c4eD363b361D3AEFb7F7E2A13782", // binance pegged eth
         bnbusd: "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE",
         mxnusd: "0x16c0C1f971b1780F952572670A9d5ce4123582a1",
     },
-    goerli: {
-        ethusd: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
-        btcusd: "0xA39434A63A52E749F02807ae27335515BA4b07F7",
-        mxnusd: "0x480f3c11381824E9EEbEEdbB6398dB86e38bAEA0",
-    },
     sepolia: {
+        pyth: "0xDd24F84d36BF92C65F92307595335bdFab5Bbd21",
         ethusd: "0x694AA1769357215DE4FAC081bf1f309aDC325306",
         btcusd: "0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43",
         mxnusd: "0x480f3c11381824E9EEbEEdbB6398dB86e38bAEA0",
+    },
+    arbitrum: {
+        pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+    },
+    optimism: {
+        pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+    },
+    base: {
+        pyth: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+    },
+    gnosis: {
+        pyth: "0x2880aB155794e7179c9eE2e38200202908C17B43",
     },
 };
 
@@ -223,8 +223,8 @@ const TLATLALIANI_CONTRACTS = {
 module.exports = {
     LADAO_MULTISIGS,
     ASSETS,
-    UMA_CONTRACTS,
-    CHAINLINK_CONTRACTS,
+    ORACLE_CONTRACTS,
     CONTRACT_DEPLOYER_FACTORY,
     TLATLALIANI_CONTRACTS,
+    PYTH_MXN_USD_FEED_ID,
 };

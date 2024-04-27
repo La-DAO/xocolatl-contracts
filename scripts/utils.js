@@ -2,9 +2,9 @@ const hre = require("hardhat");
 const fs = require("fs");
 
 const {ethers, artifacts, upgrades} = hre;
-const {provider} = ethers;
 
-const network = process.env.NETWORK;
+const NETWORK = process.env.NETWORK;
+const CHAIN_ID = process.env.NETWORK_CHAIN_ID;
 
 const DEBUG = false;
 
@@ -13,36 +13,36 @@ let deploymentsPath = "core-version-last.deploy";
 let publishPath = "core-version-last.deploy";
 
 /**
- * @note Set the deployment path for the contract artifacts to be saved.
+ * @notice Set the deployment path for the contract artifacts to be saved.
  * @param {integer} version of the deployment.
  */
 const setDeploymentsPath = async (version) => {
-    const netw = await provider.getNetwork();
-    deploymentsPath = `${hre.config.paths.artifacts}/${netw.chainId}-version-${version}.deploy`;
+    if (!NETWORK || !CHAIN_ID) throw "Set 'NETWORK' and 'NETWORK_CHAIN_ID' in .env file";
+    deploymentsPath = `${hre.config.paths.artifacts}/${CHAIN_ID}-version-${version}.deploy`;
     if (DEBUG) {
         console.log("deploymentsPath", deploymentsPath);
     }
 };
 
 /**
- * @note Set the publish path for the contract artifacts to be saved.
+ * @notice Set the publish path for the contract artifacts to be saved.
  */
 const setPublishPath = async (version) => {
-    const netw = await provider.getNetwork();
-    publishPath = `${hre.config.paths.root}/deployments/${network}/${netw.chainId}-version-${version}.deploy`;
+    if (!NETWORK || !CHAIN_ID) throw "Set 'NETWORK' and 'NETWORK_CHAIN_ID' in .env file";
+    publishPath = `${hre.config.paths.root}/deployments/${NETWORK}/${CHAIN_ID}-version-${version}.deploy`;
     if (DEBUG) {
         console.log("publishPath", publishPath);
     }
 };
 
 /**
- * @note Get the contract abi for the contract name.
+ * @notice Get the contract abi for the contract name.
  * @param {string} detailName to get artifacts, as defined in .deploy file.
  */
 const getDeployments = (detailName) => {
     let deployData;
-    if (fs.existsSync(deploymentsPath)) {
-        deployData = JSON.parse(fs.readFileSync(deploymentsPath).toString());
+    if (fs.existsSync(publishPath)) {
+        deployData = JSON.parse(fs.readFileSync(publishPath).toString());
     } else {
         deployData = {};
     }
@@ -50,7 +50,7 @@ const getDeployments = (detailName) => {
 };
 
 /**
- * @note Update the contract abi with new contract data.
+ * @notice Update the contract abi with new contract data.
  * @param {string} detailName to get artifacts, as defined in .deploy file.
  * @param {string} contractName name of the compiled contract as defined in the solidity file.
  * @param {string} address of the contract.
@@ -72,7 +72,7 @@ const updateDeployments = async (detailName, contractName, address) => {
 };
 
 /**
- * @note Get the contract address from recorded .deploy file.
+ * @notice Get the contract address from recorded .deploy file.
  * @param {string} detailName to get in artifacts, as defined in .deploy file.
  * @returns {string} address of the contract.
  */
@@ -81,7 +81,7 @@ const getContractAddress = (detailName) => {
 };
 
 /**
- * @note Get ethersJS contract from recorded .deploy file.
+ * @notice Get ethersJS contract from recorded .deploy file.
  * @param {string} detailName to get in artifacts, as defined in .deploy file.
  * @param {string} contractName of the compiled contract as defined in the solidity file.
  * @returns {Promise} resolves to Ethersjs contract requested.
@@ -191,8 +191,7 @@ const redeployIf = async (detailName, contractName, deployContract, args = [], o
 };
 
 const publishUpdates = async () => {
-    const netw = await provider.getNetwork();
-    if (netw.chainId != 31337) {
+    if (CHAIN_ID != 31337) {
         fs.copyFile(deploymentsPath, publishPath, (err) => {
             if (err) throw err;
             console.log("Deployments/Updates have been published!");
@@ -201,7 +200,7 @@ const publishUpdates = async () => {
 };
 
 module.exports = {
-    network,
+    NETWORK,
     setDeploymentsPath,
     setPublishPath,
     publishUpdates,

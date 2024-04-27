@@ -1,7 +1,7 @@
 const {ethers} = require("hardhat");
-const {ASSETS} = require("../const");
+const {ASSETS, LADAO_MULTISIGS} = require("../const");
 
-const VERSION = "1.0.0";
+const VERSION = "2.0.0";
 
 const RESERVE_CAPS = {
     weth: {
@@ -13,10 +13,12 @@ const RESERVE_CAPS = {
 };
 
 const WNATIVE = ASSETS.sepolia.weth.address;
+const TREASURY = LADAO_MULTISIGS.sepolia;
 
 module.exports = {
     VERSION,
     WNATIVE,
     RESERVE_CAPS,
     ASSETS,
+    TREASURY,
 };
