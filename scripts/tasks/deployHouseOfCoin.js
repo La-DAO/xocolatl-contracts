@@ -1,9 +1,9 @@
 const {deployProxy, redeployIf} = require("../utils");
 
-const deployHouseOfCoin = async (backedAsset_, assetsAccountant_) => {
+const deployHouseOfCoin = async (backedAsset_, assetsAccountant_, treasury_) => {
     const detailName = "HouseOfCoin";
     const contractName = "HouseOfCoin";
-    const args = [backedAsset_, assetsAccountant_];
+    const args = [backedAsset_, assetsAccountant_, treasury_];
     const proxyOpts = {
         timeout: 600000,
         kind: "uups",
