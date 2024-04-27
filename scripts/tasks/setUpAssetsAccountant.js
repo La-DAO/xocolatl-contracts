@@ -7,7 +7,7 @@ const setUpAssetsAccountant = async (contract, houseOfCoinAddr, liquidatorAddr, 
     await stx2.wait();
     console.log("...liquidator set in AssetsAccountant");
 
-    const stx3 = await contract.allowReserveFactory(reserveFactoryAddr);
+    const stx3 = await contract.allowReserveFactory(reserveFactoryAddr, true);
     await stx3.wait();
     console.log("...House of Reserve Factory allowed in AssetsAccountant");
 };
