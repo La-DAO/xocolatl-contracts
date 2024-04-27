@@ -1,5 +1,5 @@
 const {ethers} = require("hardhat");
-const {network} = require("../utils");
+const {NETWORK} = require("../utils");
 const {LADAO_MULTISIGS} = require("../const");
 
 const rolesHandOverAssetsAccountant = async (contract) => {
@@ -8,9 +8,9 @@ const rolesHandOverAssetsAccountant = async (contract) => {
     const burner = await contract.BURNER_ROLE();
     const liquidator = await contract.LIQUIDATOR_ROLE();
 
-    console.log(`LADAO_MULTISIGS[${network}]`, LADAO_MULTISIGS[network]);
+    console.log(`LADAO_MULTISIGS[${NETWORK}]`, LADAO_MULTISIGS[NETWORK]);
 
-    const rtx1 = await contract.grantRole(admin, LADAO_MULTISIGS[network]);
+    const rtx1 = await contract.grantRole(admin, LADAO_MULTISIGS[NETWORK]);
     await rtx1.wait();
     console.log("...multisig granted DEFAULT_ADMIN_ROLE in AssetsAccountant");
 
@@ -36,7 +36,7 @@ const rolesHandOverAssetsAccountant = async (contract) => {
 const handOverDefaultAdmin = async (contract) => {
     const admin = await contract.DEFAULT_ADMIN_ROLE();
 
-    const rtx1 = await contract.grantRole(admin, LADAO_MULTISIGS[network]);
+    const rtx1 = await contract.grantRole(admin, LADAO_MULTISIGS[NETWORK]);
     await rtx1.wait();
     console.log(`...multisig granted DEFAULT_ADMIN_ROLE in contract:${await contract.getAddress()}`);
 
@@ -47,7 +47,14 @@ const handOverDefaultAdmin = async (contract) => {
     console.log(`...renounced to DEFAULT_ADMIN_ROLE in contract:${await contract.getAddress()}`);
 };
 
+const handOverOwnership = async (contract) => {
+    const rtx1 = await contract.transferOwnership(LADAO_MULTISIGS[NETWORK]);
+    await rtx1.wait();
+    console.log(`...multisig granted ownership in contract:${await contract.getAddress()}`);
+};
+
 module.exports = {
     rolesHandOverAssetsAccountant,
     handOverDefaultAdmin,
+    handOverOwnership,
 };
