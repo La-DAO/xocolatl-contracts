@@ -5,21 +5,24 @@ const deployOracleImplementations = async (implNames) => {
     let invPriceFeedImpl;
     let priceFeedPythWrapperImpl;
     let detailName;
-    for (n in implNames) {
+    for (const n of implNames) {
         switch (n) {
-            case n == "ComputedPriceFeed" || n == "ComputedPriceFeedWithSequencer":
+            case "ComputedPriceFeed":
                 detailName = n + "Impl";
-                computedPriceFeedImpl = await redeployIf(detailName, contractName, deploy, []);
+                computedPriceFeedImpl = await redeployIf(detailName, n, deploy, []);
                 break;
-            case n == "InversePriceFeed":
+            case "ComputedPriceFeedWithSequencer":
                 detailName = n + "Impl";
-                invPriceFeedImpl = await redeployIf(detailName, contractName, deploy, []);
+                computedPriceFeedImpl = await redeployIf(detailName, n, deploy, []);
                 break;
-            case n == "PriceFeedPythWrapper":
+            case "InversePriceFeed":
                 detailName = n + "Impl";
-                priceFeedPythWrapperImpl = await redeployIf(detailName, contractName, deploy, []);
-            default:
-                throw "Unkown oracle implementation name";
+                invPriceFeedImpl = await redeployIf(detailName, n, deploy, []);
+                break;
+            case "PriceFeedPythWrapper":
+                detailName = n + "Impl";
+                priceFeedPythWrapperImpl = await redeployIf(detailName, n, deploy, []);
+                break;
         }
     }
 
