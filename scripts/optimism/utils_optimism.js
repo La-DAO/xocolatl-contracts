@@ -1,5 +1,5 @@
 const {ethers} = require("hardhat");
-const {ASSETS} = require("../const");
+const {ASSETS, LADAO_MULTISIGS} = require("../const");
 
 const VERSION = "0.0";
 
@@ -10,10 +10,12 @@ const RESERVE_CAPS = {
 };
 
 const WNATIVE = ASSETS.optimism.weth.address;
+const TREASURY = LADAO_MULTISIGS.optimism;
 
 module.exports = {
     VERSION,
     WNATIVE,
     RESERVE_CAPS,
     ASSETS,
+    TREASURY,
 };

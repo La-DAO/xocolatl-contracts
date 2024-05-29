@@ -1,4 +1,4 @@
-const {network, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
+const {NETWORK, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
 const {VERSION} = require("./utils_sepolia");
 
 const {deployXocolatl} = require("../tasks/deployXocolatl");
@@ -11,7 +11,7 @@ const deployBackedAsset = async () => {
 };
 
 const main = async () => {
-    if (network !== "sepolia") {
+    if (NETWORK !== "sepolia") {
         throw new Error("Set 'NETWORK=sepolia' in .env file");
     }
     await setDeploymentsPath(VERSION);

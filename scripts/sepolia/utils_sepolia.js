@@ -5,10 +5,10 @@ const VERSION = "2.0.0";
 
 const RESERVE_CAPS = {
     weth: {
-        defaultInitialLimit: ethers.parseUnits("5", 18),
+        defaultInitialLimit: ethers.parseUnits("1000", 18),
     },
     wbtc: {
-        defaultInitialLimit: ethers.parseUnits("5", 18),
+        defaultInitialLimit: ethers.parseUnits("1000", 18),
     },
 };
 

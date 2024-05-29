@@ -1,16 +1,17 @@
-const {network, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
-
-const {VERSION} = require("./utils_optimism");
+const {NETWORK, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
+const {VERSION} = require("./utils_sepolia");
 
 const {deployXocolatl} = require("../tasks/deployXocolatl");
+const {handOverDefaultAdmin} = require("../tasks/rolesHandOver");
 
 const deployBackedAsset = async () => {
     console.log("\n\n 📡 Deploying...\n");
     const xoc = await deployXocolatl();
+    await handOverDefaultAdmin(xoc);
 };
 
 const main = async () => {
-    if (network !== "optimism") {
+    if (NETWORK !== "optimism") {
         throw new Error("Set 'NETWORK=optimism' in .env file");
     }
     await setDeploymentsPath(VERSION);

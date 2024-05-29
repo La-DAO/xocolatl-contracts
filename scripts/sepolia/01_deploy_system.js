@@ -7,10 +7,12 @@ const {deployHouseOfReserveImplementation} = require("../tasks/deployHouseOfRese
 const {deployOracleFactory} = require("../tasks/deployOracleFactory");
 const {deployOracleImplementations} = require("../tasks/deployOracleImplementations");
 const {deployReserveBeaconFactory} = require("../tasks/deployReserveBeaconFactory");
-const {ORACLE_CONTRACTS, PYTH_MXN_USD_FEED_ID} = require("../const");
-const {rolesHandOverAssetsAccountant, handOverDefaultAdmin, handOverOwnership} = require("../tasks/rolesHandOver");
+const {ORACLE_CONTRACTS} = require("../const");
+const {rolesHandOverAssetsAccountant, handOverOwnership} = require("../tasks/rolesHandOver");
 const {setUpAssetsAccountant} = require("../tasks/setUpAssetsAccountant");
 const {setupOracleFactory} = require("../tasks/setupOracleFactory");
+const {deployUsdMxnPythWrapper} = require("../tasks/deployUsdMxnPythWrapper");
+const {deployReserveViaFactory} = require("../tasks/deployReserveViaFactory");
 
 const deploySystemContracts = async () => {
     console.log("\n\n 📡 Deploying...\n");
@@ -42,69 +44,35 @@ const deploySystemContracts = async () => {
     const oracleFactory = await deployOracleFactory();
     await setupOracleFactory(oracleFactory, computedPriceFeedImpl, invPriceFeedImpl, priceFeedPythWrapperImpl);
 
-    const pythWrapperAddr = await oracleFactory.createPriceFeedPythWrapper.staticCall(
-        "pyth usdmxn",
-        8,
-        ORACLE_CONTRACTS.sepolia.pyth,
-        PYTH_MXN_USD_FEED_ID,
-        86400,
-    );
-    const dtx1 = await oracleFactory.createPriceFeedPythWrapper(
-        "pyth usdmxn",
-        8,
-        ORACLE_CONTRACTS.sepolia.pyth,
-        PYTH_MXN_USD_FEED_ID,
-        86400,
-    );
-    await dtx1.wait();
-    console.log("... pythWrapperAddr", pythWrapperAddr);
+    const pythWrapperUsdMxn = await deployUsdMxnPythWrapper(oracleFactory, ORACLE_CONTRACTS[NETWORK].pyth);
 
-    const computedPriceAddr = await oracleFactory.createComputedPriceFeed.staticCall(
-        "computed ethmxn",
-        8,
-        pythWrapperAddr,
-        ORACLE_CONTRACTS.sepolia.ethusd,
-        86400,
-    );
-    const dtx2 = await oracleFactory.createComputedPriceFeed(
-        "computed ethmxn",
-        8,
-        pythWrapperAddr,
-        ORACLE_CONTRACTS.sepolia.ethusd,
-        86400,
-    );
-    await dtx2.wait();
-    console.log("... computedPriceAddr", computedPriceAddr);
-
-    const reserveAddr = await factory.deployHouseOfReserve.staticCall(
+    const reservehouse = await deployReserveViaFactory(
+        factory,
+        oracleFactory,
         WNATIVE,
-        computedPriceAddr,
-        ethers.parseUnits("0.8", 18),
-        ethers.parseUnits("0.85", 18),
-        ethers.parseEther("100"),
-        15000, // 150 bps
-    );
-    const dtx3 = await factory.deployHouseOfReserve(
-        WNATIVE,
-        computedPriceAddr,
-        ethers.parseUnits("0.8", 18),
-        ethers.parseUnits("0.85", 18),
         RESERVE_CAPS.weth.defaultInitialLimit,
-        15000, // 150 bps
+        ethers.parseUnits("0.8", 18),
+        ethers.parseUnits("0.85", 18),
+        15000,
+        await pythWrapperUsdMxn.getAddress(),
+        ORACLE_CONTRACTS[NETWORK].ethusd,
     );
-    await dtx3.wait();
-    console.log("... reserveAddr", reserveAddr);
-
-    const reservehouse = await ethers.getContractAt("HouseOfReserve", reserveAddr);
 
     await rolesHandOverAssetsAccountant(accountant);
-    await handOverDefaultAdmin(coinhouse);
+    await handOverOwnership(coinhouse);
     await handOverOwnership(factory);
     await handOverOwnership(oracleFactory);
-    await handOverDefaultAdmin(liquidator);
-    await handOverDefaultAdmin(reservehouse);
+    await handOverOwnership(liquidator);
+    await handOverOwnership(reservehouse);
 
     // In addition the multisig needs to queue
+    // 1.- Xocolatl contract grants minter role to Coinhouse
+    // 2.- Xocolatl contract grants burner role to Coinhouse
+    // 3.- Xocolatl contract grants burner role to Liquidator
+    // For example:
+    // await xoc.grantRole(minter, await coinhouse.getAddress());
+    // await xoc.grantRole(burner, await coinhouse.getAddress());
+    // await xoc.grantRole(burner, await liquidator.getAddress());
 };
 
 const main = async () => {

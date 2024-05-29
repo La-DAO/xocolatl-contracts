@@ -1,16 +1,17 @@
-const {network, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
-
+const {NETWORK, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
 const {VERSION} = require("./utils_base");
 
 const {deployXocolatl} = require("../tasks/deployXocolatl");
+const {handOverDefaultAdmin} = require("../tasks/rolesHandOver");
 
 const deployBackedAsset = async () => {
     console.log("\n\n 📡 Deploying...\n");
     const xoc = await deployXocolatl();
+    await handOverDefaultAdmin(xoc);
 };
 
 const main = async () => {
-    if (network !== "base") {
+    if (NETWORK !== "base") {
         throw new Error("Set 'NETWORK=base' in .env file");
     }
     await setDeploymentsPath(VERSION);

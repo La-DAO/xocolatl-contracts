@@ -1,5 +1,5 @@
 const {NETWORK, getContract, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
-const {TREASURY, RESERVE_CAPS, VERSION, WNATIVE} = require("./utils_polygon");
+const {TREASURY, RESERVE_CAPS, VERSION, WNATIVE} = require("./utils_mainnet");
 const {deployAccountLiquidator} = require("../tasks/deployAccountLiquidator");
 const {deployAssetsAccountant} = require("../tasks/deployAssetsAccountant");
 const {deployHouseOfCoin} = require("../tasks/deployHouseOfCoin");
@@ -77,8 +77,8 @@ const deploySystemContracts = async () => {
 };
 
 const main = async () => {
-    if (NETWORK !== "polygon") {
-        throw new Error("Set 'NETWORK=polygon' in .env file");
+    if (NETWORK !== "mainnet") {
+        throw new Error("Set 'NETWORK=mainnet' in .env file");
     }
     await setDeploymentsPath(VERSION);
     await setPublishPath(VERSION);

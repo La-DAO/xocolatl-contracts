@@ -6,6 +6,10 @@ const LADAO_MULTISIGS = {
     gnosis: "0x2CBe215Eae3e926f11291560be0e4cda9556DCBb",
     binance: "0xD14F02ad072238d5D58671bcfE07FcBf9a17d5f7",
     sepolia: "0xbd9e84Da78228039867E1687F824a106310c029D",
+    base: "0x571131167e1A16D9879FA605319944Ba6E993Dd7",
+    linea: "",
+    polygonzkevm: "",
+    scroll: "0x840A6f02e31eBa9761Ceb18471524B71B506E7F4",
 };
 
 const CONTRACT_DEPLOYER_FACTORY = "0xF8faF9319e5CDDfda173B0a6461f19765AAAbf03";
@@ -77,9 +81,9 @@ const ASSETS = {
         },
         wbtc: {
             address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-        },
-        storageSlots: {
-            balanceOf: 0,
+            storageSlots: {
+                balanceOf: 0,
+            },
         },
     },
     polygonzkevm: {
@@ -123,9 +127,9 @@ const ASSETS = {
         },
         wbtc: {
             address: "0x45AC379F019E48ca5dAC02E54F406F99F5088099",
-        },
-        storageSlots: {
-            balanceOf: 0,
+            storageSlots: {
+                balanceOf: 0,
+            },
         },
     },
     sepolia: {
@@ -137,9 +141,9 @@ const ASSETS = {
         },
         wbtc: {
             address: "0xf864F011C5A97fD8Da79baEd78ba77b47112935a",
-        },
-        storageSlots: {
-            balanceOf: 0,
+            storageSlots: {
+                balanceOf: 0,
+            },
         },
     },
     mumbai: {
@@ -157,9 +161,17 @@ const ASSETS = {
         },
         wbtc: {
             address: "0x97e8dE167322a3bCA28E8A49BC46F6Ce128FEC68",
+            storageSlots: {
+                balanceOf: 0,
+            },
         },
-        storageSlots: {
-            balanceOf: 0,
+    },
+    scroll: {
+        weth: {
+            address: "0x5300000000000000000000000000000000000004",
+            storageSlots: {
+                balanceOf: 0,
+            },
         },
     },
 };
@@ -190,15 +202,31 @@ const ORACLE_CONTRACTS = {
     },
     arbitrum: {
         pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+        ethusd: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
     },
     optimism: {
         pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+        ethusd: "0x13e3Ee699D1909E989722E753853AE30b17e08c5",
     },
     base: {
         pyth: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
+        ethusd: "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
     },
     gnosis: {
         pyth: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+        ethusd: "0xa767f745331D267c7751297D982b050c93985627",
+    },
+    mainnet: {
+        pyth: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+        ethusd: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    },
+    linea: {
+        pyth: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+        ethusd: "0x3c6Cd9Cc7c7a4c2Cf5a82734CD249D7D593354dA",
+    },
+    scroll: {
+        pyth: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+        ethusd: "0x6bF14CB0A831078629D993FDeBcB182b21A8774C",
     },
 };
 

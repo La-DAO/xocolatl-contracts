@@ -192,6 +192,8 @@ const redeployIf = async (detailName, contractName, deployContract, args = [], o
 
 const publishUpdates = async () => {
     if (CHAIN_ID != 31337) {
+        console.log("deploymentsPath", deploymentsPath);
+        console.log("publishPath", publishPath);
         fs.copyFile(deploymentsPath, publishPath, (err) => {
             if (err) throw err;
             console.log("Deployments/Updates have been published!");

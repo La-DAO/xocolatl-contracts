@@ -9,8 +9,8 @@ const RESERVE_CAPS = {
     },
 };
 
-const WNATIVE = ASSETS.gnosis.weth.address;
-const TREASURY = LADAO_MULTISIGS.gnosis;
+const WNATIVE = ASSETS.scroll.weth.address;
+const TREASURY = LADAO_MULTISIGS.scroll;
 
 module.exports = {
     VERSION,

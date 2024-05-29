@@ -1,5 +1,5 @@
 const {NETWORK, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
-const {VERSION} = require("./utils_sepolia");
+const {VERSION} = require("./utils_scroll");
 
 const {deployXocolatl} = require("../tasks/deployXocolatl");
 const {handOverDefaultAdmin} = require("../tasks/rolesHandOver");
@@ -11,8 +11,8 @@ const deployBackedAsset = async () => {
 };
 
 const main = async () => {
-    if (NETWORK !== "mumbai") {
-        throw new Error("Set 'NETWORK=mumbai' in .env file");
+    if (NETWORK !== "scroll") {
+        throw new Error("Set 'NETWORK=scroll' in .env file");
     }
     await setDeploymentsPath(VERSION);
     await setPublishPath(VERSION);

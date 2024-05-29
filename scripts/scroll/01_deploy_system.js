@@ -1,5 +1,5 @@
 const {NETWORK, getContract, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
-const {TREASURY, RESERVE_CAPS, VERSION, WNATIVE} = require("./utils_polygon");
+const {TREASURY, RESERVE_CAPS, VERSION, WNATIVE} = require("./utils_scroll");
 const {deployAccountLiquidator} = require("../tasks/deployAccountLiquidator");
 const {deployAssetsAccountant} = require("../tasks/deployAssetsAccountant");
 const {deployHouseOfCoin} = require("../tasks/deployHouseOfCoin");
@@ -66,7 +66,6 @@ const deploySystemContracts = async () => {
     await handOverOwnership(reservehouse);
 
     // In addition the multisig needs to queue
-    // In addition the multisig needs to queue
     // 1.- Xocolatl contract grants minter role to Coinhouse
     // 2.- Xocolatl contract grants burner role to Coinhouse
     // 3.- Xocolatl contract grants burner role to Liquidator
@@ -77,8 +76,8 @@ const deploySystemContracts = async () => {
 };
 
 const main = async () => {
-    if (NETWORK !== "polygon") {
-        throw new Error("Set 'NETWORK=polygon' in .env file");
+    if (NETWORK !== "scroll") {
+        throw new Error("Set 'NETWORK=scroll' in .env file");
     }
     await setDeploymentsPath(VERSION);
     await setPublishPath(VERSION);
