@@ -30,7 +30,10 @@ contract AccountLiquidator is Initializable, OwnableUpgradeable, UUPSUpgradeable
      * @param collateralAmount sold.
      */
     event Liquidation(
-        address indexed userLiquidated, address indexed liquidator, uint256 collateralAmount, uint256 debtAmount
+        address indexed userLiquidated,
+        address indexed liquidator,
+        uint256 collateralAmount,
+        uint256 debtAmount
     );
 
     /// Custom errors
@@ -82,7 +85,7 @@ contract AccountLiquidator is Initializable, OwnableUpgradeable, UUPSUpgradeable
         uint256 reserveTokenID_ = hOfReserve.reserveTokenID();
         uint256 backedTokenID_ = hOfReserve.backedTokenID();
 
-        (uint256 reserveBal,) = _checkBalances(userToLiquidate, reserveTokenID_, backedTokenID_);
+        (uint256 reserveBal, ) = _checkBalances(userToLiquidate, reserveTokenID_, backedTokenID_);
 
         uint256 latestPrice = getLatestPrice(houseOfReserve);
 
@@ -99,12 +102,20 @@ contract AccountLiquidator is Initializable, OwnableUpgradeable, UUPSUpgradeable
             // User at liquidation level
             if (healthRatio <= liqParam.liquidationThreshold) {
                 // check liquidator ERC20 approval
-                (uint256 costofLiquidation, uint256 collatPenaltyBal) =
-                    _computeCostOfLiquidation(reserveBal, latestPrice, reserveAssetDecimals, liqParam);
+                (uint256 costofLiquidation, uint256 collatPenaltyBal) = _computeCostOfLiquidation(
+                    reserveBal,
+                    latestPrice,
+                    reserveAssetDecimals,
+                    liqParam
+                );
                 require(backedAsset.allowance(msg.sender, address(this)) >= costofLiquidation, "No allowance!");
 
                 _executeLiquidation(
-                    userToLiquidate, reserveTokenID_, backedTokenID_, costofLiquidation, collatPenaltyBal
+                    userToLiquidate,
+                    reserveTokenID_,
+                    backedTokenID_,
+                    costofLiquidation,
+                    collatPenaltyBal
                 );
             }
         } else {
@@ -117,11 +128,10 @@ contract AccountLiquidator is Initializable, OwnableUpgradeable, UUPSUpgradeable
      * @param user address.
      * * @param houseOfReserve address in where user has collateral backing debt.
      */
-    function computeCostOfLiquidation(address user, address houseOfReserve)
-        public
-        view
-        returns (uint256 costAmount, uint256 collateralAtPenalty)
-    {
+    function computeCostOfLiquidation(
+        address user,
+        address houseOfReserve
+    ) public view returns (uint256 costAmount, uint256 collateralAtPenalty) {
         // Get all the required inputs.
         // Get all the required inputs.
         IHouseOfReserve hOfReserve = IHouseOfReserve(houseOfReserve);
@@ -129,7 +139,7 @@ contract AccountLiquidator is Initializable, OwnableUpgradeable, UUPSUpgradeable
         uint256 reserveTokenID_ = hOfReserve.reserveTokenID();
         uint256 backedTokenID_ = hOfReserve.backedTokenID();
 
-        (uint256 reserveBal,) = _checkBalances(user, reserveTokenID_, backedTokenID_);
+        (uint256 reserveBal, ) = _checkBalances(user, reserveTokenID_, backedTokenID_);
         if (reserveBal == 0) {
             revert AccountLiquidator_noBalances();
         }
@@ -140,8 +150,12 @@ contract AccountLiquidator is Initializable, OwnableUpgradeable, UUPSUpgradeable
 
         IHouseOfCoin.LiquidationParam memory liqParam = houseOfCoin.getLiqParams();
 
-        (costAmount, collateralAtPenalty) =
-            _computeCostOfLiquidation(reserveBal, latestPrice, reserveAssetDecimals, liqParam);
+        (costAmount, collateralAtPenalty) = _computeCostOfLiquidation(
+            reserveBal,
+            latestPrice,
+            reserveAssetDecimals,
+            liqParam
+        );
 
         return (costAmount, collateralAtPenalty);
     }
@@ -149,11 +163,11 @@ contract AccountLiquidator is Initializable, OwnableUpgradeable, UUPSUpgradeable
     /**
      * @dev  Internal function to query balances in {AssetsAccountant}
      */
-    function _checkBalances(address user, uint256 reservesTokenID_, uint256 bAssetRTokenID_)
-        internal
-        view
-        returns (uint256 reserveBal, uint256 mintedCoinBal)
-    {
+    function _checkBalances(
+        address user,
+        uint256 reservesTokenID_,
+        uint256 bAssetRTokenID_
+    ) internal view returns (uint256 reserveBal, uint256 mintedCoinBal) {
         reserveBal = assetsAccountant.balanceOf(user, reservesTokenID_);
         mintedCoinBal = assetsAccountant.balanceOf(user, bAssetRTokenID_);
     }

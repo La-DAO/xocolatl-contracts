@@ -20,7 +20,10 @@ contract ReserveBeaconFactory is IBeacon, Ownable {
 
     /// Events
     event HouseOfReserveCreated(
-        address indexed newReserveAddr, address indexed reserveAsset, uint256 reserveTokenId, uint256 backedTokenId
+        address indexed newReserveAddr,
+        address indexed reserveAsset,
+        uint256 reserveTokenId,
+        uint256 backedTokenId
     );
     event Upgraded(address indexed implementation);
 
@@ -108,13 +111,19 @@ contract ReserveBeaconFactory is IBeacon, Ownable {
             weth9,
             address(this)
         );
-        bytes memory bytecode =
-            abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(address(this), initCallData));
+        bytes memory bytecode = abi.encodePacked(
+            type(BeaconProxy).creationCode,
+            abi.encode(address(this), initCallData)
+        );
         bytes32 salt = keccak256(abi.encode(reserveAsset, _reservesByAsset[reserveAsset].length));
         reserve = Create2.deploy(0, salt, bytecode);
 
         _configureDeployedReserve(
-            HouseOfReserve(payable(reserve)), maxLTVFactor, liquidationFactor, depositLimit, reserveMintFee
+            HouseOfReserve(payable(reserve)),
+            maxLTVFactor,
+            liquidationFactor,
+            depositLimit,
+            reserveMintFee
         );
         _addAssetToReserves(reserveAsset);
         emit HouseOfReserveCreated(
