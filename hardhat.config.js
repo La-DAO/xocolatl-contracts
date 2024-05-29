@@ -103,6 +103,11 @@ module.exports = {
             url: `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_ID}`,
             accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
         },
+        scroll: {
+            chainId: 534352,
+            url: `https://rpc.scroll.io/`,
+            accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
+        }
     },
     sourcify: {
         enabled: true,
