@@ -7,7 +7,7 @@ const {deployHouseOfReserveImplementation} = require("../tasks/deployHouseOfRese
 const {deployOracleFactory} = require("../tasks/deployOracleFactory");
 const {deployOracleImplementations} = require("../tasks/deployOracleImplementations");
 const {deployReserveBeaconFactory} = require("../tasks/deployReserveBeaconFactory");
-const {ORACLE_CONTRACTS} = require("../const");
+const {ORACLE_CONTRACTS, ASSETS} = require("../const");
 const {rolesHandOverAssetsAccountant, handOverOwnership} = require("../tasks/rolesHandOver");
 const {setUpAssetsAccountant} = require("../tasks/setUpAssetsAccountant");
 const {setupOracleFactory} = require("../tasks/setupOracleFactory");
@@ -46,10 +46,10 @@ const deploySystemContracts = async () => {
 
     const pythWrapperUsdMxn = await deployUsdMxnPythWrapper(oracleFactory, ORACLE_CONTRACTS[NETWORK].pyth);
 
-    const reservehouse = await deployReserveViaFactory(
+    const reservehouseWETH = await deployReserveViaFactory(
         factory,
         oracleFactory,
-        WNATIVE,
+        ASSETS[NETWORK].gnosis.weth.address,
         RESERVE_CAPS.weth.defaultInitialLimit,
         ethers.parseUnits("0.8", 18),
         ethers.parseUnits("0.85", 18),
@@ -58,12 +58,25 @@ const deploySystemContracts = async () => {
         ORACLE_CONTRACTS[NETWORK].ethusd,
     );
 
+    const reservehouseGNO = await deployReserveViaFactory(
+        factory,
+        oracleFactory,
+        ASSETS[NETWORK].gnosis.gno.address,
+        RESERVE_CAPS.gno.defaultInitialLimit,
+        ethers.parseUnits("0.6", 18),
+        ethers.parseUnits("0.65", 18),
+        15000,
+        await pythWrapperUsdMxn.getAddress(),
+        ORACLE_CONTRACTS[NETWORK].gnousd,
+    );
+
     await rolesHandOverAssetsAccountant(accountant);
     await handOverOwnership(coinhouse);
     await handOverOwnership(factory);
     await handOverOwnership(oracleFactory);
     await handOverOwnership(liquidator);
-    await handOverOwnership(reservehouse);
+    await handOverOwnership(reservehouseWETH);
+    await handOverOwnership(reservehouseGNO);
 
     // In addition the multisig needs to queue
     // In addition the multisig needs to queue
