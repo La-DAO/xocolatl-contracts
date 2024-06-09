@@ -121,15 +121,14 @@ const ASSETS = {
             address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
             storageSlots: {
                 balanceOf: 0,
-            }
+            },
         },
         wxdai: {
             address: "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
             storageSlots: {
                 balanceOf: 0,
-            }
+            },
         },
-
     },
     goerli: {
         weth: {
@@ -214,14 +213,18 @@ const ORACLE_CONTRACTS = {
         mxnusd: "0x480f3c11381824E9EEbEEdbB6398dB86e38bAEA0",
     },
     arbitrum: {
+        sequencer: "0xFdB631F5EE196F0ed6FAa767959853A9F217697D",
         pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
         ethusd: "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
     },
     optimism: {
+        sequencer: "0x371EAD81c9102C9BF4874A9075FFFf170F2Ee389",
+
         pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
         ethusd: "0x13e3Ee699D1909E989722E753853AE30b17e08c5",
     },
     base: {
+        sequencer: "0xBCF85224fc0756B9Fa45aA7892530B47e10b6433",
         pyth: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
         ethusd: "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
     },
@@ -240,6 +243,7 @@ const ORACLE_CONTRACTS = {
         ethusd: "0x3c6Cd9Cc7c7a4c2Cf5a82734CD249D7D593354dA",
     },
     scroll: {
+        sequencer: "0x45c2b8C204568A03Dc7A2E32B71D67Fe97F908A9",
         pyth: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
         ethusd: "0x6bF14CB0A831078629D993FDeBcB182b21A8774C",
     },
