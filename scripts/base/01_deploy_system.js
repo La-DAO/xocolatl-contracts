@@ -7,7 +7,7 @@ const {deployHouseOfReserveImplementation} = require("../tasks/deployHouseOfRese
 const {deployOracleFactoryL2} = require("../tasks/deployOracleFactoryL2");
 const {deployOracleImplementations} = require("../tasks/deployOracleImplementations");
 const {deployReserveBeaconFactory} = require("../tasks/deployReserveBeaconFactory");
-const {ORACLE_CONTRACTS} = require("../const");
+const {ASSETS, ORACLE_CONTRACTS} = require("../const");
 const {rolesHandOverAssetsAccountant, handOverOwnership} = require("../tasks/rolesHandOver");
 const {setUpAssetsAccountant} = require("../tasks/setUpAssetsAccountant");
 const {setupOracleFactory} = require("../tasks/setupOracleFactory");
@@ -46,7 +46,7 @@ const deploySystemContracts = async () => {
 
     const pythWrapperUsdMxn = await deployUsdMxnPythWrapper(oracleFactory, ORACLE_CONTRACTS[NETWORK].pyth);
 
-    const reservehouse = await deployReserveViaFactory(
+    const reservehouseWeth = await deployReserveViaFactory(
         factory,
         oracleFactory,
         WNATIVE,
@@ -58,12 +58,25 @@ const deploySystemContracts = async () => {
         ORACLE_CONTRACTS[NETWORK].ethusd,
     );
 
+    const reservehouseCbEth = await deployReserveViaFactory(
+        factory,
+        oracleFactory,
+        ASSETS[NETWORK].cbeth.address,
+        RESERVE_CAPS.weth.defaultInitialLimit,
+        ethers.parseUnits("0.8", 18),
+        ethers.parseUnits("0.85", 18),
+        15000,
+        await pythWrapperUsdMxn.getAddress(),
+        ORACLE_CONTRACTS[NETWORK].cbethusd,
+    );
+
     await rolesHandOverAssetsAccountant(accountant);
     await handOverOwnership(coinhouse);
     await handOverOwnership(factory);
     await handOverOwnership(oracleFactory);
     await handOverOwnership(liquidator);
-    await handOverOwnership(reservehouse);
+    await handOverOwnership(reservehouseWeth);
+    await handOverOwnership(reservehouseCbEth);
 
     // In addition the multisig needs to queue
     // 1.- Xocolatl contract grants minter role to Coinhouse

@@ -109,6 +109,12 @@ const ASSETS = {
                 balanceOf: 3,
             },
         },
+        cbeth: {
+            address: "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22",
+            storageSlots: {
+                balanceOf: 51,
+            },
+        },
     },
     gnosis: {
         weth: {
@@ -227,6 +233,7 @@ const ORACLE_CONTRACTS = {
         sequencer: "0xBCF85224fc0756B9Fa45aA7892530B47e10b6433",
         pyth: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
         ethusd: "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
+        cbethusd: "0xd7818272B9e248357d13057AAb0B417aF31E817d",
     },
     gnosis: {
         pyth: "0x2880aB155794e7179c9eE2e38200202908C17B43",
