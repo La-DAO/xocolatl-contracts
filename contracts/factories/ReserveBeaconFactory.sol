@@ -44,7 +44,7 @@ contract ReserveBeaconFactory is IBeacon, Ownable {
     mapping(address => bool) public isAcceptedReserveAsset;
 
     /**
-     * @notice Constructor of a new {BorrowingVaultFactory}.
+     * @notice Constructor
      * @param implAddr address of the master BorrowingVault.sol
      * @param xocAddr address of the Xocolatl contract
      * @param accountAddr address of the AssetsAccountant contract
@@ -67,6 +67,13 @@ contract ReserveBeaconFactory is IBeacon, Ownable {
      */
     function getReserveAssets() public view returns (address[] memory) {
         return _reserveAssets;
+    }
+
+    /**
+     * @notice Returns the list of HouseOfReserve contracts for a given reserve asset.
+     */
+    function getHouseOfReservesByAsset(address reserveAsset) public view returns (HouseOfReserve[] memory) {
+        return _reservesByAsset[reserveAsset];
     }
 
     /**

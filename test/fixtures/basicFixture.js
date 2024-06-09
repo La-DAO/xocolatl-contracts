@@ -93,6 +93,7 @@ async function basicFixture() {
     return {
         accountant,
         coinhouse,
+        factory,
         reservehouse,
         liquidator,
         xoc,
