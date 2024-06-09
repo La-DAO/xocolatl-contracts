@@ -37,7 +37,7 @@ const deploySystemContracts = async () => {
     );
 
     const {computedPriceFeedImpl, invPriceFeedImpl, priceFeedPythWrapperImpl} = await deployOracleImplementations([
-        "ComputedPriceFeed",
+        "ComputedPriceFeedWithSequencer",
         "InversePriceFeed",
         "PriceFeedPythWrapper",
     ]);
@@ -65,7 +65,6 @@ const deploySystemContracts = async () => {
     await handOverOwnership(liquidator);
     await handOverOwnership(reservehouse);
 
-    // In addition the multisig needs to queue
     // In addition the multisig needs to queue
     // 1.- Xocolatl contract grants minter role to Coinhouse
     // 2.- Xocolatl contract grants burner role to Coinhouse
