@@ -7,9 +7,12 @@ const RESERVE_CAPS = {
     weth: {
         defaultInitialLimit: ethers.parseUnits("5", 18),
     },
+    gnosis: {
+        defaultInitialLimit: ethers.parseUnits("50", 18),
+    },
 };
 
-const WNATIVE = ASSETS.gnosis.weth.address;
+const WNATIVE = ASSETS.gnosis.wxdai.address;
 const TREASURY = LADAO_MULTISIGS.gnosis;
 
 module.exports = {

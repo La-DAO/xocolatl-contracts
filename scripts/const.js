@@ -117,6 +117,19 @@ const ASSETS = {
                 balanceOf: 0,
             },
         },
+        gno: {
+            address: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
+            storageSlots: {
+                balanceOf: 0,
+            }
+        },
+        wxdai: {
+            address: "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
+            storageSlots: {
+                balanceOf: 0,
+            }
+        },
+
     },
     goerli: {
         weth: {
@@ -215,6 +228,8 @@ const ORACLE_CONTRACTS = {
     gnosis: {
         pyth: "0x2880aB155794e7179c9eE2e38200202908C17B43",
         ethusd: "0xa767f745331D267c7751297D982b050c93985627",
+        gnousd: "0x22441d81416430A54336aB28765abd31a792Ad37",
+        mxnusd: "0xe9cea51a7b1b9B32E057ff62762a2066dA933cD2",
     },
     mainnet: {
         pyth: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
