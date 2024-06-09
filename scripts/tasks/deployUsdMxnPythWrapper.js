@@ -23,7 +23,7 @@ const deployUsdMxnPythWrapper = async (oracleFactory, pythAddress) => {
         8,
         pythAddress,
         PYTH_MXN_USD_FEED_ID,
-        86400,
+        234000, // Due to market closure on weekends
     );
 
     const dtx1 = await oracleFactory.createPriceFeedPythWrapper(
