@@ -70,6 +70,7 @@ At the current state, Xoc System smart contracts are currently owned by the foll
 | BSC           | 0xD14F02ad072238d5D58671bcfE07FcBf9a17d5f7 |
 | Arbritum      | 0x80Ea762B09883Bddf09d3F7E4142ca6E1e697490 |
 | Optimism      | 0xC6A1425bC0D0c3FcE5055da85032d36893f91D03 |
+| Base          | 0x571131167e1A16D9879FA605319944Ba6E993Dd7 |
 
 Each multisig requires 5 of 8 signatures and the current members include the most active members since inception of the Xoc system.
 
@@ -92,9 +93,9 @@ The core ERC20 contract has been deployed:
 
 </div>
 
-| Symbol | Name                    | Deployed Address                           | Chains                                                                                              |
-| ------ | ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| $Xoc   | Xocolatl MXN Stablecoin | 0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf | Ethereum, Polygon (POS), Binance Smart Chain (BSC), Gnosis Chain, Arbitrum, Optimism, Polygon zkEVM |
+| Symbol | Name                    | Deployed Address                           | Chains                                                                                                    |
+| ------ | ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| $Xoc   | Xocolatl MXN Stablecoin | 0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf | Ethereum, Polygon (POS), Binance Smart Chain (BSC), Gnosis Chain, Arbitrum, Optimism, Base, Polygon zkEVM |
 
 ### 5.2 Reserves and Minting
 
@@ -125,9 +126,20 @@ This list may increase in the future via multisig consensus and / or by an estab
 | 0x2170ed0880ac9a755fd29b2688956bd959f933f8 | WETH  | 85%                     | 100                   | [0xd411BE9A105Ea7701FabBe58C2834b7033EBC203](https://bscscan.com/address/0xd411BE9A105Ea7701FabBe58C2834b7033EBC203) |
 | 0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c | WBNB  | 70%                     | 100                   | [0x070ccE6887E70b75015F948b12601D1E759D2024](https://bscscan.com/address/0x070ccE6887E70b75015F948b12601D1E759D2024) |
 
-<div class="p-h3">
+#### 5.2.3 Base
 
-**House Of Coin**: [0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b](https://bscscan.com/address/0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b)
+**ReserveBeaconFactory :**: [0x57Fe06D0E981D828459FA547f07710D227FBceE4](https://basescan.org/address/0x57Fe06D0E981D828459FA547f07710D227FBceE4)  
+**OracleFactoryL2 :**: [0x07A576cD380b71647accF0cff5DB496ff1886E77](https://basescan.org/address/0x07A576cD380b71647accF0cff5DB496ff1886E77)  
+**House Of Coin :**: [0x02c531Cd9791dD3A31428B2987A82361D72F9b13](https://basescan.org/address/0x02c531Cd9791dD3A31428B2987A82361D72F9b13)  
+**AssetsAccountant :**: [0xB93EcD005B6053c6F8428645aAA879e7028408C7](https://basescan.org/address/0xB93EcD005B6053c6F8428645aAA879e7028408C7)  
+**AccountLiquidator :**: [0x4b75Fb5B0D323672fc6Eac5Afbf487AE4c2ff6de](https://basescan.org/address/0x4b75Fb5B0D323672fc6Eac5Afbf487AE4c2ff6de)
+
+| Token Address                              | Token | Max Loan To Value (LTV) | Liquidation Threshold (LT) | Reserve Deposit Limit | House of Reserve Address                                                                                              |
+| ------------------------------------------ | ----- | ----------------------- | -------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 0x4200000000000000000000000000000000000006 | WETH  | 80%                     | 85%                        | 5                     | [0xfF69E183A863151B4152055974aa648b3165014D](https://basescan.org/address/0xfF69E183A863151B4152055974aa648b3165014D) |
+| 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22 | CBETH | 80%                     | 85%                        | 5                     | [0x070ccE6887E70b75015F948b12601D1E759D2024](https://basescan.org/address/0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22) |
+
+<div class="p-h3">
 
 </div>
 
