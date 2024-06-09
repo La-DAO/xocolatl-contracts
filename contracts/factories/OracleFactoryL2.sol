@@ -43,10 +43,12 @@ contract OracleFactoryL2 is Ownable {
     event ComputedPriceFeedImplSet(address indexed computedPriceFeedImpl);
     event InversePriceFeedImplSet(address indexed inversePriceFeedImpl);
     event PriceFeedPythWrapperImplSet(address indexed priceFeedPythWrapperImpl);
+    event SequencerFeedSet(address indexed sequencerFeed);
 
     /// Custom errors
     error OracleFactory_invalidInput();
     error OracleFactory_noImplementation();
+    error OracleFactory_noSequencerFeed();
 
     address[] internal _computedFeeds;
     address[] internal _inverseFeeds;
@@ -55,6 +57,8 @@ contract OracleFactoryL2 is Ownable {
     address public computedPriceFeedImpl;
     address public inversePriceFeedImpl;
     address public priceFeedPythWrapperImpl;
+
+    address public sequencerFeed;
 
     function getComputedFeeds() external view returns (address[] memory) {
         return _computedFeeds;
@@ -73,10 +77,10 @@ contract OracleFactoryL2 is Ownable {
         uint8 decimals,
         address feedAsset,
         address feedInterAsset,
-        uint256 allowedTimeout,
-        address sequencerFeed
+        uint256 allowedTimeout
     ) external onlyOwner returns (address computedPriceFeed) {
         if (computedPriceFeedImpl == address(0)) revert OracleFactory_noImplementation();
+        if (sequencerFeed == address(0)) revert OracleFactory_noSequencerFeed();
         computedPriceFeed = Clones.clone(computedPriceFeedImpl);
         ComputedPriceFeedWithSequencer(computedPriceFeed).initialize(
             description,
@@ -153,5 +157,11 @@ contract OracleFactoryL2 is Ownable {
         if (priceFeedPythWrapperImpl_ == address(0)) revert OracleFactory_invalidInput();
         priceFeedPythWrapperImpl = priceFeedPythWrapperImpl_;
         emit PriceFeedPythWrapperImplSet(priceFeedPythWrapperImpl);
+    }
+
+    function setSequencerFeed(address sequencerFeed_) external onlyOwner {
+        if (sequencerFeed_ == address(0)) revert OracleFactory_invalidInput();
+        sequencerFeed = sequencerFeed_;
+        emit SequencerFeedSet(sequencerFeed);
     }
 }
