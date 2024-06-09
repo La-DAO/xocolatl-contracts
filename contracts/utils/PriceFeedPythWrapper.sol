@@ -30,7 +30,7 @@ interface IPyth {
     function priceFeedExists(bytes32 id) external view returns (bool);
 }
 
-contract PriceFeedPythWrapper is Initializable {
+contract PriceFeedPythWrapper is IPriceBulletin, Initializable {
     struct PriceFeedResponse {
         uint80 roundId;
         int256 answer;
@@ -50,7 +50,7 @@ contract PriceFeedPythWrapper is Initializable {
     error PriceFeedPythWrapper_invalidPriceFeedId();
     error PriceFeedPythWrapper_safeCast_overflow();
 
-    string public constant VERSION = "v1.0.0";
+    uint256 public constant version = 1;
 
     string private _description;
     uint8 private _decimals;
@@ -100,6 +100,11 @@ contract PriceFeedPythWrapper is Initializable {
     function latestAnswer() external view returns (int256) {
         PriceFeedResponse memory pythRound = _computeLatestRoundData();
         return pythRound.answer;
+    }
+
+    function latestRound() external view returns (uint256) {
+        PriceFeedResponse memory clComputed = _computeLatestRoundData();
+        return clComputed.roundId;
     }
 
     function latestRoundData()

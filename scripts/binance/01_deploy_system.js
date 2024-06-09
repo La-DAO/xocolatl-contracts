@@ -1,127 +1,94 @@
-const {
-  network,
-  getContract,
-  setDeploymentsPath,
-  setPublishPath,
-  publishUpdates
-} = require("../utils");
-
-const { VERSION, RESERVE_CAPS, WNATIVE, ASSETS } = require("./utils_binance");
-const { CHAINLINK_CONTRACTS } = require("../const");
-
-const { deployAssetsAccountant } = require("../tasks/deployAssetsAccountant");
-const { deployHouseOfCoin } = require("../tasks/deployHouseOfCoin");
-const { deployHouseOfReserve } = require("../tasks/deployHouseOfReserve");
-const { deployAccountLiquidator } = require("../tasks/deployAccountLiquidator");
-
-const { systemPermissionGranting } = require("../tasks/setUpXocolatl");
-const { setUpAssetsAccountant } = require("../tasks/setUpAssetsAccountant");
-const { setUpHouseOfReserve, setUpOraclesHouseOfReserve } = require("../tasks/setUpHouseOfReserve");
-
-const {
-  rolesHandOverAssetsAccountant,
-  handOverDefaultAdmin
-} = require("../tasks/rolesHandOver");
+const {NETWORK, getContract, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
+const {TREASURY, RESERVE_CAPS, VERSION, WNATIVE} = require("./utils_binance");
+const {deployAccountLiquidator} = require("../tasks/deployAccountLiquidator");
+const {deployAssetsAccountant} = require("../tasks/deployAssetsAccountant");
+const {deployHouseOfCoin} = require("../tasks/deployHouseOfCoin");
+const {deployHouseOfReserveImplementation} = require("../tasks/deployHouseOfReserve");
+const {deployOracleFactory} = require("../tasks/deployOracleFactory");
+const {deployOracleImplementations} = require("../tasks/deployOracleImplementations");
+const {deployReserveBeaconFactory} = require("../tasks/deployReserveBeaconFactory");
+const {ORACLE_CONTRACTS} = require("../const");
+const {rolesHandOverAssetsAccountant, handOverOwnership} = require("../tasks/rolesHandOver");
+const {setUpAssetsAccountant} = require("../tasks/setUpAssetsAccountant");
+const {setupOracleFactory} = require("../tasks/setupOracleFactory");
+const {deployUsdMxnPythWrapper} = require("../tasks/deployUsdMxnPythWrapper");
+const {deployReserveViaFactory} = require("../tasks/deployReserveViaFactory");
 
 const deploySystemContracts = async () => {
-  console.log("\n\n 📡 Deploying...\n");
+    console.log("\n\n 📡 Deploying...\n");
+    xoc = await getContract("Xocolatl", "Xocolatl");
+    console.log("xoc", await xoc.getAddress());
+    const accountant = await deployAssetsAccountant();
+    const coinhouse = await deployHouseOfCoin(await xoc.getAddress(), await accountant.getAddress(), TREASURY);
+    const reservehouseImpl = await deployHouseOfReserveImplementation();
+    const factory = await deployReserveBeaconFactory(
+        await reservehouseImpl.getAddress(),
+        await xoc.getAddress(),
+        await accountant.getAddress(),
+        WNATIVE,
+    );
+    const liquidator = await deployAccountLiquidator(await coinhouse.getAddress(), await accountant.getAddress());
 
-  const xoc = await getContract("Xocolatl", "Xocolatl");
-  console.log("xoc", (await xoc.getAddress()));
-  const accountant = await deployAssetsAccountant();
-  const coinhouse = await deployHouseOfCoin(
-    (await xoc.getAddress()),
-    (await accountant.getAddress())
-  );
+    await setUpAssetsAccountant(
+        accountant,
+        await coinhouse.getAddress(),
+        await liquidator.getAddress(),
+        await factory.getAddress(),
+    );
 
-  const reservehouseWeth = await deployHouseOfReserve(
-    "HouseOfReserveBinanceWETH",
-    ASSETS.binance.weth.address,
-    (await xoc.getAddress()),
-    (await accountant.getAddress()),
-    "MXN",
-    "ETH",
-    WNATIVE
-  );
+    const {computedPriceFeedImpl, invPriceFeedImpl, priceFeedPythWrapperImpl} = await deployOracleImplementations([
+        "ComputedPriceFeed",
+        "InversePriceFeed",
+        "PriceFeedPythWrapper",
+    ]);
+    const oracleFactory = await deployOracleFactory();
+    await setupOracleFactory(oracleFactory, computedPriceFeedImpl, invPriceFeedImpl, priceFeedPythWrapperImpl);
 
-  const liquidator = await deployAccountLiquidator(
-    (await coinhouse.getAddress()),
-    (await accountant.getAddress())
-  );
+    const pythWrapperUsdMxn = await deployUsdMxnPythWrapper(oracleFactory, ORACLE_CONTRACTS[NETWORK].pyth);
 
-  const reservehouseWBNB = await deployHouseOfReserve(
-    "HouseOfReserveWBNB",
-    ASSETS.binance.wbnb.address,
-    (await xoc.getAddress()),
-    (await accountant.getAddress()),
-    "MXN",
-    "BNB",
-    WNATIVE
-  );
+    const reservehouse = await deployReserveViaFactory(
+        factory,
+        oracleFactory,
+        WNATIVE,
+        RESERVE_CAPS.weth.defaultInitialLimit,
+        ethers.parseUnits("0.8", 18),
+        ethers.parseUnits("0.85", 18),
+        15000,
+        await pythWrapperUsdMxn.getAddress(),
+        ORACLE_CONTRACTS[NETWORK].ethusd,
+    );
 
-  await setUpHouseOfReserve(
-    reservehouseWeth,
-    RESERVE_CAPS.weth.defaultInitialLimit
-  );
+    await rolesHandOverAssetsAccountant(accountant);
+    await handOverOwnership(coinhouse);
+    await handOverOwnership(factory);
+    await handOverOwnership(oracleFactory);
+    await handOverOwnership(liquidator);
+    await handOverOwnership(reservehouse);
 
-  await setUpHouseOfReserve(
-    reservehouseWBNB,
-    RESERVE_CAPS.wbnb.defaultInitialLimit
-  );
-
-  await setUpOraclesHouseOfReserve(
-    reservehouseWeth,
-    ethers.ZeroAddress,
-    CHAINLINK_CONTRACTS.binance.ethusd
-  );
-
-  await setUpOraclesHouseOfReserve(
-    reservehouseWBNB,
-    ethers.ZeroAddress,
-    CHAINLINK_CONTRACTS.binance.bnbusd
-  );
-
-  await setUpAssetsAccountant(
-    accountant,
-    (await coinhouse.getAddress()),
-    reservehouseWeth.address,
-    (await liquidator.getAddress())  
-  );
-
-  const stx1 = await accountant.registerHouse(
-    reservehouseWBNB.address
-  );
-  await stx1.wait();
-  console.log("...House of Reserve registered in AssetsAccountant");
-
-  // await systemPermissionGranting(
-  //   xoc,
-  //   (await coinhouse.getAddress()),
-  //   (await liquidator.getAddress())
-  // );
-
-  // await rolesHandOverAssetsAccountant(accountant);
-  // await handOverDefaultAdmin(coinhouse);
-  // await handOverDefaultAdmin(reservehouseWeth);
-  // await handOverDefaultAdmin(reservehouseWBNB);
-  // await handOverDefaultAdmin(liquidator);
-}
-
-
-const main = async () => {
-  if (network !== "binance") {
-    throw new Error("Set 'NETWORK=binance' in .env file");
-  }
-  await setDeploymentsPath(VERSION);
-  await setPublishPath(VERSION);
-  await deploySystemContracts();
-  await publishUpdates();
+    // In addition the multisig needs to queue
+    // In addition the multisig needs to queue
+    // 1.- Xocolatl contract grants minter role to Coinhouse
+    // 2.- Xocolatl contract grants burner role to Coinhouse
+    // 3.- Xocolatl contract grants burner role to Liquidator
+    // For example:
+    // await xoc.grantRole(minter, await coinhouse.getAddress());
+    // await xoc.grantRole(burner, await coinhouse.getAddress());
+    // await xoc.grantRole(burner, await liquidator.getAddress());
 };
 
+const main = async () => {
+    if (NETWORK !== "binance") {
+        throw new Error("Set 'NETWORK=binance' in .env file");
+    }
+    await setDeploymentsPath(VERSION);
+    await setPublishPath(VERSION);
+    await deploySystemContracts();
+    await publishUpdates();
+};
 
 main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(`\n${error}\n`);
-    process.exit(1);
-  });
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(`\n${error}\n`);
+        process.exit(1);
+    });

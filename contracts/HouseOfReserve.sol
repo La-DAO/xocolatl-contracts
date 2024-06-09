@@ -11,13 +11,16 @@ pragma solidity 0.8.17;
  */
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {IERC20Extension} from "./interfaces/IERC20Extension.sol";
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {IAssetsAccountant} from "./interfaces/IAssetsAccountant.sol";
 import {OracleHouse} from "./abstract/OracleHouse.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract HouseOfReserveState {
+    bytes32 public constant HOUSE_TYPE = keccak256("RESERVE_HOUSE");
+
+    uint256 public constant MAX_RESERVE_FEE = 1_000_000;
+
     address public WRAPPED_NATIVE;
 
     address public reserveAsset;
@@ -42,8 +45,6 @@ contract HouseOfReserveState {
 
     IAssetsAccountant public assetsAccountant;
 
-    bytes32 public constant HOUSE_TYPE = keccak256("RESERVE_HOUSE");
-
     /**
      * @notice Fee for minting backedAsset of this HouseOfReserve in BPS x 10**2.
      * Examples: 100 = 1 bps (0.01%): 10000 = 100 bps (1%)
@@ -51,13 +52,7 @@ contract HouseOfReserveState {
     uint256 public reserveMintFee;
 }
 
-contract HouseOfReserve is
-    Initializable,
-    AccessControlUpgradeable,
-    UUPSUpgradeable,
-    OracleHouse,
-    HouseOfReserveState
-{
+contract HouseOfReserve is Initializable, OwnableUpgradeable, OracleHouse, HouseOfReserveState {
     // HouseOfReserve Events
     /**
      * @dev Emit when user makes an asset deposit in this contract.
@@ -128,15 +123,23 @@ contract HouseOfReserve is
      * @param backedAsset_ ERC20 address of the asset type of coin that can be backed with this reserves.
      * @param assetsAccountant_ Address of the {AssetsAccountant} contract.
      * @param wrappedNative address (WETH equivalent)
+     * @param admin Address of the DEFAULT_ADMIN_ROLE.
      */
     function initialize(
         address reserveAsset_,
         address backedAsset_,
         address assetsAccountant_,
         address computedPriceFeedAddr_,
-        address wrappedNative
+        address wrappedNative,
+        address admin
     ) public initializer {
-        if (reserveAsset_ == address(0) || backedAsset_ == address(0) || assetsAccountant_ == address(0)) {
+        if (
+            reserveAsset_ == address(0) ||
+            backedAsset_ == address(0) ||
+            assetsAccountant_ == address(0) ||
+            wrappedNative == address(0) ||
+            admin == address(0)
+        ) {
             revert HouseOfReserve_invalidInput();
         }
         reserveAsset = reserveAsset_;
@@ -152,11 +155,7 @@ contract HouseOfReserve is
         assetsAccountant = IAssetsAccountant(assetsAccountant_);
 
         __OracleHouse_init(computedPriceFeedAddr_);
-
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-
-        __AccessControl_init();
-        __UUPSUpgradeable_init();
+        __Ownable_init();
 
         reserveTokenID = uint256(keccak256(abi.encodePacked(reserveAsset, backedAsset, "collateral", block.number)));
         emit ReserveTokenIdSet(reserveTokenID);
@@ -169,13 +168,12 @@ contract HouseOfReserve is
      * @notice  See '_setComputedPriceFeedAddr()' in {OracleHouse}
      * @dev  Restricted to admin only.
      */
-    function setComputedPriceFeedAddr(address computedPriceFeedAddr_) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setComputedPriceFeedAddr(address computedPriceFeedAddr_) external override onlyOwner {
         _setComputedPriceFeedAddr(computedPriceFeedAddr_);
     }
 
-    function setReserveMintFee(uint256 newFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 maxFee = 999_999;
-        if (newFee > maxFee) revert HouseOfReserve_invalidInput();
+    function setReserveMintFee(uint256 newFee) external onlyOwner {
+        if (newFee > MAX_RESERVE_FEE - 1) revert HouseOfReserve_invalidInput();
         reserveMintFee = newFee;
         emit ReserveMintFeeChanged(newFee);
     }
@@ -234,7 +232,7 @@ contract HouseOfReserve is
      * @param maxLTVFactor_ of new collateralization factor.
      * Emits a {maxLTVChanged} event.
      */
-    function setMaxLTVFactor(uint256 maxLTVFactor_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setMaxLTVFactor(uint256 maxLTVFactor_) external onlyOwner {
         // Check inputs
         if (maxLTVFactor_ == 0 || maxLTVFactor_ >= 1e18) {
             revert HouseOfReserve_invalidInput();
@@ -253,7 +251,7 @@ contract HouseOfReserve is
      * @param liquidationFactor_ of new collateralization factor.
      * Emits a {maxLTVChanged} event.
      */
-    function setLiquidationFactor(uint256 liquidationFactor_) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setLiquidationFactor(uint256 liquidationFactor_) external onlyOwner {
         // Check inputs
         if (liquidationFactor_ == 0 || liquidationFactor_ > 1e18) {
             revert HouseOfReserve_invalidInput();
@@ -271,7 +269,7 @@ contract HouseOfReserve is
      * @param newLimit uint256, must be greater than zero.
      * Emits a {DepositLimitChanged} event.
      */
-    function setDepositLimit(uint256 newLimit) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setDepositLimit(uint256 newLimit) external onlyOwner {
         // Check `newLimit` is not zero
         if (newLimit == 0) {
             revert HouseOfReserve_invalidInput();
@@ -347,11 +345,11 @@ contract HouseOfReserve is
     /**
      * @dev  Internal function to check max withdrawal amount.
      */
-    function _checkMaxWithdrawal(uint256 reserveBal_, uint256 mintedCoinBal_, uint256 price)
-        internal
-        view
-        returns (uint256)
-    {
+    function _checkMaxWithdrawal(
+        uint256 reserveBal_,
+        uint256 mintedCoinBal_,
+        uint256 price
+    ) internal view returns (uint256) {
         // Check if msg.sender has minted backedAsset, if yes compute:
         // The minimum required balance to back 100% all minted coins of backedAsset.
         // Else, return 0.
@@ -381,11 +379,11 @@ contract HouseOfReserve is
     /**
      * @dev  Internal function to query balances in {AssetsAccountant}
      */
-    function _checkBalances(address user, uint256 reservesTokenID_, uint256 bAssetRTokenID_)
-        internal
-        view
-        returns (uint256 reserveBal, uint256 mintedCoinBal)
-    {
+    function _checkBalances(
+        address user,
+        uint256 reservesTokenID_,
+        uint256 bAssetRTokenID_
+    ) internal view returns (uint256 reserveBal, uint256 mintedCoinBal) {
         reserveBal = assetsAccountant.balanceOf(user, reservesTokenID_);
         mintedCoinBal = assetsAccountant.balanceOf(user, bAssetRTokenID_);
     }
@@ -410,6 +408,4 @@ contract HouseOfReserve is
             revert HouseOfReserve_wrongReserveAsset();
         }
     }
-
-    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 }

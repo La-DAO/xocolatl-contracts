@@ -10,8 +10,7 @@ pragma solidity 0.8.17;
  * @dev Users do not interact directly with this contract.
  */
 import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import {ERC1155SupplyUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
+import {ERC1155SupplyUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IHouseOfReserve} from "./interfaces/IHouseOfReserve.sol";
 import {IHouseOfCoin} from "./interfaces/IHouseOfCoin.sol";
@@ -19,6 +18,14 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract AssetsAccountantState {
+    string internal constant NAME = "AssetsAccountant";
+
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+
+    bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
+
     // reserveTokenID => houseOfReserve
     mapping(uint256 => address) public houseOfReserves;
 
@@ -30,14 +37,7 @@ contract AssetsAccountantState {
 
     mapping(address => bool) public isARegisteredHouse;
 
-    // Contract Token name
-    string internal constant NAME = "AssetsAccountant";
-
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
-
-    bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
+    mapping(address => bool) public isAValidReserveFactory;
 }
 
 contract AssetsAccountant is
@@ -62,7 +62,13 @@ contract AssetsAccountant is
      * @param liquidator Address of house registered.
      * @param allow boolean
      */
-    event LiquidatorAllow(address liquidator, bool allow);
+    event LiquidatorAllow(address indexed liquidator, bool allow);
+    /**
+     * @dev Emit when a ReserveBeaconFactory contract is `allow`.
+     * @param factory Address of house registered.
+     * @param allow boolean
+     */
+    event ReserveFactoryAllow(address indexed factory, bool allow);
 
     // AssetsAccountant custom errors
     error AssetsAccountant_zeroAddress();
@@ -163,6 +169,21 @@ contract AssetsAccountant is
         emit LiquidatorAllow(liquidator, allow);
     }
 
+    function allowReserveFactory(address factory, bool allow) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (factory == address(0)) {
+            revert AssetsAccountant_zeroAddress();
+        }
+
+        isAValidReserveFactory[factory] = allow;
+
+        if (allow == true) {
+            _grantRole(DEFAULT_ADMIN_ROLE, factory);
+        } else {
+            _revokeRole(DEFAULT_ADMIN_ROLE, factory);
+        }
+        emit ReserveFactoryAllow(factory, allow);
+    }
+
     function getReserveIds(address reserveAsset, address backedAsset) public view returns (uint256[] memory) {
         return _reservesIds[reserveAsset][backedAsset];
     }
@@ -223,34 +244,35 @@ contract AssetsAccountant is
      * @dev Function override added to restrict transferability of tokens in this contract.
      * @dev Accounting assets are not meant to be transferable.
      */
-    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
-        public
-        override
-        onlyRole(LIQUIDATOR_ROLE)
-    {
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override onlyRole(LIQUIDATOR_ROLE) {
         _safeTransferFrom(from, to, id, amount, data);
     }
 
     /**
      * @dev See {safeTransferFrom}.
      */
-    function safeBatchTransferFrom(address, address, uint256[] memory, uint256[] memory, bytes memory)
-        public
-        pure
-        override
-    {
+    function safeBatchTransferFrom(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public pure override {
         revert AssetsAccountant_NonTransferable();
     }
 
     /**
      * @dev Function override required by Solidity.
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155Upgradeable, AccessControlUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC1155Upgradeable, AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

@@ -13,7 +13,7 @@ pragma solidity 0.8.17;
 import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract InversePriceFeed is Initializable {
+contract InversePriceFeed is IPriceBulletin, Initializable {
     struct PriceFeedResponse {
         uint80 roundId;
         int256 answer;
@@ -31,7 +31,7 @@ contract InversePriceFeed is Initializable {
     error InversePriceFeed_noValidUpdateAt();
     error InversePriceFeed_staleFeed();
 
-    string public constant VERSION = "v1.0.0";
+    uint256 public constant version = 1;
 
     string private _description;
     uint8 private _decimals;
@@ -44,10 +44,12 @@ contract InversePriceFeed is Initializable {
         _disableInitializers();
     }
 
-    function initialize(string memory description_, uint8 decimals_, address feedAsset_, uint256 allowedTimeout_)
-        external
-        initializer
-    {
+    function initialize(
+        string memory description_,
+        uint8 decimals_,
+        address feedAsset_,
+        uint256 allowedTimeout_
+    ) external initializer {
         _description = description_;
         _decimals = decimals_;
 
@@ -71,6 +73,11 @@ contract InversePriceFeed is Initializable {
     function latestAnswer() external view returns (int256) {
         PriceFeedResponse memory feedLatestRound = _callandCheckFeed();
         return _computeInverseAnswer(feedLatestRound.answer);
+    }
+
+    function latestRound() external view returns (uint256) {
+        PriceFeedResponse memory clComputed = _callandCheckFeed();
+        return clComputed.roundId;
     }
 
     function latestRoundData()

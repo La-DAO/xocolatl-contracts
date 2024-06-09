@@ -9,7 +9,7 @@ pragma solidity 0.8.17;
  * @dev  Contracts are split into state and functionality.
  */
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 import {IERC20Extension} from "./interfaces/IERC20Extension.sol";
 import {IAssetsAccountant} from "./interfaces/IAssetsAccountant.sol";
@@ -24,6 +24,8 @@ contract HouseOfCoinState {
         uint256 collateralPenalty;
     }
 
+    bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
+
     address public backedAsset;
 
     uint256 internal backedAssetDecimals;
@@ -32,14 +34,12 @@ contract HouseOfCoinState {
 
     LiquidationParam internal _liqParam;
 
-    bytes32 public constant HOUSE_TYPE = keccak256("COIN_HOUSE");
-
     uint256 internal constant _ALL_BPS = 1e6;
 
     address public treasury;
 }
 
-contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable, HouseOfCoinState {
+contract HouseOfCoin is Initializable, OwnableUpgradeable, UUPSUpgradeable, HouseOfCoinState {
     // HouseOfCoinMinting Events
 
     /**
@@ -112,17 +112,15 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         assetsAccountant = assetsAccountant_;
         treasury = treasury_;
 
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-
-        __AccessControl_init();
-        __UUPSUpgradeable_init();
-
-        setLiqParams(
+        _setLiquidationParams(
             1e18, // margin call when health ratio is 1 or below.
             0.95e18, // liquidation starts when health ratio drops to 0.95 or below.
             0.1e18, // 10% price discount for liquidated user collateral.
             0.75e18 // 75% collateral of liquidated will be sold to bring user's to good HealthRatio.
         );
+
+        __Ownable_init();
+        __UUPSUpgradeable_init();
     }
 
     /**
@@ -150,9 +148,9 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
 
         // Validate reserveAsset and houseOfReserve are active with {AssetsAccountant}.
         if (
-            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(houseOfReserve)
-                || IAssetsAccountant(assetsAccountant).houseOfReserves(reserveTokenID) == address(0)
-                || hOfReserve.reserveAsset() != reserveAsset
+            !IAssetsAccountant(assetsAccountant).isARegisteredHouse(houseOfReserve) ||
+            IAssetsAccountant(assetsAccountant).houseOfReserves(reserveTokenID) == address(0) ||
+            hOfReserve.reserveAsset() != reserveAsset
         ) {
             revert HouseOfCoin_invalidInput();
         }
@@ -170,8 +168,14 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         uint256 price = getLatestPrice(houseOfReserve);
 
         // Checks minting power of msg.sender.
-        uint256 mintingPower =
-            _checkRemainingMintingPower(msg.sender, reserveTokenID, reserveDecimals, backedTokenID, maxLTV, price);
+        uint256 mintingPower = _checkRemainingMintingPower(
+            msg.sender,
+            reserveTokenID,
+            reserveDecimals,
+            backedTokenID,
+            maxLTV,
+            price
+        );
         if (mintingPower == 0 || amount + fee > mintingPower) {
             revert HouseOfCoin_noBalances();
         }
@@ -256,7 +260,7 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
      * Requirements:
      * - function should be admin restricted.
      */
-    function setTreasury(address newTreasury) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setTreasury(address newTreasury) public onlyOwner {
         if (newTreasury == address(0)) revert HouseOfCoin_invalidInput();
         treasury = newTreasury;
         emit TreasuryChanged(newTreasury);
@@ -281,24 +285,14 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         uint256 liquidationThreshold_,
         uint256 liquidationPricePenaltyDiscount_,
         uint256 collateralPenalty_
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (
-            marginCallThreshold_ == 0 || liquidationThreshold_ == 0 || liquidationPricePenaltyDiscount_ == 0
-                || collateralPenalty_ == 0 || liquidationThreshold_ >= marginCallThreshold_ || liquidationThreshold_ >= 1e18
-                || liquidationPricePenaltyDiscount_ >= 1e18 || collateralPenalty_ >= 1e18
-        ) {
-            revert HouseOfCoin_invalidInput();
-        }
-        _liqParam.marginCallThreshold = marginCallThreshold_;
-        _liqParam.liquidationThreshold = liquidationThreshold_;
-        _liqParam.liquidationPricePenaltyDiscount = liquidationPricePenaltyDiscount_;
-        _liqParam.collateralPenalty = collateralPenalty_;
-        emit LiquidationParamsChanges(
-            _liqParam.marginCallThreshold,
-            _liqParam.liquidationThreshold,
-            _liqParam.liquidationPricePenaltyDiscount,
-            _liqParam.collateralPenalty
-        );
+    ) public onlyOwner {
+        return
+            _setLiquidationParams(
+                marginCallThreshold_,
+                liquidationThreshold_,
+                liquidationPricePenaltyDiscount_,
+                collateralPenalty_
+            );
     }
 
     /**
@@ -326,11 +320,11 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
     /**
      * @dev  Internal function to query balances in {AssetsAccountant}
      */
-    function _checkBalances(address user, uint256 reservesTokenID_, uint256 bAssetRTokenID_)
-        internal
-        view
-        returns (uint256 reserveBal, uint256 mintedCoinBal)
-    {
+    function _checkBalances(
+        address user,
+        uint256 reservesTokenID_,
+        uint256 bAssetRTokenID_
+    ) internal view returns (uint256 reserveBal, uint256 mintedCoinBal) {
         reserveBal = IERC1155Upgradeable(assetsAccountant).balanceOf(user, reservesTokenID_);
         mintedCoinBal = IERC1155Upgradeable(assetsAccountant).balanceOf(user, bAssetRTokenID_);
     }
@@ -355,8 +349,13 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
             return 0;
         } else {
             // Check if user can mint more
-            (bool canMintMore, uint256 remainingMintingPower) =
-                _checkIfUserCanMintMore(reserveBal, reserveDecimals, mintedCoinBal, maxLTV, price);
+            (bool canMintMore, uint256 remainingMintingPower) = _checkIfUserCanMintMore(
+                reserveBal,
+                reserveDecimals,
+                mintedCoinBal,
+                maxLTV,
+                price
+            );
             if (canMintMore) {
                 // If msg.sender canMintMore, how much
                 return remainingMintingPower;
@@ -418,5 +417,35 @@ contract HouseOfCoin is Initializable, AccessControlUpgradeable, UUPSUpgradeable
         }
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
+    function _setLiquidationParams(
+        uint256 marginCallThreshold_,
+        uint256 liquidationThreshold_,
+        uint256 liquidationPricePenaltyDiscount_,
+        uint256 collateralPenalty_
+    ) internal {
+        if (
+            marginCallThreshold_ == 0 ||
+            liquidationThreshold_ == 0 ||
+            liquidationPricePenaltyDiscount_ == 0 ||
+            collateralPenalty_ == 0 ||
+            liquidationThreshold_ >= marginCallThreshold_ ||
+            liquidationThreshold_ >= 1e18 ||
+            liquidationPricePenaltyDiscount_ >= 1e18 ||
+            collateralPenalty_ >= 1e18
+        ) {
+            revert HouseOfCoin_invalidInput();
+        }
+        _liqParam.marginCallThreshold = marginCallThreshold_;
+        _liqParam.liquidationThreshold = liquidationThreshold_;
+        _liqParam.liquidationPricePenaltyDiscount = liquidationPricePenaltyDiscount_;
+        _liqParam.collateralPenalty = collateralPenalty_;
+        emit LiquidationParamsChanges(
+            _liqParam.marginCallThreshold,
+            _liqParam.liquidationThreshold,
+            _liqParam.liquidationPricePenaltyDiscount,
+            _liqParam.collateralPenalty
+        );
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
