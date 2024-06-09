@@ -107,7 +107,7 @@ module.exports = {
             chainId: 534352,
             url: `https://rpc.scroll.io/`,
             accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
-        }
+        },
     },
     sourcify: {
         enabled: true,
