@@ -57,7 +57,12 @@ contract ComputedPriceFeedWithSequencer is IPriceBulletin, Initializable, Sequen
         _description = description_;
         _decimals = decimals_;
 
-        if (feedAsset_ == address(0) || feedInterAsset_ == address(0) || allowedTimeout_ == 0) {
+        if (
+            feedAsset_ == address(0) ||
+            feedInterAsset_ == address(0) ||
+            allowedTimeout_ == 0 ||
+            sequencerFeed == address(0)
+        ) {
             revert ComputedPriceFeed_invalidInput();
         }
         __SequencerFeed_init(sequencerFeed);
