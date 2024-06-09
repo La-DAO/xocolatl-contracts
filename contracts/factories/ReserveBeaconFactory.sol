@@ -133,6 +133,7 @@ contract ReserveBeaconFactory is IBeacon, Ownable {
             reserveMintFee
         );
         _addAssetToReserves(reserveAsset);
+        _reservesByAsset[reserveAsset].push(HouseOfReserve(payable(reserve)));
         emit HouseOfReserveCreated(
             reserve,
             reserveAsset,
