@@ -4,7 +4,7 @@ const {deployAccountLiquidator} = require("../tasks/deployAccountLiquidator");
 const {deployAssetsAccountant} = require("../tasks/deployAssetsAccountant");
 const {deployHouseOfCoin} = require("../tasks/deployHouseOfCoin");
 const {deployHouseOfReserveImplementation} = require("../tasks/deployHouseOfReserve");
-const {deployOracleFactory} = require("../tasks/deployOracleFactory");
+const {deployOracleFactoryL2} = require("../tasks/deployOracleFactoryL2");
 const {deployOracleImplementations} = require("../tasks/deployOracleImplementations");
 const {deployReserveBeaconFactory} = require("../tasks/deployReserveBeaconFactory");
 const {ORACLE_CONTRACTS} = require("../const");
@@ -41,7 +41,7 @@ const deploySystemContracts = async () => {
         "InversePriceFeed",
         "PriceFeedPythWrapper",
     ]);
-    const oracleFactory = await deployOracleFactory();
+    const oracleFactory = await deployOracleFactoryL2();
     await setupOracleFactory(oracleFactory, computedPriceFeedImpl, invPriceFeedImpl, priceFeedPythWrapperImpl);
 
     const pythWrapperUsdMxn = await deployUsdMxnPythWrapper(oracleFactory, ORACLE_CONTRACTS[NETWORK].pyth);
