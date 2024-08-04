@@ -137,7 +137,7 @@ This list may increase in the future via multisig consensus and / or by an estab
 | Token Address                              | Token | Max Loan To Value (LTV) | Liquidation Threshold (LT) | Reserve Deposit Limit | House of Reserve Address                                                                                              |
 | ------------------------------------------ | ----- | ----------------------- | -------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | 0x4200000000000000000000000000000000000006 | WETH  | 80%                     | 85%                        | 5                     | [0xfF69E183A863151B4152055974aa648b3165014D](https://basescan.org/address/0xfF69E183A863151B4152055974aa648b3165014D) |
-| 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22 | CBETH | 80%                     | 85%                        | 5                     | [0x070ccE6887E70b75015F948b12601D1E759D2024](https://basescan.org/address/0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22) |
+| 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22 | CBETH | 80%                     | 85%                        | 5                     | [0x5c4a154690AE52844F151bcF3aA44885db3c8A58](https://basescan.org/address/0x5c4a154690AE52844F151bcF3aA44885db3c8A58) |
 
 <div class="p-h3">
 
