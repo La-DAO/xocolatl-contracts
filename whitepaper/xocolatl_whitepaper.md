@@ -136,8 +136,8 @@ This list may increase in the future via multisig consensus and / or by an estab
 
 | Symbol       | Name              | Deployed Address                           | Chains  |
 | ------------ | ----------------- | ------------------------------------------ | ------- |
-| $Lp-USDC-XOC | LpToken: USDC-XOC | 0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291 | Base    |
-| $Lp-USDC-XOC | LpToken: USDC-XOC | 0xF9ed5514035e94b6ff89BFE1218c21a643D29b49 | Polygon |
+| $Lp-USDC-XOC | LpToken: USDC-XOC | [0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291](https://basescan.org/address/0xd6dab267b7c23edb2ed5605d9f3f37420e88e291) | Base    |
+| $Lp-USDC-XOC | LpToken: USDC-XOC | [0xF9ed5514035e94b6ff89BFE1218c21a643D29b49](https://polygonscan.com/address/0xf9ed5514035e94b6ff89bfe1218c21a643d29b49) | Polygon |
 
 ## 6 Code Audits
 
