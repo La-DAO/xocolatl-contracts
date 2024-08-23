@@ -78,11 +78,7 @@ contract Xocolatl is
         _unpause();
     }
 
-    function mint(address to, uint256 amount)
-        public
-        onlyRole(MINTER_ROLE)
-        whenNotPaused
-    {
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) whenNotPaused {
         _mint(to, amount);
     }
 
@@ -98,21 +94,11 @@ contract Xocolatl is
         revert("No self burn!");
     }
 
-    function maxFlashLoan(address token)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function maxFlashLoan(address token) public view override returns (uint256) {
         return token == address(this) ? totalSupply() : 0;
     }
 
-    function flashFee(address token, uint256 amount)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function flashFee(address token, uint256 amount) public view override returns (uint256) {
         require(token == address(this), "ERC20FlashMint: wrong token");
         return (amount * _flashFee.numerator) / _flashFee.denominator;
     }
@@ -124,14 +110,8 @@ contract Xocolatl is
      *  - Should be restricted to admin function.
      *  - The numerator should be less than denominator.
      */
-    function setFlashFee(Factor memory newFlashFee_)
-        public
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(
-            newFlashFee_.numerator < newFlashFee_.denominator,
-            "Invalid input!"
-        );
+    function setFlashFee(Factor memory newFlashFee_) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newFlashFee_.numerator < newFlashFee_.denominator, "Invalid input!");
         _flashFee = newFlashFee_;
         emit FlashFeeChanged(newFlashFee_);
     }
@@ -140,32 +120,22 @@ contract Xocolatl is
      * @dev Sets the flash fees receiver address.
      * If address(0) fees are burned.
      */
-    function setFlashFeeReceiver(address _flashFeeReceiverAddr)
-        public
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setFlashFeeReceiver(address _flashFeeReceiverAddr) public onlyRole(DEFAULT_ADMIN_ROLE) {
         flashFeeReceiver = _flashFeeReceiverAddr;
         emit FlashFeeReceiverChanged(_flashFeeReceiverAddr);
     }
 
-    /** Override from {ERC20FlashMintUpgradeable} to send flash fees to
+    /**
+     * Override from {ERC20FlashMintUpgradeable} to send flash fees to
      *  established 'flashFeeReceiver' address
      */
     function _flashFeeReceiver() internal view override returns (address) {
         return flashFeeReceiver;
     }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override whenNotPaused {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override whenNotPaused {
         super._beforeTokenTransfer(from, to, amount);
     }
 
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        override
-        onlyRole(UPGRADER_ROLE)
-    {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
 }

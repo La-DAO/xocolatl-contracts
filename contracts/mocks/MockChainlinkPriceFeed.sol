@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
-import {IAggregatorV3} from "../interfaces/chainlink/IAggregatorV3.sol";
+import {IPriceBulletin} from "../interfaces/tlatlalia/IPriceBulletin.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MockChainlinkPriceFeed is IAggregatorV3, Ownable {
+contract MockChainlinkPriceFeed is IPriceBulletin, Ownable {
     event RoundAnswered(uint80 roundId, int256 answer, uint256 updatedAt);
     event PriceRequest(uint80 roundId, uint256 startedAt);
 
@@ -42,18 +42,11 @@ contract MockChainlinkPriceFeed is IAggregatorV3, Ownable {
         );
         _latestAnswerRound = recordRound;
 
-        emit RoundAnswered(
-            recordRound.roundId,
-            recordRound.answer,
-            recordRound.updatedAt
-        );
+        emit RoundAnswered(recordRound.roundId, recordRound.answer, recordRound.updatedAt);
     }
 
     function requestPriceFeedData() external {
-        Request memory recordRequest = Request(
-            _latestAnswerRound.roundId + 1,
-            block.timestamp
-        );
+        Request memory recordRequest = Request(_latestAnswerRound.roundId + 1, block.timestamp);
 
         _latestRequest = recordRequest;
 
@@ -84,13 +77,7 @@ contract MockChainlinkPriceFeed is IAggregatorV3, Ownable {
         external
         view
         override
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        )
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         roundId = _latestAnswerRound.roundId;
         answer = _latestAnswerRound.answer;

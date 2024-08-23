@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
-import {IOracle} from "./IOracle.sol";
-
-interface IHouseOfReserve is IOracle {
+interface IHouseOfReserve {
     /**
      * @dev Returns the reserveAsset of this HouseOfReserve.
      */
@@ -17,12 +15,12 @@ interface IHouseOfReserve is IOracle {
     /**
      * @dev Returns the reserveTokenID (used in {AssetsAccountant}) for this HouseOfReserve.
      */
-    function reserveTokenID() external view returns (uint);
+    function reserveTokenID() external view returns (uint256);
 
     /**
      * @dev Returns the backedTokenID (used in {AssetsAccountant}) for this HouseOfReserve.
      */
-    function backedTokenID() external view returns (uint);
+    function backedTokenID() external view returns (uint256);
 
     /**
      * @dev Returns the type of House Contract.
@@ -43,6 +41,11 @@ interface IHouseOfReserve is IOracle {
      * @dev Returns the latest price according to activeOracle
      */
     function getLatestPrice() external view returns (uint256 price);
+
+    /**
+     * @dev Returns the reserve mint fee of this HouseOfReserve in BPS x 10**2.
+     */
+    function reserveMintFee() external view returns (uint256);
 
     /**
      * @dev Deposit reserves in this contract on behalf caller.

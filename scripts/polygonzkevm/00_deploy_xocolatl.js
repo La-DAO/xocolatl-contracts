@@ -1,32 +1,28 @@
-const { 
-  network,
-  setDeploymentsPath,
-  setPublishPath, 
-  publishUpdates
-} = require("../utils");
+const {NETWORK, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
+const {VERSION} = require("./utils_sepolia");
 
-const { VERSION } = require("./utils_polygonzkevm");
-
-const { deployXocolatl } = require("../tasks/deployXocolatl");
+const {deployXocolatl} = require("../tasks/deployXocolatl");
+const {handOverDefaultAdmin} = require("../tasks/rolesHandOver");
 
 const deployBackedAsset = async () => {
-  console.log("\n\n 📡 Deploying...\n");
-  const xoc = await deployXocolatl();
-}
+    console.log("\n\n 📡 Deploying...\n");
+    const xoc = await deployXocolatl();
+    await handOverDefaultAdmin(xoc);
+};
 
 const main = async () => {
-  if (network !== "polygonzkevm") {
-    throw new Error("Set 'NETWORK=polygonzkevm' in .env file");
-  }
-  await setDeploymentsPath(VERSION);
-  await setPublishPath(VERSION);
-  await deployBackedAsset();
-  await publishUpdates();
+    if (NETWORK !== "polygonzkevm") {
+        throw new Error("Set 'NETWORK=polygonzkevm' in .env file");
+    }
+    await setDeploymentsPath(VERSION);
+    await setPublishPath(VERSION);
+    await deployBackedAsset();
+    await publishUpdates();
 };
 
 main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(`\n${error}\n`);
-    process.exit(1);
-  });
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(`\n${error}\n`);
+        process.exit(1);
+    });
