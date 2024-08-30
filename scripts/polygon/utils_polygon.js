@@ -11,10 +11,10 @@ const RESERVE_CAPS = {
         defaultInitialLimit: ethers.parseUnits("5", 8),
     },
     wmatic: {
-        defaultInitialLimit: ethers.parseUnits("100", 18),
+        defaultInitialLimit: ethers.parseUnits("10000", 18),
     },
     maticx: {
-        defaultInitialLimit: ethers.parseUnits("100", 18),
+        defaultInitialLimit: ethers.parseUnits("10000", 18),
     },
     wsteth: {
         defaultInitialLimit: ethers.parseUnits("5", 18),
