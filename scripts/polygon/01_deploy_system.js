@@ -79,7 +79,7 @@ const deploySystemContracts = async () => {
         ethers.parseUnits("0.75", 18),
         15000,
         invUsdMxnAddr,
-        ORACLE_CONTRACTS[NETWORK].wmaticusd,
+        ORACLE_CONTRACTS[NETWORK].maticusd,
         "wmatic/mxn",
     );
 
