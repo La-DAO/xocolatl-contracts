@@ -17,6 +17,12 @@ describe("Xoc Tests - General Systems tests", function () {
         bid = await reservehouse.backedTokenID();
     });
 
+    it("ReserveBeacon factory should return all house of reserve addresses by reserve asset", async () => {
+        const {factory, reservehouse} = await loadFixture(basicFixture);
+        const response = await factory.getHouseOfReservesByAsset(await reservehouse.reserveAsset());
+        expect(response[0]).to.eq(await reservehouse.getAddress());
+    });
+
     it("PriceFeed should return price constant", async () => {
         const {priceFeed} = await loadFixture(basicFixture);
         const response = await priceFeed.latestRoundData();

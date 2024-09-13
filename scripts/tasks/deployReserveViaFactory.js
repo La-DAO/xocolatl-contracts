@@ -10,28 +10,31 @@ const deployReserveViaFactory = async (
     reserveMintFee = 15000,
     pricefeedAddr1 = ethers.ZeroAddress,
     pricefeedAddr2 = ethers.ZeroAddress,
+    priceFeedName,
 ) => {
     if (pricefeedAddr1 == ethers.ZeroAddress) throw "PricefeedAddr1 is required";
 
+    console.log("Deploying reserve via Factory for reserve asset:", reserveAssetAddr);
     console.log("PriceFeed1", pricefeedAddr1);
     console.log("PriceFeed2", pricefeedAddr2);
 
     let oracleAddrArg = pricefeedAddr1;
+    const allowedTimeout = 234000; // Due to market closure on weekends
     if (pricefeedAddr2 !== ethers.ZeroAddress) {
         console.log("ComputedPriceFeed" + ": Deploying...");
         const computedPriceAddr = await oracleFactory.createComputedPriceFeed.staticCall(
-            "computed ethmxn",
+            `computed ${priceFeedName}`,
             8,
             pricefeedAddr1,
             pricefeedAddr2,
-            86400,
+            allowedTimeout,
         );
         const dtx1 = await oracleFactory.createComputedPriceFeed(
-            "computed ethmxn",
+            `computed ${priceFeedName}`,
             8,
             pricefeedAddr1,
             pricefeedAddr2,
-            86400,
+            allowedTimeout,
         );
         await dtx1.wait();
         console.log("ComputedPriceFeed" + ": Deployed at", computedPriceAddr);

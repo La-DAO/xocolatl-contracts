@@ -18,12 +18,13 @@ const deployUsdMxnPythWrapper = async (oracleFactory, pythAddress) => {
     }
 
     console.log(detailName + ": Deploying...");
+    const allowedTimeout = 234000; // Due to market closure on weekends
     const pythWrapperAddr = await oracleFactory.createPriceFeedPythWrapper.staticCall(
         "pyth usdmxn",
         8,
         pythAddress,
         PYTH_MXN_USD_FEED_ID,
-        86400,
+        allowedTimeout,
     );
 
     const dtx1 = await oracleFactory.createPriceFeedPythWrapper(
@@ -31,7 +32,7 @@ const deployUsdMxnPythWrapper = async (oracleFactory, pythAddress) => {
         8,
         pythAddress,
         PYTH_MXN_USD_FEED_ID,
-        86400,
+        allowedTimeout,
     );
     await dtx1.wait();
 

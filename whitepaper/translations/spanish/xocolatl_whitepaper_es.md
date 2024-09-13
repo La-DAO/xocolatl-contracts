@@ -71,6 +71,7 @@ Por el momento, el sistema de contratos inteligentes de Xoc pertence a las sigui
 | BSC           | 0xD14F02ad072238d5D58671bcfE07FcBf9a17d5f7 |
 | Arbritum      | 0x80Ea762B09883Bddf09d3F7E4142ca6E1e697490 |
 | Optimism      | 0xC6A1425bC0D0c3FcE5055da85032d36893f91D03 |
+| Base          | 0x571131167e1A16D9879FA605319944Ba6E993Dd7 |
 
 Cada cuenta multifirmas requiere 5 de 8 firmas de alguno de los miembros actuales. Dichos miembros incluyen a los miembros más activos en el desarrollo del sistema Xoc.
 
@@ -105,19 +106,17 @@ Esta lista puede variar en el futuro por medio de un consenso entre los miembros
 
 #### 5.2.1 Polygon (PoS)
 
-| Token Address                              | Token  | Max Loan To Value (LTV) | Reserve Deposit Limit | House of Reserve Address                                                                                                 |
-| ------------------------------------------ | ------ | ----------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| 0x7ceb23fd6bc0add59e62ac25578270cff1b9f619 | WETH   | 85%                     | 100                   | [0xd411BE9A105Ea7701FabBe58C2834b7033EBC203](https://polygonscan.com/address/0xd411BE9A105Ea7701FabBe58C2834b7033EBC203) |
-| 0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6 | WBTC   | 70%                     | 10                    | [0x983A0eC44bf1BB11592a8bD5F91f05adE4F44D81](https://polygonscan.com/address/0x983A0eC44bf1BB11592a8bD5F91f05adE4F44D81) |
-| 0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6 | WMATIC | 70%                     | 10                    | [0xdB9Dd25660240415d95144C6CE4f21f00Edf8168](https://polygonscan.com/address/0xdB9Dd25660240415d95144C6CE4f21f00Edf8168) |
-| 0x03b54a6e9a984069379fae1a4fc4dbae93b3bccd | WSTETH | 70%                     | 10000                 | [0x28C7DF27e5bC7Cb004c8D4bb2C2D91f246D0A2C9](https://polygonscan.com/address/0x28C7DF27e5bC7Cb004c8D4bb2C2D91f246D0A2C9) |
-| 0xfa68fb4628dff1028cfec22b4162fccd0d45efb6 | MATICX | 60%                     | 50000                 | [0x102dda5f4621a08dafD327f29f9c815f851846dC](https://polygonscan.com/address/0x102dda5f4621a08dafD327f29f9c815f851846dC) |
+**ReserveBeaconFactory :**: [0xcadd1Dd658439d92E26efE6154FFF13b94d11494](https://polygonscan.com/address/0xcadd1dd658439d92e26efe6154fff13b94d11494)  
+**OracleFactory :**: [0xE6347221110c010cF4Bb4AdFD330F8e4EF01eD37](https://polygonscan.com/address/0xe6347221110c010cf4bb4adfd330f8e4ef01ed37)  
+**House Of Coin :**: [0x9d29E6b3D75F5e676f91b69284e015C9CEa20533](https://polygonscan.com/address/0x9d29e6b3d75f5e676f91b69284e015c9cea20533)  
+**AssetsAccountant :**: [0x076b6C91cC7e72286cd01D967A44787d1f3A6432](https://polygonscan.com/address/0x076b6c91cc7e72286cd01d967a44787d1f3a6432)  
+**AccountLiquidator :**: [0xf183665D02eD1F2E364db344Bee6659Ba2f6F85B](https://polygonscan.com/address/0xf183665d02ed1f2e364db344bee6659ba2f6f85b)
 
-<div class="p-h3">
-
-**House Of Coin**: [0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b](https://polygonscan.com/address/0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b)
-
-</div>
+| Token Address                              | Token  | Max Loan To Value (LTV) | Liquidation Threshold (LT) | Reserve Deposit Limit | House of Reserve Address                                                                                                 |
+| ------------------------------------------ | ------ | ----------------------- | -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619 | WETH   | 80%                     | 85%                        | 5                     | [0x2718644E0C38A6a1F82136FC31dcA00DFCdF92a3](https://polygonscan.com/address/0x2718644E0C38A6a1F82136FC31dcA00DFCdF92a3) |
+| 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270 | WMATIC | 68%                     | 75%                        | 1000                  | [0xF56293025437Db5C0024a37dfcEc792125d56A48](https://polygonscan.com/address/0xf56293025437db5c0024a37dfcec792125d56a48) |
+| 0xfa68FB4628DFF1028CFEc22b4162FCcd0d45efb6 | MATICX | 50%                     | 60%                        | 1000                  | [0x76CAc0bC384a49485627D2235fE132e3038b45BB](https://polygonscan.com/address/0x76cac0bc384a49485627d2235fe132e3038b45bb) |
 
 #### 5.2.2 Binance Smart Chain
 
@@ -125,6 +124,19 @@ Esta lista puede variar en el futuro por medio de un consenso entre los miembros
 | ------------------------------------------ | ----- | ----------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | 0x2170ed0880ac9a755fd29b2688956bd959f933f8 | WETH  | 85%                     | 100                   | [0xd411BE9A105Ea7701FabBe58C2834b7033EBC203](https://bscscan.com/address/0xd411BE9A105Ea7701FabBe58C2834b7033EBC203) |
 | 0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c | WBNB  | 70%                     | 100                   | [0x070ccE6887E70b75015F948b12601D1E759D2024](https://bscscan.com/address/0x070ccE6887E70b75015F948b12601D1E759D2024) |
+
+#### 5.2.3 Base
+
+**ReserveBeaconFactory :**: [0x57Fe06D0E981D828459FA547f07710D227FBceE4](https://basescan.org/address/0x57Fe06D0E981D828459FA547f07710D227FBceE4)  
+**OracleFactoryL2 :**: [0x07A576cD380b71647accF0cff5DB496ff1886E77](https://basescan.org/address/0x07A576cD380b71647accF0cff5DB496ff1886E77)  
+**House Of Coin :**: [0x02c531Cd9791dD3A31428B2987A82361D72F9b13](https://basescan.org/address/0x02c531Cd9791dD3A31428B2987A82361D72F9b13)  
+**AssetsAccountant :**: [0xB93EcD005B6053c6F8428645aAA879e7028408C7](https://basescan.org/address/0xB93EcD005B6053c6F8428645aAA879e7028408C7)  
+**AccountLiquidator :**: [0x4b75Fb5B0D323672fc6Eac5Afbf487AE4c2ff6de](https://basescan.org/address/0x4b75Fb5B0D323672fc6Eac5Afbf487AE4c2ff6de)
+
+| Token Address                              | Token | Max Loan To Value (LTV) | Liquidation Threshold (LT) | Reserve Deposit Limit | House of Reserve Address                                                                                              |
+| ------------------------------------------ | ----- | ----------------------- | -------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 0x4200000000000000000000000000000000000006 | WETH  | 80%                     | 85%                        | 5                     | [0xfF69E183A863151B4152055974aa648b3165014D](https://basescan.org/address/0xfF69E183A863151B4152055974aa648b3165014D) |
+| 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22 | CBETH | 80%                     | 85%                        | 5                     | [0x070ccE6887E70b75015F948b12601D1E759D2024](https://basescan.org/address/0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22) |
 
 <div class="p-h3">
 
