@@ -96,11 +96,7 @@ The core ERC20 contract has been deployed:
 
 | Symbol | Name                    | Deployed Address                           | Chains                                                                                                    |
 | ------ | ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-<<<<<<< HEAD
-| $Xoc   | Xocolatl MXN Stablecoin | 0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf | Ethereum, Polygon (POS), Binance Smart Chain (BSC), Gnosis Chain, Arbitrum, Optimism, Base, Polygon zkEVM |
-=======
 | $Xoc   | Xocolatl MXN Stablecoin | 0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf | Ethereum, Base, Polygon (POS), Binance Smart Chain (BSC), Gnosis Chain, Arbitrum, Optimism, Polygon zkEVM |
->>>>>>> dev
 
 ### 5.2 Reserves and Minting
 
@@ -144,9 +140,9 @@ This list may increase in the future via multisig consensus and / or by an estab
 
 ### 5.3 UniswapV3 Tokenized Liquidity Provision contract
 
-| Symbol       | Name              | Deployed Address                           | Chains  |
-| ------------ | ----------------- | ------------------------------------------ | ------- |
-| $Lp-USDC-XOC | LpToken: USDC-XOC | [0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291](https://basescan.org/address/0xd6dab267b7c23edb2ed5605d9f3f37420e88e291) | Base    |
+| Symbol       | Name              | Deployed Address                                                                                                         | Chains  |
+| ------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------ | ------- |
+| $Lp-USDC-XOC | LpToken: USDC-XOC | [0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291](https://basescan.org/address/0xd6dab267b7c23edb2ed5605d9f3f37420e88e291)    | Base    |
 | $Lp-USDC-XOC | LpToken: USDC-XOC | [0xF9ed5514035e94b6ff89BFE1218c21a643D29b49](https://polygonscan.com/address/0xf9ed5514035e94b6ff89bfe1218c21a643d29b49) | Polygon |
 
 ## 6 Code Audits
