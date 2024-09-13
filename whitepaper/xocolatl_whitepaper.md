@@ -65,6 +65,7 @@ At the current state, Xoc System smart contracts are currently owned by the foll
 | Network       | Safe (Gnosis) Multisig Address             |
 | ------------- | ------------------------------------------ |
 | Ethereum      | 0xaaE1A89e827Ac63d92f3633Be2e0dDd6edafd34a |
+| Base          | 0x571131167e1A16D9879FA605319944Ba6E993Dd7 |
 | Polygon (POS) | 0x707C5E55277A0C2f598f191b269c9e773516052A |
 | Gnosis Chain  | 0x2CBe215Eae3e926f11291560be0e4cda9556DCBb |
 | BSC           | 0xD14F02ad072238d5D58671bcfE07FcBf9a17d5f7 |
@@ -95,7 +96,11 @@ The core ERC20 contract has been deployed:
 
 | Symbol | Name                    | Deployed Address                           | Chains                                                                                                    |
 | ------ | ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+<<<<<<< HEAD
 | $Xoc   | Xocolatl MXN Stablecoin | 0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf | Ethereum, Polygon (POS), Binance Smart Chain (BSC), Gnosis Chain, Arbitrum, Optimism, Base, Polygon zkEVM |
+=======
+| $Xoc   | Xocolatl MXN Stablecoin | 0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf | Ethereum, Base, Polygon (POS), Binance Smart Chain (BSC), Gnosis Chain, Arbitrum, Optimism, Polygon zkEVM |
+>>>>>>> dev
 
 ### 5.2 Reserves and Minting
 
@@ -136,6 +141,13 @@ This list may increase in the future via multisig consensus and / or by an estab
 | ------------------------------------------ | ----- | ----------------------- | -------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | 0x4200000000000000000000000000000000000006 | WETH  | 80%                     | 85%                        | 5                     | [0xfF69E183A863151B4152055974aa648b3165014D](https://basescan.org/address/0xfF69E183A863151B4152055974aa648b3165014D) |
 | 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22 | CBETH | 80%                     | 85%                        | 5                     | [0x5c4a154690AE52844F151bcF3aA44885db3c8A58](https://basescan.org/address/0x5c4a154690AE52844F151bcF3aA44885db3c8A58) |
+
+### 5.3 UniswapV3 Tokenized Liquidity Provision contract
+
+| Symbol       | Name              | Deployed Address                           | Chains  |
+| ------------ | ----------------- | ------------------------------------------ | ------- |
+| $Lp-USDC-XOC | LpToken: USDC-XOC | [0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291](https://basescan.org/address/0xd6dab267b7c23edb2ed5605d9f3f37420e88e291) | Base    |
+| $Lp-USDC-XOC | LpToken: USDC-XOC | [0xF9ed5514035e94b6ff89BFE1218c21a643D29b49](https://polygonscan.com/address/0xf9ed5514035e94b6ff89bfe1218c21a643d29b49) | Polygon |
 
 ## 6 Code Audits
 

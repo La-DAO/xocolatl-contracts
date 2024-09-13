@@ -65,6 +65,7 @@ Por el momento, el sistema de contratos inteligentes de Xoc pertence a las sigui
 | Network       | Safe (Gnosis) Multisig Address             |
 | ------------- | ------------------------------------------ |
 | Ethereum      | 0xaaE1A89e827Ac63d92f3633Be2e0dDd6edafd34a |
+| Base          | 0x571131167e1A16D9879FA605319944Ba6E993Dd7 |
 | Polygon (POS) | 0x707C5E55277A0C2f598f191b269c9e773516052A |
 | Gnosis Chain  | 0x2CBe215Eae3e926f11291560be0e4cda9556DCBb |
 | BSC           | 0xD14F02ad072238d5D58671bcfE07FcBf9a17d5f7 |
@@ -93,9 +94,9 @@ El contrato central ERC20 ha sido desplegado a las siguientes cadenas de bloque:
 
 </div>
 
-| Symbol | Name                    | Deployed Address                           | Chains                                                                                              |
-| ------ | ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| $Xoc   | Xocolatl MXN Stablecoin | 0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf | Ethereum, Polygon (POS), Binance Smart Chain (BSC), Gnosis Chain, Arbitrum, Optimism, Polygon zkEVM |
+| Symbol | Name                    | Deployed Address                           | Chains                                                                                                    |
+| ------ | ----------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| $Xoc   | Xocolatl MXN Stablecoin | 0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf | Ethereum, Base, Polygon (POS), Binance Smart Chain (BSC), Gnosis Chain, Arbitrum, Optimism, Polygon zkEVM |
 
 ### 5.2 Reservas y Acuñado
 
@@ -142,6 +143,13 @@ Esta lista puede variar en el futuro por medio de un consenso entre los miembros
 **House Of Coin**: [0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b](https://bscscan.com/address/0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b)
 
 </div>
+
+### 5.3 UniswapV3 Tokenized Liquidity Provision contract
+
+| Symbol       | Name              | Deployed Address                           | Chains  |
+| ------------ | ----------------- | ------------------------------------------ | ------- |
+| $Lp-USDC-XOC | LpToken: USDC-XOC | 0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291 | Base    |
+| $Lp-USDC-XOC | LpToken: USDC-XOC | 0xF9ed5514035e94b6ff89BFE1218c21a643D29b49 | Polygon |
 
 ## 6 Auditorías
 
