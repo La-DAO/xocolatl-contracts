@@ -8,8 +8,9 @@ const LADAO_MULTISIGS = {
     sepolia: "0xbd9e84Da78228039867E1687F824a106310c029D",
     base: "0x571131167e1A16D9879FA605319944Ba6E993Dd7",
     linea: "",
-    polygonzkevm: "",
+    polygonzkevm: "0xBB22D8dD78FcfD15D0ad2aef3B2f595a24461026",
     scroll: "0x840A6f02e31eBa9761Ceb18471524B71B506E7F4",
+    polygonamoy: "",
 };
 
 const CONTRACT_DEPLOYER_FACTORY = "0xF8faF9319e5CDDfda173B0a6461f19765AAAbf03";
@@ -192,6 +193,14 @@ const ASSETS = {
             },
         },
     },
+    polygonamoy: {
+        wpol: {
+            address: "0x96388dDB8C35799D14D5DcBb05AD98b80F0D1d11",
+            storageSlots: {
+                balanceOf: 3,
+            },
+        },
+    },
 };
 
 const ORACLE_CONTRACTS = {
@@ -254,6 +263,13 @@ const ORACLE_CONTRACTS = {
         pyth: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
         ethusd: "0x6bF14CB0A831078629D993FDeBcB182b21A8774C",
     },
+    polygonzkevm: {
+        pyth: "0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65",
+        ethusd: "0x97d9F9A00dEE0004BE8ca0A8fa374d486567eE2D",
+    },
+    polygonamoy: {
+        pyth: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    },
 };
 
 const TLATLALIANI_CONTRACTS = {
@@ -272,6 +288,7 @@ const TLATLALIANI_CONTRACTS = {
     sepolia: {
         mxnusd: "0xada8c0eaba7ad722f4b5555b216f8f11a81593d8",
     },
+    // TODO - add Polygon Amoy + zkEVM contracts here???
 };
 
 module.exports = {

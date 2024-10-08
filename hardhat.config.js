@@ -60,7 +60,7 @@ module.exports = {
         },
         polygonzkevm: {
             chainId: 1101,
-            url: `https://zkevm-rpc.com`,
+            url: `https://polygonzkevm-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_ID}`,
             accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
         },
         arbitrum: {
