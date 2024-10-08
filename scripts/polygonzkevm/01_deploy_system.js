@@ -41,7 +41,7 @@ const deploySystemContracts = async () => {
         "InversePriceFeed",
         "PriceFeedPythWrapper",
     ]);
-    const oracleFactory = await deployOracleFactoryL2();
+    const oracleFactory = await deployOracleFactory();
     await setupOracleFactory(oracleFactory, computedPriceFeedImpl, invPriceFeedImpl, priceFeedPythWrapperImpl);
 
     const pythWrapperUsdMxn = await deployUsdMxnPythWrapper(oracleFactory, ORACLE_CONTRACTS[NETWORK].pyth);
@@ -56,6 +56,7 @@ const deploySystemContracts = async () => {
         15000,
         await pythWrapperUsdMxn.getAddress(),
         ORACLE_CONTRACTS[NETWORK].ethusd,
+        "weth/mxn",
     );
 
     await rolesHandOverAssetsAccountant(accountant);
