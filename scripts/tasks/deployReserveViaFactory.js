@@ -22,6 +22,7 @@ const deployReserveViaFactory = async (
     const allowedTimeout = 234000; // Due to market closure on weekends
     if (pricefeedAddr2 !== ethers.ZeroAddress) {
         console.log("ComputedPriceFeed" + ": Deploying...");
+        // TODO - error seems to happen here
         const computedPriceAddr = await oracleFactory.createComputedPriceFeed.staticCall(
             `computed ${priceFeedName}`,
             8,

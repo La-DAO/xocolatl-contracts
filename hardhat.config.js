@@ -60,7 +60,7 @@ module.exports = {
         },
         polygonzkevm: {
             chainId: 1101,
-            url: `https://zkevm-rpc.com`,
+            url: `https://polygonzkevm-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_ID}`,
             accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
         },
         arbitrum: {
@@ -106,6 +106,11 @@ module.exports = {
         scroll: {
             chainId: 534352,
             url: `https://rpc.scroll.io/`,
+            accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
+        },
+        polygonamoy: {
+            chainId: 80002,
+            url: `https://polygon-amoy.infura.io/v3/${process.env.INFURA_ID}`,
             accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
         },
     },
