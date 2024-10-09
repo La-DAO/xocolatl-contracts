@@ -13,6 +13,7 @@ const {setUpAssetsAccountant} = require("../tasks/setUpAssetsAccountant");
 const {setupOracleFactory} = require("../tasks/setupOracleFactory");
 const {deployUsdMxnPythWrapper} = require("../tasks/deployUsdMxnPythWrapper");
 const {deployReserveViaFactory} = require("../tasks/deployReserveViaFactory");
+const {deployOracleFactory} = require("../tasks/deployOracleFactory");
 
 const deploySystemContracts = async () => {
     console.log("\n\n 📡 Deploying...\n");
@@ -41,16 +42,19 @@ const deploySystemContracts = async () => {
         "InversePriceFeed",
         "PriceFeedPythWrapper",
     ]);
-    const oracleFactory = await deployOracleFactoryL2();
+    // TODO - check error for oracleFactory implementation
+    // const oracleFactory = await deployOracleFactoryL2();
+    const oracleFactory = await deployOracleFactory();
+
     await setupOracleFactory(oracleFactory, computedPriceFeedImpl, invPriceFeedImpl, priceFeedPythWrapperImpl);
 
     const pythWrapperUsdMxn = await deployUsdMxnPythWrapper(oracleFactory, ORACLE_CONTRACTS[NETWORK].pyth);
 
-    const reservehouseWeth = await deployReserveViaFactory(
+    const reservehouseWpol = await deployReserveViaFactory(
         factory,
         oracleFactory,
         WNATIVE,
-        RESERVE_CAPS.weth.defaultInitialLimit,
+        RESERVE_CAPS.wpol.defaultInitialLimit,
         ethers.parseUnits("0.8", 18),
         ethers.parseUnits("0.85", 18),
         15000,
@@ -63,7 +67,7 @@ const deploySystemContracts = async () => {
     await handOverOwnership(factory);
     await handOverOwnership(oracleFactory);
     await handOverOwnership(liquidator);
-    await handOverOwnership(reservehouseWeth);
+    await handOverOwnership(reservehouseWpol);
 
     // In addition the multisig needs to queue
     // 1.- Xocolatl contract grants minter role to Coinhouse
@@ -76,8 +80,8 @@ const deploySystemContracts = async () => {
 };
 
 const main = async () => {
-    if (NETWORK !== "polygonzkevm") {
-        throw new Error("Set 'NETWORK=polygonzkevm' in .env file");
+    if (NETWORK !== "polygonamoy") {
+        throw new Error("Set 'NETWORK=polygonamoy' in .env file");
     }
     await setDeploymentsPath(VERSION);
     await setPublishPath(VERSION);

@@ -9,7 +9,7 @@ const RESERVE_CAPS = {
     },
 };
 
-const WNATIVE = ASSETS.wpol.weth.address;
+const WNATIVE = ASSETS.polygonamoy.wpol.address;
 const TREASURY = LADAO_MULTISIGS.polygonamoy;
 
 module.exports = {

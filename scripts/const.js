@@ -10,7 +10,7 @@ const LADAO_MULTISIGS = {
     linea: "",
     polygonzkevm: "0xBB22D8dD78FcfD15D0ad2aef3B2f595a24461026",
     scroll: "0x840A6f02e31eBa9761Ceb18471524B71B506E7F4",
-    polygonamoy: "",
+    polygonamoy: "0x3839FaE2cF838F8Ed6EAEB65b8c98fad72Cca7EA", // TODO - change address
 };
 
 const CONTRACT_DEPLOYER_FACTORY = "0xF8faF9319e5CDDfda173B0a6461f19765AAAbf03";
@@ -269,6 +269,7 @@ const ORACLE_CONTRACTS = {
     },
     polygonamoy: {
         pyth: "0x2880aB155794e7179c9eE2e38200202908C17B43",
+        ethusd: "0x8eFDBF61C74179Bb670d4529E1BD61C69ebdaE0A",
     },
 };
 

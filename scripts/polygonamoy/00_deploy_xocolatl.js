@@ -1,5 +1,5 @@
 const {NETWORK, setDeploymentsPath, setPublishPath, publishUpdates} = require("../utils");
-const {VERSION} = require("./utils_sepolia");
+const {VERSION} = require("./utils_polygonamoy");
 
 const {deployXocolatl} = require("../tasks/deployXocolatl");
 const {handOverDefaultAdmin} = require("../tasks/rolesHandOver");
@@ -11,8 +11,8 @@ const deployBackedAsset = async () => {
 };
 
 const main = async () => {
-    if (NETWORK !== "polygonzkevm") {
-        throw new Error("Set 'NETWORK=polygonzkevm' in .env file");
+    if (NETWORK !== "polygonamoy") {
+        throw new Error("Set 'NETWORK=polygonamoy' in .env file");
     }
     await setDeploymentsPath(VERSION);
     await setPublishPath(VERSION);

@@ -108,6 +108,11 @@ module.exports = {
             url: `https://rpc.scroll.io/`,
             accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
         },
+        polygonamoy: {
+            chainId: 80002,
+            url: `https://polygon-amoy.infura.io/v3/${process.env.INFURA_ID}`,
+            accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : {mnemonic: mnemonic()},
+        },
     },
     sourcify: {
         enabled: true,
