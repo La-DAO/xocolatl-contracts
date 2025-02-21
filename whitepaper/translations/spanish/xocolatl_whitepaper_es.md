@@ -75,12 +75,13 @@ Por el momento, el sistema de contratos inteligentes de Xoc pertence a las sigui
 
 Cada cuenta multifirmas requiere 5 de 8 firmas de alguno de los miembros actuales. Dichos miembros incluyen a los miembros más activos en el desarrollo del sistema Xoc.
 
-| Twitter                                      | Twitter                                  |
-| -------------------------------------------- | ---------------------------------------- |
-| [Mel](https://twitter.com/0xAMC)             | [Jaibo](https://twitter.com/iafhurtado)  |
-| [Jonathan](https://twitter.com/curto_05)     | [Paulo](https://twitter.com/mexican_btc) |
-| [AcidLazzer](https://twitter.com/acidlazzer) | [Cuau](https://twitter.com/0xcuau)       |
-| [Nook](https://twitter.com/0xnook)           | [0xdcota](https://twitter.com/0xdcota)   |
+| X                                      | X                                   |
+| -------------------------------------- | ----------------------------------- |
+| [Mel](https://x.com/0xAMC)             | [Jaibo](https://x.com/iafhurtado)   |
+| [Jonathan](https://x.com/curto_05)     | [Mexi](https://x.com/meximalist)    |
+| [AcidLazzer](https://x.com/acidlazzer) | [Sergio](https://x.com/SergioRoVar) |
+| [Garo](https://x.com/garosan1)         | [0xdcota](https://x.com/0xdcota)    |
+| [Plauto](https://x.com/PlautoThe)      |                                     |
 
 Sin embargo, se planea que en el futuro el sistema Xoc opere de forma decentralizada sea decentralizado por medio de un token de gobernanza el cual se dará a conocer en el futuro.
 
@@ -120,6 +121,12 @@ Esta lista puede variar en el futuro por medio de un consenso entre los miembros
 
 #### 5.2.2 Binance Smart Chain
 
+<div class="p-h3">
+
+**House Of Coin**: [0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b](https://bscscan.com/address/0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b)
+
+</div>
+
 | Token Address                              | Token | Max Loan To Value (LTV) | Reserve Deposit Limit | House of Reserve Address                                                                                             |
 | ------------------------------------------ | ----- | ----------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | 0x2170ed0880ac9a755fd29b2688956bd959f933f8 | WETH  | 85%                     | 100                   | [0xd411BE9A105Ea7701FabBe58C2834b7033EBC203](https://bscscan.com/address/0xd411BE9A105Ea7701FabBe58C2834b7033EBC203) |
@@ -138,11 +145,18 @@ Esta lista puede variar en el futuro por medio de un consenso entre los miembros
 | 0x4200000000000000000000000000000000000006 | WETH  | 80%                     | 85%                        | 5                     | [0xfF69E183A863151B4152055974aa648b3165014D](https://basescan.org/address/0xfF69E183A863151B4152055974aa648b3165014D) |
 | 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22 | CBETH | 80%                     | 85%                        | 5                     | [0x070ccE6887E70b75015F948b12601D1E759D2024](https://basescan.org/address/0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22) |
 
-<div class="p-h3">
+#### 5.2.3 Optimism
 
-**House Of Coin**: [0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b](https://bscscan.com/address/0x7ed1acd46de3a4e63f2d3b0f4fb5532e113a520b)
+**ReserveBeaconFactory :**: [0x25e2eCe02546aCcDBEC507c886F97faA6F664BbA](https://optimistic.etherscan.io/address/0x25e2eCe02546aCcDBEC507c886F97faA6F664BbA)  
+**OracleFactoryL2 :**: [0xb1Ef5B36e96cEA44146E21497180e05a24B50596](https://optimistic.etherscan.io/address/0xb1Ef5B36e96cEA44146E21497180e05a24B50596)  
+**House Of Coin :**: [0x1BD6dc9162e90ca4c86Ee721b80808D21a557dEd](https://optimistic.etherscan.io/address/0x1BD6dc9162e90ca4c86Ee721b80808D21a557dEd)  
+**AssetsAccountant :**: [0xCAF99D6cF30E8e735309E4ED1dDC47E47ac0EEB9](https://optimistic.etherscan.io/address/0xCAF99D6cF30E8e735309E4ED1dDC47E47ac0EEB9)  
+**AccountLiquidator :**: [0xdd3F32c4e0dE88a256B50Ab4650a4203C6E5D6b0](https://optimistic.etherscan.io/address/0xdd3F32c4e0dE88a256B50Ab4650a4203C6E5D6b0)
 
-</div>
+| Token Address                              | Token | Max Loan To Value (LTV) | Liquidation Threshold (LT) | Reserve Deposit Limit | House of Reserve Address                                                                                                         |
+| ------------------------------------------ | ----- | ----------------------- | -------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 0x4200000000000000000000000000000000000006 | WETH  | 80%                     | 85%                        | 5                     | [0x7fB68dc36044FcC02eEE779A9b35AC9D75e659Be](https://optimistic.etherscan.io/address/0x7fB68dc36044FcC02eEE779A9b35AC9D75e659Be) |
+| 0x4200000000000000000000000000000000000042 | OP    | 80%                     | 85%                        | 5000                  | [0x2424BcD327DFD8e5DfF73eCB606CCED4235c1990](https://optimistic.etherscan.io/address/0x2424BcD327DFD8e5DfF73eCB606CCED4235c1990) |
 
 ### 5.3 UniswapV3 Tokenized Liquidity Provision contract
 
