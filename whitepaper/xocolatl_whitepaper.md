@@ -159,6 +159,9 @@ This list may increase in the future via multisig consensus and / or by an estab
 | $Lp-USDC-XOC | LpToken: USDC-XOC | [0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291](https://basescan.org/address/0xd6dab267b7c23edb2ed5605d9f3f37420e88e291)    | Base    |
 | $Lp-USDC-XOC | LpToken: USDC-XOC | [0xF9ed5514035e94b6ff89BFE1218c21a643D29b49](https://polygonscan.com/address/0xf9ed5514035e94b6ff89bfe1218c21a643d29b49) | Polygon |
 
+### 5.4 CETES TWAP Adapter
+On Base **CETES TwapAdapter/usd :**: [0xc77f35e8adf7313391b8c83eaa2c72a612356f02](https://basescan.org/address/0xc77f35e8adf7313391b8c83eaa2c72a612356f02) 
+
 ## 6 Code Audits
 
 The first iteration of the Xoc system was audited by Cyberscope December 2022. The audit was possible thanks to a grant from Polygon and contribution from LaDAO’s early members. The full report is available [here](https://github.com/La-DAO/xocolatl-contracts/tree/main/audits/cyberscope).
